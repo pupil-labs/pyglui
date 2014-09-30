@@ -96,17 +96,18 @@ cdef class Menu:
         for e in self.elements:
             e.draw(context,self.size)
 
-        #tranlate to stack start here:
-        context.translate(0,20)
-
-        for e in self.stacked_elements:
-            e.draw(context,self.size)
-            context.translate(0,e.h)
+        if not self.iconified:
+            context.translate(0,20)
+            for e in self.stacked_elements:
+                e.draw(context,self.size)
+                context.translate(0,e.h)
 
         context.restore()
 
     cdef draw_menu(self,context):
         context.beginPath()
+        context.rect(self.origin.x,self.origin.y,self.size.x,20)
+        context.fill()
         context.rect(self.origin.x,self.origin.y,self.size.x,self.size.y)
         context.stroke()
 
@@ -150,6 +151,94 @@ cdef class Menu:
         def __set__(self,val):
             cdef int w,h = val
             self.outline.w,self.outline.h = w,h
+
+
+cdef class Slider:
+    cdef readonly bytes label
+    cdef readonly long  uid
+    cdef float minimum,maximum,step
+    cdef public bint stacked
+    cdef public int height,slider_width
+    cdef bint selected
+    cdef Vec2 slider_pos
+    cdef Synced_Value sync_val
+
+    def __cinit__(self,bytes attribute_name, object attribute_context,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
+        self.stacked = True
+        self.uid = id(self)
+        self.label = label or attribute_name
+        self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
+        self.minimum = min
+        self.maximum = max
+        self.step = step
+        self.height = 40
+        self.slider_pos = Vec2(0,self.height/2)
+        self.selected = False
+        self.slider_width = 0
+
+    def __init__(self,bytes attribute_name, object attribute_context,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
+        pass
+
+
+    cpdef sync(self):
+        self.sync_val.sync()
+
+    cpdef draw(self,context,Vec2 parent_size):
+        #update apperance:
+        self.slider_width = parent_size.x
+
+        # map slider value
+        self.slider_pos.x = int( clampmap(self.sync_val.value,self.minimum,self.maximum,0,self.slider_width) )
+
+        #then transform locally and render the UI element
+        context.save()
+        context.beginPath()
+        context.text(20.0, 0.0, self.label)
+        context.textAlign(1<<0)
+
+        context.roundedRect(0,15,parent_size.x,10,2)
+        if self.selected:
+            context.circle(self.slider_pos.x,self.slider_pos.y,14)
+        else:
+            context.circle(self.slider_pos.x,self.slider_pos.y,18)
+        context.text(self.slider_pos.x,self.slider_pos.y, str(self.sync_val.value))
+        context.textAlign(1<<1 | 1<<4)
+
+        context.stroke()
+        context.restore()
+
+    cpdef handle_input(self,Input new_input):
+        global should_redraw
+
+        if self.selected:
+            self.sync_val.value = clampmap(self.slider_pos.x+new_input.dm.x,0,self.slider_width,self.minimum,self.maximum)
+
+        for b in new_input.buttons:
+            if b[1] == 1:
+                if mouse_over_center(self.slider_pos,self.height,self.height,new_input.m):
+                    self.selected = True
+                    should_redraw = True
+            if self.selected and b[1] == 0:
+                self.selected =False
+
+
+        #for c in new_input.chars:
+        #    pass
+
+        #for k in new_input.keys:
+        #    pass
+
+
+    property h:
+        def __get__(self):
+            return self.height
+
+
+
+cdef class Toggle:
+    pass
+
+
 
 cdef class Synced_Value:
     '''
@@ -196,89 +285,9 @@ cdef class Synced_Value:
 
             if self.setter:
                 self.setter(self._value)
-            else:
-                self.attribute_context.__dict__[self.attribute_name] = self._value
 
+            self.attribute_context.__dict__[self.attribute_name] = self._value
 
-
-cdef class Slider:
-    cdef readonly bytes label
-    cdef readonly long  uid
-    cdef float minimum,maximum,step
-    cdef public bint stacked
-    cdef public int height,slider_width
-    cdef bint selected
-    cdef Vec2 slider_pos
-    cdef Synced_Value sync_val
-
-    def __cinit__(self,bytes attribute_name, object attribute_context,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
-        self.stacked = True
-        self.uid = id(self)
-        self.label = label or attribute_name
-        self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
-        self.minimum = min
-        self.maximum = max
-        self.step = step
-        self.height = 40
-        self.slider_pos = Vec2(0,self.height/2)
-        self.selected = False
-        self.slider_width = 0
-
-    def __init__(self, bytes attribute_name, object attribute_context,label = None, min = 0, max = 10, step = 1):
-        pass
-
-
-    cpdef sync(self):
-        self.sync_val.sync()
-
-    cpdef draw(self,context,Vec2 parent_size):
-        #first  update apperance:
-        # 1 map slider value
-        self.slider_width = parent_size.x
-        self.slider_pos.x = int( clampmap(self.sync_val.value,self.minimum,self.maximum,0,self.slider_width) )
-
-        #then  transform locally and render the UI element
-        context.save()
-        context.beginPath()
-        context.rect(0,0,parent_size.x,self.height)
-        if not self.selected:
-            context.circle(self.slider_pos.x,self.slider_pos.y,18)
-
-        context.stroke()
-        context.restore()
-
-    cpdef handle_input(self,Input new_input):
-        global should_redraw
-
-        if self.selected:
-            self.sync_val.value = clampmap(self.slider_pos.x+new_input.dm.x,0,self.slider_width,self.minimum,self.maximum)
-
-        for b in new_input.buttons:
-            if b[1] == 1:
-                if mouse_over_center(self.slider_pos,self.height,self.height,new_input.m):
-                    self.selected = True
-                    should_redraw = True
-            if self.selected and b[1] == 0:
-                self.selected =False
-
-
-
-
-        #for c in new_input.chars:
-        #    pass
-
-        #for k in new_input.keys:
-        #    pass
-
-
-    property h:
-        def __get__(self):
-            return self.height
-
-
-
-cdef class Toggle:
-    pass
 
 
 
