@@ -158,7 +158,6 @@ cdef class StackBox:
         # dont show the stuff that does not fit.
         context.scissor(*self.outline.rect)
 
-        print self.outline.size.x
         #display that we have scrollable content
         h = sum([e.height for e in self.elements])
         if h:
