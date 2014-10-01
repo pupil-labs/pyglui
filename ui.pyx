@@ -19,7 +19,6 @@ cdef class UI:
         if 0 <= mx <= self.window_size.x and 0 <= my <= self.window_size.y:
             self.new_input.dm.x,self.new_input.dm.y = mx-self.new_input.m.x,my-self.new_input.m.y
             self.new_input.m.x,self.new_input.m.y = mx,my
-            self.new_input.am.x,self.new_input.am.y = mx,my
 
 
     def update_window(self,w,h):
@@ -52,7 +51,7 @@ cdef class UI:
         global should_redraw
         cdef Menu e
         for e in self.elements:
-            e.draw(context,self.window_size)
+            e.draw(context,FitBox(Vec2(0,0),self.window_size))
         should_redraw = True
 
     def update(self,context):
@@ -73,31 +72,32 @@ cdef class Menu:
     cdef bytes label
     cdef long uid
     cdef Draggable handlebar, resize_corner
+    cdef Vec2 top_left_padding
 
     def __cinit__(self,label,pos=(0,0),size=(200,100)):
         self.uid = id(self)
         self.label = label
         self.outline = FitBox(position=Vec2(*pos),size=Vec2(*size))
+        self.top_left_padding = Vec2(20,0)
+        self.elements = []
 
 
     def __init__(self,label,pos=(0,0),size=(200,100)):
-        self.elements = []
-        self.handlebar = Draggable(Vec2(0,0),Vec2(0,20),self.outline.design_org)
-        self.resize_corner = Draggable(Vec2(-1,-1),Vec2(-20,-20),self.outline.design_size)
+        arrest_axis = 0
+        self.handlebar = Draggable(Vec2(0,0),Vec2(20,0),self.outline.design_org,arrest_axis)
+        self.resize_corner = Draggable(Vec2(-1,-1),Vec2(-20,-20),self.outline.design_size,arrest_axis)
 
 
-    cdef draw(self,context,parent_size):
-        self.outline.fit(parent_size)
+    cdef draw(self,context,parent_box):
+        self.outline.compute(parent_box)
         context.save()
         self.draw_menu(context)
-        #translate to origin of this menu
-        context.translate(self.outline.org.x,self.outline.org.y)
 
-        self.handlebar.draw(context,self.outline.size)
-        self.resize_corner.draw(context,self.outline.size)
+        self.handlebar.draw(context,self.outline)
+        self.resize_corner.draw(context,self.outline)
 
         for e in self.elements:
-            e.draw(context,self.outline.size)
+            e.draw(context,self.outline)
 
         context.restore()
 
@@ -108,16 +108,12 @@ cdef class Menu:
 
 
     cdef handle_input(self, Input new_input,bint m_close):
-        new_input.m.push()
-        #translate input coords to menu
-        new_input.m -= self.outline.org
 
         self.handlebar.handle_input(new_input,True)
         self.resize_corner.handle_input(new_input,True)
 
         for e in self.elements:
             e.handle_input(new_input,True)
-        new_input.m.pop()
 
     cdef sync(self):
         for e in self.elements:
@@ -148,37 +144,21 @@ cdef class StackBox:
 
 
     cpdef handle_input(self,Input new_input,visible=True):
-        new_input.m.push()
-        #translate input coords to menu
-        new_input.m -= self.outline.org
-        cdef bint mouse_over_menue = 0 <= new_input.m.y <= +self.outline.size.y
-
-        new_input.m.push()
-        #translate stack to scrollstate
-        new_input.m.y -= self.scrollstate.y
+        cdef bint mouse_over_menue = 0 <= new_input.m.y-self.outline.org.y <= +self.outline.size.y
         for e in self.elements:
             e.handle_input(new_input, mouse_over_menue)
-            new_input.m.y-=e.height
-        new_input.m.pop()
-
         # handle scrollbar interaction after menu items
         # so grabbing a slider does not trigger scrolling
         self.scrollbar.handle_input(new_input,True)
-        new_input.m.pop()
 
 
 
     cpdef draw(self,context,parent_size):
-        self.outline.fit(parent_size)
-
-        context.save()
+        self.outline.compute(parent_size)
         # dont show the stuff that does not fit.
         context.scissor(*self.outline.rect)
 
-        #translate to origin of this menu
-        context.translate(self.outline.org.x,self.outline.org.y)
-
-
+        print self.outline.size.x
         #display that we have scrollable content
         h = sum([e.height for e in self.elements])
         if h:
@@ -193,14 +173,16 @@ cdef class StackBox:
         if not self.scrollbar.selected:
             self.scrollstate.y = int(clamp(self.scrollstate.y,min(0,self.outline.size.y-h),0))
 
-        self.scrollbar.draw(context,self.outline.size)
+        self.scrollbar.draw(context,self.outline)
 
-        context.translate(0,self.scrollstate.y)
+        self.outline.org.y+=self.scrollstate.y
         for e in self.elements:
-            e.draw(context,self.outline.size)
-            context.translate(0,e.height)
+            e.draw(context,self.outline)
+            self.outline.org.y+=(<FitBox>e.outline).size.y
 
-        context.restore()
+        self.outline.org.y -=self.scrollstate.y
+        self.outline.org.y -=h
+
 
 
 
@@ -231,20 +213,22 @@ cdef class Slider:
     cpdef sync(self):
         self.sync_val.sync()
 
-    cpdef draw(self,context,Vec2 parent_size):
+    cpdef draw(self,context,FitBox parent):
         #update apperance:
-        self.outline.fit(parent_size)
+        self.outline.compute(parent)
 
         # map slider value
         self.slider_pos.x = int( clampmap(self.sync_val.value,self.minimum,self.maximum,0,self.outline.size.x) )
-
+        context.beginPath()
+        context.rect(*self.outline.rect)
+        context.stroke()
         #then transform locally and render the UI element
         context.save()
+        context.translate(self.outline.org.x,self.outline.org.y)
         context.beginPath()
         context.textAlign(1<<4)
         context.text(20.0, 20.0, self.label)
 
-        context.rect(*self.outline.rect)
         if self.selected:
             context.circle(self.slider_pos.x,self.slider_pos.y,14)
         else:
@@ -259,12 +243,12 @@ cdef class Slider:
         global should_redraw
 
         if self.selected and new_input.dm:
-            self.sync_val.value = clampmap(new_input.m.x,0,self.outline.size.x,self.minimum,self.maximum)
+            self.sync_val.value = clampmap(new_input.m.x-self.outline.org.x,0,self.outline.size.x,self.minimum,self.maximum)
             should_redraw = True
 
         for b in new_input.buttons:
             if b[1] == 1 and m_close:
-                if mouse_over_center(self.slider_pos,self.height,self.height,new_input.m):
+                if mouse_over_center(self.slider_pos+self.outline.org,self.height,self.height,new_input.m):
                     new_input.buttons.remove(b)
                     self.selected = True
                     should_redraw = True
@@ -307,17 +291,17 @@ cdef class Draggable:
     def __init__(self,Vec2 pos, Vec2 size, Vec2 value, arrest_axis = 0):
         pass
 
-    cdef draw(self,context, Vec2 parent_size):
-        self.outline.fit(parent_size)
+    cdef draw(self,context, FitBox parent_size):
+        self.outline.compute(parent_size)
         context.beginPath()
         context.rect(*self.outline.rect)
-        #context.fill()
+        context.stroke()
 
     cdef handle_input(self,Input new_input, bint visible):
         global should_redraw
         if self.selected and new_input.dm:
             self.value -= self.drag_accumulator
-            self.drag_accumulator = new_input.am-self.touch_point
+            self.drag_accumulator = new_input.m-self.touch_point
             if self.arrest_axis == 1:
                 self.drag_accumulator.x = 0
             elif self.arrest_axis == 2:
@@ -332,8 +316,8 @@ cdef class Draggable:
                 if self.outline.mouse_over(new_input.m):
                     self.selected = True
                     new_input.buttons.remove(b)
-                    self.touch_point.x = new_input.am.x
-                    self.touch_point.y = new_input.am.y
+                    self.touch_point.x = new_input.m.x
+                    self.touch_point.y = new_input.m.y
                     self.drag_accumulator = Vec2(0,0)
             if self.selected and b[1] == 0:
                 self.selected = False
@@ -350,13 +334,13 @@ cdef class FitBox:
     def __cinit__(self,Vec2 position,Vec2 size):
         self.design_org = Vec2(position.x,position.y)
         self.design_size = Vec2(size.x,size.y)
-        self.org = Vec2(0,0)
-        self.size = Vec2(0,0)
+        self.org = Vec2(position.x,position.y)
+        self.size = Vec2(size.x,size.y)
 
     def __init__(self,Vec2 position,Vec2 size):
         pass
 
-    cdef fit(self,Vec2 context):
+    cdef compute(self,FitBox context):
         # all x
         if self.design_size.x > 0:
             # size is direcly specified
@@ -366,23 +350,27 @@ cdef class FitBox:
             self.size.x = - self.design_size.x
         else:
             # span parent context
-            self.size.x = context.x
+            self.size.x = context.size.x
 
+        #right align inside context
         if self.design_org.x < 0:
-            self.org.x = context.x+self.design_org.x
+            self.org.x = context.size.x+self.design_org.x
         else:
             self.org.x = self.design_org.x
+
 
         # mir origin if design size is negative
         if self.design_size.x < 0:
             self.org.x += self.design_size.x
 
-        # account for positon is span
+        # account for positon if span
         if self.design_size.x == 0:
             self.size.x -= self.org.x
 
         self.size.x = max(0,self.size.x)
 
+        # finally translate into scene by parent org
+        self.org.x +=context.org.x
 
         # copy replace for y
         if self.design_size.y > 0:
@@ -393,10 +381,10 @@ cdef class FitBox:
             self.size.y = - self.design_size.y
         else:
             # span parent context
-            self.size.y = context.y
+            self.size.y = context.size.y
 
         if self.design_org.y < 0:
-            self.org.y = context.y+self.design_org.y
+            self.org.y = context.size.y+self.design_org.y
         else:
             self.org.y = self.design_org.y
 
@@ -410,7 +398,8 @@ cdef class FitBox:
 
         self.size.y = max(0,self.size.y)
 
-
+        # finally translate into scene by parent org
+        self.org.y +=context.org.y
 
     property rect:
         def __get__(self):
@@ -420,7 +409,7 @@ cdef class FitBox:
         def __get__(self):
             return self.org.x+self.size.x/2,self.org.y+self.size.y/2
 
-    cdef bint mouse_over(self,Stack2 m):
+    cdef bint mouse_over(self,Vec2 m):
         return self.org.x <= m.x <=self.org.x+self.size.x and self.org.y <= m.y <=self.org.y+self.size.y
 
 
@@ -476,16 +465,14 @@ cdef class Synced_Value:
 
 cdef class Input:
     cdef public list keys,chars,buttons
-    cdef Vec2 dm,am # delta mouse, absolute mouse pos
-    cdef Stack2 m # mouse pos relative to parent element
+    cdef Vec2 dm,m
 
     def __cinit__(self):
         self.keys = []
         self.buttons = []
         self.chars = []
-        self.m = Stack2(0,0)
+        self.m = Vec2(0,0)
         self.dm = Vec2(0,0)
-        self.am = Vec2(0,0)
 
     def __init__(self):
         pass
@@ -562,7 +549,7 @@ cdef inline float clamp(float value, float minium, float maximum):
 cdef inline float clampmap(float value, float istart, float istop, float ostart, float ostop):
     return clamp(lmap(value,istart,istop,ostart,ostop),ostart,ostop)
 
-cdef inline bint mouse_over_center(Vec2 center, int w, int h, Stack2 m):
+cdef inline bint mouse_over_center(Vec2 center, int w, int h, Vec2 m):
     return center.x-w/2 <= m.x <=center.x+w/2 and center.y-h/2 <= m.y <=center.y+h/2
 
 
