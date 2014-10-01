@@ -324,10 +324,10 @@ cdef class Draggable:
 
 cdef class FitBox:
     '''
-    A box that will fit itself into a context specified by rules
-    for x and y respectivly:
+    A box that will fit itself into a context.
+    Specified by rules for x and y respectivly:
         size 0 will span into parent context
-        size negative will move Box org to the other side
+        size negative will move Box origin to the other side
         position negative will align to the opposite side of context
 
     Its made of 4 Vec2
@@ -341,6 +341,8 @@ cdef class FitBox:
     def __cinit__(self,Vec2 position,Vec2 size):
         self.design_org = Vec2(position.x,position.y)
         self.design_size = Vec2(size.x,size.y)
+        # The values below are just temporay
+        # and will be overwritten by compute.
         self.org = Vec2(position.x,position.y)
         self.size = Vec2(size.x,size.y)
 
@@ -358,26 +360,20 @@ cdef class FitBox:
         else:
             # span parent context
             self.size.x = context.size.x
-
         #right align inside context
         if self.design_org.x < 0:
             self.org.x = context.size.x+self.design_org.x
         else:
             self.org.x = self.design_org.x
-
         # mir origin if design size is negative
         if self.design_size.x < 0:
             self.org.x += self.design_size.x
-
         # account for positon if span
         if self.design_size.x == 0:
             self.size.x -= self.org.x
-
         self.size.x = max(0,self.size.x)
-
         # finally translate into scene by parent org
         self.org.x +=context.org.x
-
 
 
         # copy replace for y
@@ -390,22 +386,17 @@ cdef class FitBox:
         else:
             # span parent context
             self.size.y = context.size.y
-
         if self.design_org.y < 0:
             self.org.y = context.size.y+self.design_org.y
         else:
             self.org.y = self.design_org.y
-
         # mir origin if design size is negative
         if self.design_size.y < 0:
             self.org.y += self.design_size.y
-
         # account for positon is span
         if self.design_size.y == 0:
             self.size.y -= self.org.y
-
         self.size.y = max(0,self.size.y)
-
         # finally translate into scene by parent org
         self.org.y +=context.org.y
 
