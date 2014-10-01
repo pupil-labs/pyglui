@@ -85,10 +85,10 @@ cdef class Menu:
     def __init__(self,label,pos=(0,0),size=(200,100)):
         arrest_axis = 0
         self.handlebar = Draggable(Vec2(0,0),Vec2(20,0),self.outline.design_org,arrest_axis)
-        self.resize_corner = Draggable(Vec2(-1,-1),Vec2(-20,-20),self.outline.design_size,arrest_axis)
+        self.resize_corner = Draggable(Vec2(-1,-1),Vec2(-19,-19),self.outline.design_size,arrest_axis)
 
 
-    cdef draw(self,context,parent_box):
+    cpdef draw(self,context,parent_box):
         self.outline.compute(parent_box)
         context.save()
         self.draw_menu(context)
@@ -96,28 +96,34 @@ cdef class Menu:
         self.handlebar.draw(context,self.outline)
         self.resize_corner.draw(context,self.outline)
 
+        #lets manually resize
+        self.outline.org += self.top_left_padding
+        self.outline.size -= self.top_left_padding
+
         for e in self.elements:
             e.draw(context,self.outline)
 
         context.restore()
 
-    cdef draw_menu(self,context):
+    cpdef draw_menu(self,context):
         context.beginPath()
         context.rect(*self.outline.rect)
         context.stroke()
 
 
-    cdef handle_input(self, Input new_input,bint m_close):
-
+    cpdef handle_input(self, Input new_input,bint m_close):
         self.handlebar.handle_input(new_input,True)
         self.resize_corner.handle_input(new_input,True)
-
         for e in self.elements:
             e.handle_input(new_input,True)
 
-    cdef sync(self):
+    cpdef sync(self):
         for e in self.elements:
             e.sync()
+
+    property height:
+        def __get__(self):
+            return self.outline.size.y
 
 
 
@@ -156,7 +162,6 @@ cdef class StackBox:
     cpdef draw(self,context,parent_size):
         self.outline.compute(parent_size)
         # dont show the stuff that does not fit.
-        context.scissor(*self.outline.rect)
 
         #display that we have scrollable content
         h = sum([e.height for e in self.elements])
@@ -168,19 +173,22 @@ cdef class StackBox:
         if scroll_factor < 1:
             self.outline.size.x -=20
 
+        context.scissor(*self.outline.rect)
+
+
         #If the scollbar is not active make sure the content is scrolled away:
         if not self.scrollbar.selected:
             self.scrollstate.y = int(clamp(self.scrollstate.y,min(0,self.outline.size.y-h),0))
 
         self.scrollbar.draw(context,self.outline)
 
-        self.outline.org.y+=self.scrollstate.y
+        self.outline.org.y += self.scrollstate.y
         for e in self.elements:
             e.draw(context,self.outline)
-            self.outline.org.y+=(<FitBox>e.outline).size.y
+            self.outline.org.y+= e.height
 
-        self.outline.org.y -=self.scrollstate.y
-        self.outline.org.y -=h
+        self.outline.org.y -= self.scrollstate.y
+        self.outline.org.y -= h
 
 
 
@@ -255,13 +263,6 @@ cdef class Slider:
                 self.selected = False
 
 
-        #for c in new_input.chars:
-        #    pass
-
-        #for k in new_input.keys:
-        #    pass
-
-
     property height:
         def __get__(self):
             return self.outline.size.y
@@ -270,7 +271,7 @@ cdef class Slider:
 cdef class Draggable:
     '''
     A rectable that can be dragged.
-    The time does not move but the drag vector is added to 'value'
+    Does not move itself but the drag vector is added to 'value'
     '''
     cdef FitBox outline
     cdef Vec2 touch_point,drag_accumulator
@@ -323,10 +324,17 @@ cdef class Draggable:
 
 cdef class FitBox:
     '''
-    size 0 will span into parent context
-    size negative will move Box org to the other side
-    position negative will align to the opposite side of context
+    A box that will fit itself into a context specified by rules
+    for x and y respectivly:
+        size 0 will span into parent context
+        size negative will move Box org to the other side
+        position negative will align to the opposite side of context
 
+    Its made of 4 Vec2
+        "design_org" "design_size" define the rules for placement and size
+
+        "org" and "size" are the computed results of the box
+            fitted and translated by its parent context
     '''
     cdef Vec2 design_org,org,design_size,size
 
@@ -357,7 +365,6 @@ cdef class FitBox:
         else:
             self.org.x = self.design_org.x
 
-
         # mir origin if design size is negative
         if self.design_size.x < 0:
             self.org.x += self.design_size.x
@@ -370,6 +377,8 @@ cdef class FitBox:
 
         # finally translate into scene by parent org
         self.org.x +=context.org.x
+
+
 
         # copy replace for y
         if self.design_size.y > 0:
@@ -403,6 +412,10 @@ cdef class FitBox:
     property rect:
         def __get__(self):
             return self.org.x,self.org.y,self.size.x,self.size.y
+
+    property ellipse:
+        def __get__(self):
+            return self.org.x+self.size.x/2,self.org.y+self.size.y/2, self.size.x,self.size.y
 
     property center:
         def __get__(self):
@@ -463,6 +476,10 @@ cdef class Synced_Value:
 
 
 cdef class Input:
+    '''
+    Holds accumulated user input collect during a frame.
+    '''
+
     cdef public list keys,chars,buttons
     cdef Vec2 dm,m
 
@@ -502,7 +519,6 @@ cdef class Vec2:
     def __add__(self,Vec2 other):
         return Vec2(self.x+other.x,self.y+other.y)
 
-
     def __iadd__(self,Vec2 other):
         self.x +=other.x
         self.y += other.y
@@ -516,23 +532,23 @@ cdef class Vec2:
         self.y -= other.y
         return self
 
-cdef class Stack2(Vec2):
-    cdef list stack
+#cdef class Stack2(Vec2):
+#    cdef list stack
 
-    def __cinit__(self,int x, int y):
-        self.x = x
-        self.y = y
+#    def __cinit__(self,int x, int y):
+#        self.x = x
+#        self.y = y
 
-    def __init__(self,x,y):
-        self.stack = []
+#    def __init__(self,x,y):
+#        self.stack = []
 
-    cpdef push(self):
-        self.stack.append(Vec2(self.x,self.y))
+#    cpdef push(self):
+#        self.stack.append(Vec2(self.x,self.y))
 
-    cpdef pop(self):
-        cdef Vec2 vec = self.stack.pop()
-        self.x = vec.x
-        self.y = vec.y
+#    cpdef pop(self):
+#        cdef Vec2 vec = self.stack.pop()
+#        self.x = vec.x
+#        self.y = vec.y
 
 
 
