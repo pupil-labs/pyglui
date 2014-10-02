@@ -477,14 +477,18 @@ cdef class Draggable:
                 self.drag_accumulator.y = 0
 
             if not self.zero_crossing:
-                if self.value.x >= 0 and self.value.x + self.drag_accumulator.x <= 0:
+                if self.value.x > 0 and self.value.x + self.drag_accumulator.x <= 0:
                     self.drag_accumulator.x = .001 - self.value.x
-                elif self.value.x <= 0 and self.value.x + self.drag_accumulator.x >= 0:
+                elif self.value.x < 0 and self.value.x + self.drag_accumulator.x >= 0:
                     self.drag_accumulator.x = -.001 - self.value.x
-                if self.value.y >= 0 and self.value.y + self.drag_accumulator.y <= 0:
+                elif self.value.x ==0:
+                    self.drag_accumulator.x = 0
+                if self.value.y > 0 and self.value.y + self.drag_accumulator.y <= 0:
                     self.drag_accumulator.y = .001 - self.value.y
-                elif self.value.y <= 0 and self.value.y + self.drag_accumulator.y >= 0:
+                elif self.value.y < 0 and self.value.y + self.drag_accumulator.y >= 0:
                     self.drag_accumulator.y = -.001 - self.value.y
+                elif self.value.y ==0:
+                    self.drag_accumulator.y = 0
 
             self.value += self.drag_accumulator
 
@@ -508,9 +512,15 @@ cdef class FitBox:
     '''
     A box that will fit itself into a context.
     Specified by rules for x and y respectivly:
-        size 0 will span into parent context
-        size negative will move Box origin to the other side
+        size positive will size from self.org
+        size 0 will span into parent context and lock it like this. If you want it draggable use -.001 or .001
+        size negative make the box to up to size pixels to the parent container.
         position negative will align to the opposite side of context
+        position 0 will span into parent context and lock it like this. If you want it draggable use -.001 or .001
+
+
+    This is quite expressive but does have a limitation:
+        You cannot design a box that is outside of the parent context.
 
     Its made of 4 Vec2
         "design_org" "design_size" define the rules for placement and size

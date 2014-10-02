@@ -158,8 +158,12 @@ def demo():
     for x in range(1):
         s.elements.append(ui.Slider("bur",foo,setter=printer))
         s.elements.append(ui.Button("Say Hi!",print_hello))
-        s.elements.append(ui.Slider("bar",foo))
-        s.elements.append(ui.TextInput('mytext',foo,setter=printer))
+        sm = ui.Menu("SubMenu",pos=(0,0),size=(0,100))
+        ss= ui.StackBox()
+        ss.elements.append(ui.Slider("bar",foo))
+        ss.elements.append(ui.TextInput('mytext',foo,setter=printer))
+        sm.elements.append(ss)
+        s.elements.append(sm)
     m.elements.append(s)
     gui.elements.append(m)
 
