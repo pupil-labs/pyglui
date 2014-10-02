@@ -17,7 +17,7 @@ cdef class UI:
 
     def update_mouse(self,mx,my):
         if 0 <= mx <= self.window_size.x and 0 <= my <= self.window_size.y:
-            self.new_input.dm.x,self.new_input.dm.y = mx-self.new_input.m.x,my-self.new_input.m.y
+            self.new_input.dm.x,self.new_input.dm.y = mx-self.new_input.m.x, my-self.new_input.m.y
             self.new_input.m.x,self.new_input.m.y = mx,my
 
 
@@ -84,8 +84,8 @@ cdef class Menu:
 
     def __init__(self,label,pos=(0,0),size=(200,100)):
         arrest_axis = 0
-        self.handlebar = Draggable(Vec2(0,0),Vec2(20,0),self.outline.design_org,arrest_axis)
-        self.resize_corner = Draggable(Vec2(-1,-1),Vec2(-19,-19),self.outline.design_size,arrest_axis)
+        self.handlebar = Draggable(Vec2(0,0),Vec2(20,0),self.outline.design_org,arrest_axis,False)
+        self.resize_corner = Draggable(Vec2(-20,-20),Vec2(0,0),self.outline.design_size,arrest_axis,False)
 
 
     cpdef draw(self,context,parent_box):
@@ -275,11 +275,11 @@ cdef class Draggable:
     '''
     cdef FitBox outline
     cdef Vec2 touch_point,drag_accumulator
-    cdef bint selected
+    cdef bint selected,zero_crossing
     cdef Vec2 value
     cdef int arrest_axis
 
-    def __cinit__(self,Vec2 pos, Vec2 size, Vec2 value, arrest_axis = 0):
+    def __cinit__(self,Vec2 pos, Vec2 size, Vec2 value, arrest_axis = 0,zero_crossing=True):
         self.outline = FitBox(pos,size)
         self.value = value
         self.selected = False
@@ -287,8 +287,9 @@ cdef class Draggable:
         self.drag_accumulator = Vec2(0,0)
 
         self.arrest_axis = arrest_axis
+        self.zero_crossing = zero_crossing
 
-    def __init__(self,Vec2 pos, Vec2 size, Vec2 value, arrest_axis = 0):
+    def __init__(self,Vec2 pos, Vec2 size, Vec2 value, arrest_axis = 0,zero_crossing=True):
         pass
 
     cdef draw(self,context, FitBox parent_size):
@@ -306,6 +307,16 @@ cdef class Draggable:
                 self.drag_accumulator.x = 0
             elif self.arrest_axis == 2:
                 self.drag_accumulator.y = 0
+
+            if not self.zero_crossing:
+                if self.value.x >= 0 and self.value.x + self.drag_accumulator.x <= 0:
+                    self.drag_accumulator.x = 1 - self.value.x
+                elif self.value.x <= 0 and self.value.x + self.drag_accumulator.x >= 0:
+                    self.drag_accumulator.x = -1 - self.value.x
+                if self.value.y >= 0 and self.value.y + self.drag_accumulator.y <= 0:
+                    self.drag_accumulator.y = 1 - self.value.y
+                elif self.value.y <= 0 and self.value.y + self.drag_accumulator.y >= 0:
+                    self.drag_accumulator.y = -1 - self.value.y
 
             self.value += self.drag_accumulator
 
@@ -351,51 +362,33 @@ cdef class FitBox:
 
     cdef compute(self,FitBox context):
         # all x
+
+        if self.design_org.x >=0:
+            self.org.x = self.design_org.x
+        else:
+            self.org.x = context.size.x+self.design_org.x #design org is negative - double substaction
         if self.design_size.x > 0:
             # size is direcly specified
             self.size.x = self.design_size.x
-        elif self.design_size.x < 0:
-            # size is set but origin is mirrored
-            self.size.x = - self.design_size.x
         else:
-            # span parent context
-            self.size.x = context.size.x
-        #right align inside context
-        if self.design_org.x < 0:
-            self.org.x = context.size.x+self.design_org.x
-        else:
-            self.org.x = self.design_org.x
-        # mir origin if design size is negative
-        if self.design_size.x < 0:
-            self.org.x += self.design_size.x
-        # account for positon if span
-        if self.design_size.x == 0:
-            self.size.x -= self.org.x
+            self.size.x = context.size.x - self.org.x + self.design_size.x #design size is negative - double substaction
+
         self.size.x = max(0,self.size.x)
         # finally translate into scene by parent org
         self.org.x +=context.org.x
 
 
-        # copy replace for y
+
+        if self.design_org.y >=0:
+            self.org.y = self.design_org.y
+        else:
+            self.org.y = context.size.y+self.design_org.y #design size is negative - double substaction
         if self.design_size.y > 0:
             # size is direcly specified
             self.size.y = self.design_size.y
-        elif self.design_size.y < 0:
-            # size is set but origin is mirrored
-            self.size.y = - self.design_size.y
         else:
-            # span parent context
-            self.size.y = context.size.y
-        if self.design_org.y < 0:
-            self.org.y = context.size.y+self.design_org.y
-        else:
-            self.org.y = self.design_org.y
-        # mir origin if design size is negative
-        if self.design_size.y < 0:
-            self.org.y += self.design_size.y
-        # account for positon is span
-        if self.design_size.y == 0:
-            self.size.y -= self.org.y
+            self.size.y = context.size.y - self.org.y + self.design_size.y #design size is negative - double substaction
+
         self.size.y = max(0,self.size.y)
         # finally translate into scene by parent org
         self.org.y +=context.org.y
