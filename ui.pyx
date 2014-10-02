@@ -10,7 +10,8 @@ GL Backend and functions
 [ ] add render to texture option if nessesay
 
 GL Fonts:
-[ ] Select and use GL Font lib
+[x] Select GL Font Lib : https://github.com/memononen/fontstash
+[ ] and use GL Font lib
 
 UI features
 [ ] implement selector box
@@ -19,6 +20,7 @@ UI features
 [ ] design the UI and implement using gl calls above
 [ ] Optional: Add global UI scale option
 [ ] Implement Perf graph in cython
+[x] Implement scrolling
 
 Done:
 UI interaction
@@ -58,14 +60,13 @@ cdef class UI:
         self.new_input.s.x = sx
         self.new_input.s.y = sy
 
-
-    def input_key(self, key, scancode, action, mods):
+    def update_key(self, key, scancode, action, mods):
         self.new_input.keys.append((key,scancode,action,mods))
 
-    def input_char(self,c):
+    def update_char(self,c):
         self.new_input.chars.append(chr(c))
 
-    def input_button(self,button,action,mods):
+    def update_button(self,button,action,mods):
         self.new_input.buttons.append((button,action,mods))
 
     def sync(self):
@@ -80,7 +81,6 @@ cdef class UI:
             for e in self.elements:
                 e.handle_input(self.new_input,True)
             self.new_input.purge()
-
 
     cdef draw(self,context):
         global should_redraw

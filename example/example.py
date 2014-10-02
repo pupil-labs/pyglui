@@ -58,17 +58,17 @@ def demo():
         pass
 
     def on_key(window, key, scancode, action, mods):
-        gui.input_key(key,scancode,action,mods)
+        gui.update_key(key,scancode,action,mods)
 
         if action == GLFW_PRESS:
             if key == GLFW_KEY_ESCAPE:
                 on_close(window)
 
     def on_char(window,char):
-        gui.input_char(char)
+        gui.update_char(char)
 
     def on_button(window,button, action, mods):
-        gui.input_button(button,action,mods)
+        gui.update_button(button,action,mods)
         # pos = normalize(pos,glfwGetWindowSize(window))
         # pos = denormalize(pos,(frame.img.shape[1],frame.img.shape[0]) ) # Position in img pixels
 
