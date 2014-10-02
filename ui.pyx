@@ -29,7 +29,7 @@ cdef class UI:
         self.new_input.keys.append((key,scancode,action,mods))
 
     def input_char(self,c):
-        self.new_input.chars.append(c)
+        self.new_input.chars.append(chr(c))
 
     def input_button(self,button,action,mods):
         self.new_input.buttons.append((button,action,mods))
@@ -39,15 +39,16 @@ cdef class UI:
         for e in self.elements:
             e.sync()
 
-    cpdef handle_input(self):
+    cdef handle_input(self):
         cdef Menu e
         if self.new_input:
+            #print self.new_input
             for e in self.elements:
                 e.handle_input(self.new_input,True)
             self.new_input.purge()
 
 
-    cpdef draw(self,context):
+    cdef draw(self,context):
         global should_redraw
         cdef Menu e
         for e in self.elements:
@@ -90,6 +91,7 @@ cdef class Menu:
 
     cpdef draw(self,context,parent_box):
         self.outline.compute(parent_box)
+
         context.save()
         self.draw_menu(context)
 
@@ -150,9 +152,9 @@ cdef class StackBox:
 
 
     cpdef handle_input(self,Input new_input,visible=True):
-        cdef bint mouse_over_menue = 0 <= new_input.m.y-self.outline.org.y <= +self.outline.size.y
+        cdef bint mouse_over_menu = 0 <= new_input.m.y-self.outline.org.y <= +self.outline.size.y
         for e in self.elements:
-            e.handle_input(new_input, mouse_over_menue)
+            e.handle_input(new_input, mouse_over_menu)
         # handle scrollbar interaction after menu items
         # so grabbing a slider does not trigger scrolling
         self.scrollbar.handle_input(new_input,True)
@@ -161,10 +163,11 @@ cdef class StackBox:
 
     cpdef draw(self,context,parent_size):
         self.outline.compute(parent_size)
-        # dont show the stuff that does not fit.
+
+        #compute scroll stack height The stack elemets always have a fixed heigth.
+        h = sum([e.height for e in self.elements])
 
         #display that we have scrollable content
-        h = sum([e.height for e in self.elements])
         if h:
             scroll_factor = float(self.outline.size.y)/h
         else:
@@ -173,13 +176,15 @@ cdef class StackBox:
         if scroll_factor < 1:
             self.outline.size.x -=20
 
+        # dont show the stuff that does not fit.
         context.scissor(*self.outline.rect)
 
 
-        #If the scollbar is not active make sure the content is scrolled away:
+        #If the scollbar is not active make sure the content is not scrolled away:
         if not self.scrollbar.selected:
             self.scrollstate.y = int(clamp(self.scrollstate.y,min(0,self.outline.size.y-h),0))
 
+        #The draggable may be invisible but it still need to compute size
         self.scrollbar.draw(context,self.outline)
 
         self.outline.org.y += self.scrollstate.y
@@ -189,8 +194,6 @@ cdef class StackBox:
 
         self.outline.org.y -= self.scrollstate.y
         self.outline.org.y -= h
-
-
 
 
 cdef class Slider:
@@ -267,6 +270,166 @@ cdef class Slider:
         def __get__(self):
             return self.outline.size.y
 
+cdef class TextInput:
+    cdef readonly bytes label
+    cdef readonly long  uid
+    cdef public FitBox outline
+    cdef bint selected
+    cdef Vec2 slider_pos
+    cdef Synced_Value sync_val
+    cdef bytes preview
+    cdef int caret
+
+
+    def __cinit__(self,bytes attribute_name, object attribute_context,label = None,setter= None,getter= None):
+        self.uid = id(self)
+        self.label = label or attribute_name
+        self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
+        self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
+        self.selected = False
+        self.preview = str(self.sync_val.value)
+        self.caret = len(self.preview)-1
+
+    def __init__(self,bytes attribute_name, object attribute_context,label = None,setter= None,getter= None):
+        pass
+
+
+    cpdef sync(self):
+        self.sync_val.sync()
+
+    cpdef draw(self,context,FitBox parent):
+        #update apperance:
+        self.outline.compute(parent)
+
+        #then transform locally and render the UI element
+        context.save()
+        context.translate(self.outline.org.x,self.outline.org.y)
+        context.beginPath()
+        context.textAlign(1<<4)
+        context.text(20.0, 20.0, self.label)
+
+        if self.selected:
+            # TODO: the carot pos should be drawn
+            context.fontSize(26)
+            context.text(50.0, 20.0, self.preview)
+        else:
+            context.text(50.0, 20.0, self.sync_val.value)
+
+        context.stroke()
+        context.restore()
+
+    cpdef handle_input(self,Input new_input,bint m_close):
+        global should_redraw
+
+        if self.selected:
+            for c in new_input.chars:
+                self.preview = self.preview[:self.caret+1] + c + self.preview[self.caret+1:]
+                self.caret +=1
+                should_redraw = True
+
+
+            for k in new_input.keys:
+                if k == (257,36,0,0): #Enter and key up:
+                    self.finish_input()
+                elif k == (259,51,0,0): #Delete and key up:
+                    self.preview = self.preview[:self.caret] + self.preview[self.caret+1:]
+                    self.caret -=1
+                    self.caret = max(0,self.caret)
+                elif k == (263,123,0,0): #Delete and key up:
+                    self.caret -=1
+                    self.caret = max(0,self.caret)
+                elif k == (262,124,0,0): #Delete and key up:
+                    self.caret +=1
+                    self.caret = min(len(self.preview)-1,self.caret)
+
+
+            for b in new_input.buttons:
+                if b[1] == 1:
+                    self.finish_input()
+
+        else:
+            for b in new_input.buttons:
+                if b[1] == 1 and m_close:
+                    if self.outline.mouse_over(new_input.m):
+                        new_input.buttons.remove(b)
+                        self.selected = True
+                        should_redraw = True
+
+
+    cdef finish_input(self):
+        global should_redraw
+        should_redraw = True
+        self.selected = False
+        self.caret = len(self.preview)-1
+        self.sync_val.value = self.preview
+
+    property height:
+        def __get__(self):
+            return self.outline.size.y
+
+
+
+cdef class Button:
+    cdef readonly bytes label
+    cdef readonly long  uid
+    cdef public FitBox outline
+    cdef bint selected
+    cdef object function
+
+    def __cinit__(self,label, setter):
+        self.uid = id(self)
+        self.label = label
+        self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
+        self.selected = False
+        self.function = setter
+
+    def __init__(self,label, setter):
+        pass
+
+    cpdef sync(self):
+        pass
+
+    cpdef draw(self,context,FitBox parent):
+        #update apperance:
+        self.outline.compute(parent)
+
+        context.rect(*self.outline.rect)
+        context.stroke()
+        #then transform locally and render the UI element
+        context.save()
+        context.translate(self.outline.org.x,self.outline.org.y)
+        context.beginPath()
+        context.rect(10,10,self.outline.size.x-20,self.outline.size.y-20)
+
+        if self.selected:
+            context.fill()
+        else:
+            context.stroke()
+        context.beginPath()
+        context.textAlign(1<<4)
+        context.text(20.0, 20.0, self.label)
+        context.stroke()
+        context.restore()
+
+    cpdef handle_input(self,Input new_input,bint m_close):
+        global should_redraw
+
+        for b in new_input.buttons:
+            if  m_close and self.outline.mouse_over(new_input.m):
+                if b[1] == 1:
+                    new_input.buttons.remove(b)
+                    self.selected = True
+                    should_redraw = True
+            if self.selected and b[1] == 0:
+                new_input.buttons.remove(b)
+                self.selected = False
+                should_redraw = True
+                self.function()
+
+    property height:
+        def __get__(self):
+            return self.outline.size.y
+
 
 cdef class Draggable:
     '''
@@ -310,13 +473,13 @@ cdef class Draggable:
 
             if not self.zero_crossing:
                 if self.value.x >= 0 and self.value.x + self.drag_accumulator.x <= 0:
-                    self.drag_accumulator.x = 1 - self.value.x
+                    self.drag_accumulator.x = .001 - self.value.x
                 elif self.value.x <= 0 and self.value.x + self.drag_accumulator.x >= 0:
-                    self.drag_accumulator.x = -1 - self.value.x
+                    self.drag_accumulator.x = -.001 - self.value.x
                 if self.value.y >= 0 and self.value.y + self.drag_accumulator.y <= 0:
-                    self.drag_accumulator.y = 1 - self.value.y
+                    self.drag_accumulator.y = .001 - self.value.y
                 elif self.value.y <= 0 and self.value.y + self.drag_accumulator.y >= 0:
-                    self.drag_accumulator.y = -1 - self.value.y
+                    self.drag_accumulator.y = -.001 - self.value.y
 
             self.value += self.drag_accumulator
 
@@ -332,6 +495,9 @@ cdef class Draggable:
                     self.drag_accumulator = Vec2(0,0)
             if self.selected and b[1] == 0:
                 self.selected = False
+
+    cdef sync(self):
+        pass
 
 cdef class FitBox:
     '''
@@ -487,10 +653,13 @@ cdef class Input:
         self.dm.x = 0
         self.dm.y = 0
 
-cdef class Vec2:
-    cdef public int x,y
+    def __repr__(self):
+        return 'Current Input: \n   Mouse pos  : %s\n   Mouse delta: %s\n   Buttons: %s\n   Keys: %s\n   Chars: %s' %(self.m,self.dm,self.buttons,self.keys,self.chars)
 
-    def __cinit__(self,int x, int y):
+cdef class Vec2:
+    cdef public float x,y
+
+    def __cinit__(self,float x, float y):
         self.x = x
         self.y = y
 
@@ -515,6 +684,9 @@ cdef class Vec2:
         self.x -=other.x
         self.y -= other.y
         return self
+
+    def __repr__(self):
+        return 'x: %s y: %s'%(self.x,self.y)
 
 #cdef class Stack2(Vec2):
 #    cdef list stack

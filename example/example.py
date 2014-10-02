@@ -131,15 +131,20 @@ def demo():
     foo = t()
     foo.bar = 34
     foo.bur = 60
+    foo.mytext = 'change me!'
 
-    def print_bar(val):
+    def print_hello():
+        print 'hello'
+
+
+    def printer(val):
         print 'setting to :',val
 
 
     import ui
     gui = ui.UI()
     gui.update_window(width,height)
-    m = ui.Menu("MyMenu",pos=(-200,20),size=(-1,-20))
+    m = ui.Menu("MyMenu",pos=(-200,20),size=(0,-20))
     s = ui.StackBox()
 
     for x in range(5):
@@ -148,11 +153,13 @@ def demo():
     m.elements.append(s)
     gui.elements.append(m)
 
-    m = ui.Menu("MyMenu",pos=(400,200),size=(300,150))
+    m = ui.Menu("MyMenu",pos=(-400,-200),size=(300,150))
     s = ui.StackBox()
-    for x in range(5):
-        s.elements.append(ui.Slider("bur",foo))
+    for x in range(1):
+        s.elements.append(ui.Slider("bur",foo,setter=printer))
+        s.elements.append(ui.Button("Say Hi!",print_hello))
         s.elements.append(ui.Slider("bar",foo))
+        s.elements.append(ui.TextInput('mytext',foo,setter=printer))
     m.elements.append(s)
     gui.elements.append(m)
 
@@ -238,7 +245,7 @@ def demo():
         vg.endFrame()
         glfwSwapBuffers(window)
         glfwPollEvents()
-        time.sleep(.03)
+        # time.sleep(.03)
 
     vg.reset()
     glfwDestroyWindow(window)
