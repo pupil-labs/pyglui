@@ -76,7 +76,7 @@ def demo():
         gui.update_mouse(x,y)
 
     def on_scroll(window,x,y):
-        pass
+        gui.update_scroll(x,y)
 
     def on_close(window):
         global quit
@@ -147,13 +147,13 @@ def demo():
     m = ui.Menu("MySideBar",pos=(-200,20),size=(0,-20))
     s = ui.StackBox()
 
-    for x in range(5):
-        s.elements.append(ui.Slider("bar",foo))
-        s.elements.append(ui.Slider("bur",foo))
+    for x in range(20):
+        s.elements.append(ui.Slider("bar",foo,label="bar %s"%x))
+        s.elements.append(ui.Slider("bur",foo,label="bur %s"%x))
     m.elements.append(s)
     gui.elements.append(m)
 
-    m = ui.Menu("MyMenu",pos=(-400,-200),size=(300,150))
+    m = ui.Menu("MyMenu",pos=(400,200),size=(300,150))
     s = ui.StackBox()
     for x in range(1):
         s.elements.append(ui.Slider("bur",foo,setter=printer))

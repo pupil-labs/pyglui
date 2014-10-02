@@ -54,6 +54,11 @@ cdef class UI:
         self.window_size.x,self.window_size.y = w,h
         self.should_redraw = True
 
+    def update_scroll(self, sx,sy):
+        self.new_input.s.x = sx
+        self.new_input.s.y = sy
+
+
     def input_key(self, key, scancode, action, mods):
         self.new_input.keys.append((key,scancode,action,mods))
 
@@ -147,11 +152,11 @@ cdef class Menu:
         context.restore()
 
 
-    cpdef handle_input(self, Input new_input,bint m_close):
-        self.handlebar.handle_input(new_input,True)
-        self.resize_corner.handle_input(new_input,True)
+    cpdef handle_input(self, Input new_input,bint visible):
+        self.handlebar.handle_input(new_input,visible)
+        self.resize_corner.handle_input(new_input,visible)
         for e in self.elements:
-            e.handle_input(new_input,True)
+            e.handle_input(new_input,visible)
 
     cpdef sync(self):
         for e in self.elements:
@@ -187,12 +192,17 @@ cdef class StackBox:
 
     cpdef handle_input(self,Input new_input,visible=True):
         cdef bint mouse_over_menu = 0 <= new_input.m.y-self.outline.org.y <= +self.outline.size.y
+        mouse_over_menu  = mouse_over_menu and visible
         for e in self.elements:
             e.handle_input(new_input, mouse_over_menu)
         # handle scrollbar interaction after menu items
         # so grabbing a slider does not trigger scrolling
-        self.scrollbar.handle_input(new_input,True)
+        self.scrollbar.handle_input(new_input,visible)
 
+        #since this is one of the rare occasions where you could use the scrollwheel:
+        if visible and self.scrollbar.outline.mouse_over(new_input.m):
+            self.scrollstate.y += new_input.s.y * 3
+            new_input.s.y = 0
 
 
     cpdef draw(self,context,parent_size):
@@ -289,7 +299,7 @@ cdef class Slider:
         context.stroke()
         context.restore()
 
-    cpdef handle_input(self,Input new_input,bint m_close):
+    cpdef handle_input(self,Input new_input,bint visible):
         global should_redraw
 
         if self.selected and new_input.dm:
@@ -297,7 +307,7 @@ cdef class Slider:
             should_redraw = True
 
         for b in new_input.buttons:
-            if b[1] == 1 and m_close:
+            if b[1] == 1 and visible:
                 if mouse_over_center(self.slider_pos+self.outline.org,self.height,self.height,new_input.m):
                     new_input.buttons.remove(b)
                     self.selected = True
@@ -363,7 +373,7 @@ cdef class TextInput:
         context.stroke()
         context.restore()
 
-    cpdef handle_input(self,Input new_input,bint m_close):
+    cpdef handle_input(self,Input new_input,bint visible):
         global should_redraw
 
         if self.selected:
@@ -393,7 +403,7 @@ cdef class TextInput:
 
         else:
             for b in new_input.buttons:
-                if b[1] == 1 and m_close:
+                if b[1] == 1 and visible:
                     if self.textfield.mouse_over(new_input.m):
                         new_input.buttons.remove(b)
                         self.selected = True
@@ -456,11 +466,11 @@ cdef class Button:
         context.stroke()
         context.restore()
 
-    cpdef handle_input(self,Input new_input,bint m_close):
+    cpdef handle_input(self,Input new_input,bint visible):
         global should_redraw
 
         for b in new_input.buttons:
-            if  m_close and self.button.mouse_over(new_input.m):
+            if  visible and self.button.mouse_over(new_input.m):
                 if b[1] == 1:
                     new_input.buttons.remove(b)
                     self.selected = True
@@ -686,7 +696,7 @@ cdef class Input:
     '''
 
     cdef public list keys,chars,buttons
-    cdef Vec2 dm,m
+    cdef Vec2 dm,m,s
 
     def __cinit__(self):
         self.keys = []
@@ -694,12 +704,13 @@ cdef class Input:
         self.chars = []
         self.m = Vec2(0,0)
         self.dm = Vec2(0,0)
+        self.s = Vec2(0,0)
 
     def __init__(self):
         pass
 
     def __nonzero__(self):
-        return bool(self.keys or self.chars or self.buttons or self.dm)
+        return bool(self.keys or self.chars or self.buttons or self.dm or self.s)
 
     def purge(self):
         self.keys = []
@@ -707,9 +718,11 @@ cdef class Input:
         self.chars = []
         self.dm.x = 0
         self.dm.y = 0
+        self.s.x = 0
+        self.s.y = 0
 
     def __repr__(self):
-        return 'Current Input: \n   Mouse pos  : %s\n   Mouse delta: %s\n   Buttons: %s\n   Keys: %s\n   Chars: %s' %(self.m,self.dm,self.buttons,self.keys,self.chars)
+        return 'Current Input: \n   Mouse pos  : %s\n   Mouse delta: %s\n   Scroll: %s\n   Buttons: %s\n   Keys: %s\n   Chars: %s' %(self.m,self.dm,self.s,self.buttons,self.keys,self.chars)
 
 cdef class Vec2:
     cdef public float x,y
