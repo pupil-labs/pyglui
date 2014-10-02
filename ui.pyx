@@ -164,7 +164,7 @@ cdef class StackBox:
     cpdef draw(self,context,parent_size):
         self.outline.compute(parent_size)
 
-        #compute scroll stack height The stack elemets always have a fixed heigth.
+        #compute scroll stack height: The stack elemets always have a fixed heigth.
         h = sum([e.height for e in self.elements])
 
         #display that we have scrollable content
@@ -273,7 +273,7 @@ cdef class Slider:
 cdef class TextInput:
     cdef readonly bytes label
     cdef readonly long  uid
-    cdef public FitBox outline
+    cdef public FitBox outline,textfield
     cdef bint selected
     cdef Vec2 slider_pos
     cdef Synced_Value sync_val
@@ -286,6 +286,7 @@ cdef class TextInput:
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
         self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
+        self.textfield = FitBox(Vec2(10,10),Vec2(-10,-10))
         self.selected = False
         self.preview = str(self.sync_val.value)
         self.caret = len(self.preview)-1
@@ -300,20 +301,24 @@ cdef class TextInput:
     cpdef draw(self,context,FitBox parent):
         #update apperance:
         self.outline.compute(parent)
+        self.textfield.compute(self.outline)
 
         #then transform locally and render the UI element
         context.save()
-        context.translate(self.outline.org.x,self.outline.org.y)
+        context.beginPath()
+        context.rect(*self.textfield.rect)
+        context.stroke()
+        context.translate(self.textfield.org.x,self.textfield.org.y+self.textfield.size.y/2)
         context.beginPath()
         context.textAlign(1<<4)
-        context.text(20.0, 20.0, self.label)
+        context.text(0.0, 0.0, self.label)
 
         if self.selected:
             # TODO: the carot pos should be drawn
-            context.fontSize(26)
-            context.text(50.0, 20.0, self.preview)
+            context.fontSize(22)
+            context.text(50.0, 0.0, self.preview)
         else:
-            context.text(50.0, 20.0, self.sync_val.value)
+            context.text(50.0, 0.0, self.sync_val.value)
 
         context.stroke()
         context.restore()
@@ -326,7 +331,6 @@ cdef class TextInput:
                 self.preview = self.preview[:self.caret+1] + c + self.preview[self.caret+1:]
                 self.caret +=1
                 should_redraw = True
-
 
             for k in new_input.keys:
                 if k == (257,36,0,0): #Enter and key up:
@@ -350,11 +354,10 @@ cdef class TextInput:
         else:
             for b in new_input.buttons:
                 if b[1] == 1 and m_close:
-                    if self.outline.mouse_over(new_input.m):
+                    if self.textfield.mouse_over(new_input.m):
                         new_input.buttons.remove(b)
                         self.selected = True
                         should_redraw = True
-
 
     cdef finish_input(self):
         global should_redraw
@@ -373,6 +376,7 @@ cdef class Button:
     cdef readonly bytes label
     cdef readonly long  uid
     cdef public FitBox outline
+    cdef FitBox button
     cdef bint selected
     cdef object function
 
@@ -380,6 +384,7 @@ cdef class Button:
         self.uid = id(self)
         self.label = label
         self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
+        self.button = FitBox(Vec2(10,10),Vec2(-10,-10))
         self.selected = False
         self.function = setter
 
@@ -392,14 +397,14 @@ cdef class Button:
     cpdef draw(self,context,FitBox parent):
         #update apperance:
         self.outline.compute(parent)
+        self.button.compute(self.outline)
+
 
         context.rect(*self.outline.rect)
         context.stroke()
-        #then transform locally and render the UI element
         context.save()
-        context.translate(self.outline.org.x,self.outline.org.y)
         context.beginPath()
-        context.rect(10,10,self.outline.size.x-20,self.outline.size.y-20)
+        context.rect(*self.button.rect)
 
         if self.selected:
             context.fill()
@@ -415,7 +420,7 @@ cdef class Button:
         global should_redraw
 
         for b in new_input.buttons:
-            if  m_close and self.outline.mouse_over(new_input.m):
+            if  m_close and self.button.mouse_over(new_input.m):
                 if b[1] == 1:
                     new_input.buttons.remove(b)
                     self.selected = True
