@@ -1,3 +1,32 @@
+
+
+
+'''
+TODO:
+
+GL Backend and functions
+[ ] make gl.h pxd file
+[ ] implement shader based lines and points in gl backend
+[ ] add render to texture option if nessesay
+
+GL Fonts:
+[ ] Select and use GL Font lib
+
+UI features
+[ ] implement selector box
+[ ] implement toggle
+[ ] make menu move resize and minimize fn selectable and lockalbe in x or y
+[ ] design the UI and implement using gl calls above
+[ ] Optional: Add global UI scale option
+[ ] Implement Perf graph in cython
+
+Done:
+UI interaction
+UI layouting
+UI value syncing
+
+'''
+
 cdef class UI:
     '''
     The UI context for a glfw window.
@@ -68,29 +97,29 @@ cdef class Menu:
     Menu is a movable object on the canvas that contains other elements.
     '''
     cdef public list elements
-    cdef FitBox outline
+    cdef FitBox outline, element_space
     cdef public bint iconified
     cdef bytes label
     cdef long uid
     cdef Draggable handlebar, resize_corner
-    cdef Vec2 top_left_padding
 
     def __cinit__(self,label,pos=(0,0),size=(200,100)):
         self.uid = id(self)
         self.label = label
         self.outline = FitBox(position=Vec2(*pos),size=Vec2(*size))
-        self.top_left_padding = Vec2(20,0)
+        self.element_space = FitBox(position=Vec2(0,20),size=Vec2(0,-20))
+        arrest_axis = 0
+        self.handlebar = Draggable(Vec2(0,0),Vec2(0,20),self.outline.design_org,arrest_axis,zero_crossing = False)
+        self.resize_corner = Draggable(Vec2(-20,-20),Vec2(0,0),self.outline.design_size,arrest_axis,zero_crossing = False)
         self.elements = []
 
 
     def __init__(self,label,pos=(0,0),size=(200,100)):
-        arrest_axis = 0
-        self.handlebar = Draggable(Vec2(0,0),Vec2(20,0),self.outline.design_org,arrest_axis,False)
-        self.resize_corner = Draggable(Vec2(-20,-20),Vec2(0,0),self.outline.design_size,arrest_axis,False)
-
+        pass
 
     cpdef draw(self,context,parent_box):
         self.outline.compute(parent_box)
+        self.element_space.compute(self.outline)
 
         context.save()
         self.draw_menu(context)
@@ -99,18 +128,23 @@ cdef class Menu:
         self.resize_corner.draw(context,self.outline)
 
         #lets manually resize
-        self.outline.org += self.top_left_padding
-        self.outline.size -= self.top_left_padding
 
         for e in self.elements:
-            e.draw(context,self.outline)
+            e.draw(context,self.element_space)
 
         context.restore()
 
     cpdef draw_menu(self,context):
+        context.save()
         context.beginPath()
         context.rect(*self.outline.rect)
         context.stroke()
+        context.translate(self.outline.org.x,self.outline.org.y)
+        context.beginPath()
+        context.textAlign(1<<0)
+        context.text(10, -8.0, self.label)
+        context.stroke()
+        context.restore()
 
 
     cpdef handle_input(self, Input new_input,bint m_close):
@@ -142,7 +176,7 @@ cdef class StackBox:
     def __cinit__(self):
         self.outline = FitBox(Vec2(0,0),Vec2(0,0))
         self.scrollstate = Vec2(0,0)
-        self.scrollbar = Draggable(Vec2(0,0),Vec2(0,0),self.scrollstate,arrest_axis=1)
+        self.scrollbar = Draggable(Vec2(0,0),Vec2(0,0),self.scrollstate,arrest_axis=1,zero_crossing=True)
     def __init__(self):
         self.elements = []
 
@@ -164,7 +198,7 @@ cdef class StackBox:
     cpdef draw(self,context,parent_size):
         self.outline.compute(parent_size)
 
-        #compute scroll stack height: The stack elemets always have a fixed heigth.
+        #compute scroll stack height: The stack elemets always have a fixed height.
         h = sum([e.height for e in self.elements])
 
         #display that we have scrollable content
@@ -184,7 +218,7 @@ cdef class StackBox:
         if not self.scrollbar.selected:
             self.scrollstate.y = int(clamp(self.scrollstate.y,min(0,self.outline.size.y-h),0))
 
-        #The draggable may be invisible but it still need to compute size
+        #The draggable may be invisible but it still needs to compute size
         self.scrollbar.draw(context,self.outline)
 
         self.outline.org.y += self.scrollstate.y
@@ -194,6 +228,12 @@ cdef class StackBox:
 
         self.outline.org.y -= self.scrollstate.y
         self.outline.org.y -= h
+
+
+    property height:
+        def __get__(self):
+            raise Exception("Stackbox does not have a height. But it into a Menu.")
+
 
 
 cdef class Slider:

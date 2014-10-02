@@ -144,7 +144,7 @@ def demo():
     import ui
     gui = ui.UI()
     gui.update_window(width,height)
-    m = ui.Menu("MyMenu",pos=(-200,20),size=(0,-20))
+    m = ui.Menu("MySideBar",pos=(-200,20),size=(0,-20))
     s = ui.StackBox()
 
     for x in range(5):
@@ -158,7 +158,7 @@ def demo():
     for x in range(1):
         s.elements.append(ui.Slider("bur",foo,setter=printer))
         s.elements.append(ui.Button("Say Hi!",print_hello))
-        sm = ui.Menu("SubMenu",pos=(0,0),size=(0,100))
+        sm = ui.Menu("SubMenu",pos=(0,20),size=(0,100))
         ss= ui.StackBox()
         ss.elements.append(ui.Slider("bar",foo))
         ss.elements.append(ui.TextInput('mytext',foo,setter=printer))
@@ -198,7 +198,7 @@ def demo():
         vg.beginPath()
         vg.fillPaint(rg)
         vg.strokeColor(colorRGBAf(0.0,0.4,0.7,0.9))
-        vg.strokeWidth(2.)
+        vg.strokeWidth(1.)
         # if 0:
         #     vg.beginPath()
         #     vg.moveTo(0,0)
