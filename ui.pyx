@@ -1,5 +1,5 @@
 
-from cyOpenGL import cgl as gl
+from cyOpenGL cimport cgl as gl
 
 '''
 TODO:
