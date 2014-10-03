@@ -6,17 +6,15 @@ from distutils.extension import Extension
 from Cython.Build import cythonize
 
 if platform.system() == 'Darwin':
-	includes = []
+	includes = ['/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/']
 	f = '-framework'
-	link_args = [] # f, 'Cocoa', f, 'IOKit', f, 'CoreVideo'
+	link_args = [f, 'OpenGL']
 	libs = []
 else:
-    includes = []
-    libs = []
+    includes = ['/usr/include/GL',]
+    libs = ['GL']
     link_args = []
 
-
-# extra_objects=["../build/libnanovg.a"]
 
 extensions = [
 	Extension(	name="ui",
@@ -24,8 +22,6 @@ extensions = [
 				include_dirs = includes,
 				libraries = libs,
 				extra_link_args=link_args,
-				#backend is hardcoded. also look at the pyd and pyx files. ToDo: make this smart.
-				# use any of the following: NANOVG_GL2_IMPLEMENTATION,NANOVG_GL3_IMPLEMENTATION,NANOVG_GLES2_IMPLEMENTATION,NANOVG_GLES3_IMPLEMENTATION
 				extra_compile_args=[]),
 ]
 

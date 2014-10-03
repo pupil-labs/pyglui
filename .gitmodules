@@ -1,0 +1,3 @@
+[submodule "cyOpenGL"]
+	path = cyOpenGL
+	url = https://github.com/pupil-labs/cyOpenGL

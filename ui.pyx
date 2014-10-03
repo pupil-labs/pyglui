@@ -1,5 +1,5 @@
 
-
+from cyOpenGL import cgl as gl
 
 '''
 TODO:
@@ -83,6 +83,25 @@ cdef class UI:
             self.new_input.purge()
 
     cdef draw(self,context):
+
+
+        gl.glMatrixMode(gl.GL_PROJECTION)
+        gl.glLoadIdentity()
+        gl.glOrtho(0, self.window.size.x, self.window.size.y, 0, -1, 1);
+
+        # Switch back to Model View Matrix
+        gl.glMatrixMode(gl.GL_MODELVIEW)
+        gl.glLoadIdentity()
+
+
+        gl.glLineWidth(2)
+        gl.glColor4f(1.,0,0,1.)
+        gl.glBegin(gl.GL_LINES)
+        for x in range(1000):
+            gl.glVertex3f(x*3,500,0.0)
+            gl.glVertex3f(0,0,0.0)
+        gl.glEnd()
+
         global should_redraw
         cdef Menu e
         for e in self.elements:
@@ -712,7 +731,7 @@ cdef class FitBox:
             return self.org.x+self.size.x/2,self.org.y+self.size.y/2
 
     cdef bint mouse_over(self,Vec2 m):
-        return self.org.x <= m.x <=self.org.x+self.size.x and self.org.y <= m.y <=self.org.y+self.size.y
+        return self.org.x <= m.x <= self.org.x+self.size.x and self.org.y <= m.y <=self.org.y+self.size.y
 
 
 cdef class Synced_Value:

@@ -153,13 +153,17 @@ def demo():
     m.elements.append(s)
     gui.elements.append(m)
 
-    m = ui.Menu("MyMenu",pos=(400,200),size=(300,150))
+    m = ui.Menu("MyMenu",pos=(400,-200),size=(300,150))
     s = ui.StackBox()
     for x in range(1):
         s.elements.append(ui.Slider("bur",foo,setter=printer))
         s.elements.append(ui.Button("Say Hi!",print_hello))
         sm = ui.Menu("SubMenu",pos=(0,20),size=(0,100))
         ss= ui.StackBox()
+        ss.elements.append(ui.Slider("bar",foo))
+        ss.elements.append(ui.Slider("bar",foo))
+        ss.elements.append(ui.Slider("bar",foo))
+        ss.elements.append(ui.Slider("bar",foo))
         ss.elements.append(ui.Slider("bar",foo))
         ss.elements.append(ui.TextInput('mytext',foo,setter=printer))
         sm.elements.append(ss)
@@ -246,7 +250,7 @@ def demo():
         # vg.stroke()
         # vg.roundedRect(600,100,100,100,3)
 
-        vg.endFrame()
+        # vg.endFrame()
         glfwSwapBuffers(window)
         glfwPollEvents()
         # time.sleep(.03)
