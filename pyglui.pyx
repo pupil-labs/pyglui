@@ -1,6 +1,6 @@
 
-from cyOpenGL cimport cgl as gl
-from cyOpenGl cimport gl_utils
+cimport cgl as gl
+cimport gl_utils
 '''
 TODO:
 
@@ -28,6 +28,7 @@ UI layouting
 UI value syncing
 
 '''
+
 
 cdef class UI:
     '''
@@ -92,15 +93,7 @@ cdef class UI:
         # Switch back to Model View Matrix
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
-
-
-        gl.glLineWidth(2)
-        gl.glColor4f(1.,0,0,1.)
-        gl.glBegin(gl.GL_LINES)
-        for x in range(1000):
-            gl.glVertex3f(x*3,500,0.0)
-            gl.glVertex3f(0,0,0.0)
-        gl.glEnd()
+        gl_utils.test(1000)
 
         global should_redraw
         cdef Menu e

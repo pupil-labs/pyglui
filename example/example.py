@@ -13,10 +13,10 @@ width, height = (1000,600)
 
 
 def basic_gl_setup():
-    glEnable( GL_POINT_SPRITE )
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE) # overwrite pointsize
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-    glEnable(GL_BLEND)
+    # glEnable( GL_POINT_SPRITE )
+    # glEnable(GL_VERTEX_PROGRAM_POINT_SIZE) # overwrite pointsize
+    # glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    # glEnable(GL_BLEND)
     glClearColor(0., 0., 0., 1.0)
 
 def adjust_gl_view(w,h,window):
