@@ -17,8 +17,8 @@ else:
 
 
 extensions = [
-	Extension(	name="ui",
-				sources=['ui.pyx'],
+	Extension(	name="pyglui",
+				sources=['pyglui.pyx'],
 				include_dirs = includes,
 				libraries = libs,
 				extra_link_args=link_args,

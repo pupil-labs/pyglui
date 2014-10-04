@@ -141,7 +141,7 @@ def demo():
         print 'setting to :',val
 
 
-    import ui
+    import pyglui as ui
     gui = ui.UI()
     gui.update_window(width,height)
     m = ui.Menu("MySideBar",pos=(-200,20),size=(0,-20))
@@ -250,7 +250,7 @@ def demo():
         # vg.stroke()
         # vg.roundedRect(600,100,100,100,3)
 
-        # vg.endFrame()
+        vg.endFrame()
         glfwSwapBuffers(window)
         glfwPollEvents()
         # time.sleep(.03)

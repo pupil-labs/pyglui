@@ -1,6 +1,6 @@
 
 from cyOpenGL cimport cgl as gl
-from cyOpenGL cimport gl_utils
+from cyOpenGl cimport gl_utils
 '''
 TODO:
 
