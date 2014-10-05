@@ -13,11 +13,15 @@ width, height = (1000,600)
 
 
 def basic_gl_setup():
-    # glEnable( GL_POINT_SPRITE )
-    # glEnable(GL_VERTEX_PROGRAM_POINT_SIZE) # overwrite pointsize
-    # glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-    # glEnable(GL_BLEND)
-    glClearColor(0., 0., 0., 1.0)
+    glEnable( GL_POINT_SPRITE )
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE) # overwrite pointsize
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    glEnable(GL_BLEND)
+    glClearColor(.8,.8,.8,1.)
+    glEnable(GL_LINE_SMOOTH)
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
+    # glEnable(GL_POINT_SMOOTH)
+
 
 def adjust_gl_view(w,h,window):
     """
@@ -33,8 +37,8 @@ def adjust_gl_view(w,h,window):
 
 
 def clear_gl_screen():
-    glClearColor(0.7, 0.7, 0.7, 1.0)
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT)
+
+    glClear(GL_COLOR_BUFFER_BIT)
 
 
 def demo():
@@ -98,10 +102,11 @@ def demo():
     glfwSetMouseButtonCallback(window,on_button)
     glfwSetCursorPosCallback(window,on_pos)
     glfwSetScrollCallback(window,on_scroll)
-    basic_gl_setup()
+
 
     # glfwSwapInterval(0)
     glfwMakeContextCurrent(window)
+    basic_gl_setup()
 
     class t(object):
         pass
