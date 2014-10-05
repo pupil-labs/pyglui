@@ -93,8 +93,11 @@ cdef class UI:
         gl.glLoadIdentity()
         #gl_utils.test(10000)
         global should_redraw
+        global window_size
+        window_size = self.window.size
         cdef Menu e
         for e in self.elements:
+            win_height =  self.window.size.y
             e.draw(context,self.window)
         should_redraw = True
 
@@ -131,7 +134,7 @@ cdef class Menu:
     def __init__(self,label,pos=(0,0),size=(200,100)):
         pass
 
-    cpdef draw(self,context,parent_box):
+    cpdef draw(self,context,FitBox parent_box):
         self.outline.compute(parent_box)
         self.element_space.compute(self.outline)
 
@@ -149,16 +152,10 @@ cdef class Menu:
         #context.restore()
 
     cpdef draw_menu(self,context):
-        #context.save()
-        #context.beginPath()
         self.outline.sketch()
-        #context.stroke()
-        #context.translate(self.outline.org.x,self.outline.org.y)
-        #context.beginPath()
         #context.textAlign(1<<0)
         #context.text(10, -8.0, self.label)
-        #context.stroke()
-        #context.restore()
+
 
 
     cpdef handle_input(self, Input new_input,bint visible):
@@ -173,7 +170,7 @@ cdef class Menu:
 
     property height:
         def __get__(self):
-            return self.outline.size.y
+            return self.outline.size.y+self.outline.design_org.y
 
 
 
@@ -214,7 +211,7 @@ cdef class StackBox:
             new_input.s.y = 0
 
 
-    cpdef draw(self,context,parent_size):
+    cpdef draw(self,context,FitBox parent_size):
         self.outline.compute(parent_size)
 
         #compute scroll stack height: The stack elemets always have a fixed height.
@@ -230,23 +227,21 @@ cdef class StackBox:
             self.outline.size.x -=20
 
 
-
+        # dont show the stuff that does not fit.
         gl.glPushAttrib(gl.GL_SCISSOR_BIT)
         gl.glEnable(gl.GL_SCISSOR_TEST)
-        # dont show the stuff that does not fit.
         cdef int sb[4]
+        global window_size
         gl.glGetIntegerv(gl.GL_SCISSOR_BOX,sb)
-        sb[1] = 600-sb[1]-sb[3] # y-flipped coord system
+        sb[1] = window_size.y-sb[1]-sb[3] # y-flipped coord system
         #deal with nested scissors
-        cdef float top_x = max(sb[0],self.outline.org.x)
-        cdef float low_x = min(sb[0]+sb[2],self.outline.org.x+self.outline.size.x)
-        low_x = max(0,low_x-self.outline.org.x)
-        cdef float top_y = max(sb[1],self.outline.org.y)
-        cdef float low_y = min(sb[1]+sb[3],self.outline.org.y+self.outline.size.y)
-        low_y = max(0,low_y-self.outline.org.y)
-
-        gl.glScissor(int(top_x),600-int(top_y)-int(low_y),int(low_x),int(low_y))
-
+        cdef float org_x = max(sb[0],self.outline.org.x)
+        cdef float size_x = min(sb[0]+sb[2],self.outline.org.x+self.outline.size.x)
+        size_x = max(0,size_x-org_x)
+        cdef float org_y = max(sb[1],self.outline.org.y)
+        cdef float size_y = min(sb[1]+sb[3],self.outline.org.y+self.outline.size.y)
+        size_y = max(0,size_y-org_y)
+        gl.glScissor(int(org_x),window_size.y-int(org_y)-int(size_y),int(size_x),int(size_y))
 
 
         #If the scollbar is not active make sure the content is not scrolled away:
@@ -278,7 +273,7 @@ cdef class Slider:
     cdef readonly bytes label
     cdef readonly long  uid
     cdef float minimum,maximum,step
-    cdef public FitBox outline
+    cdef public FitBox outline,field
     cdef bint selected
     cdef Vec2 slider_pos
     cdef Synced_Value sync_val
@@ -291,6 +286,7 @@ cdef class Slider:
         self.maximum = max
         self.step = step
         self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
+        self.field = FitBox(Vec2(20,10),Vec2(-20,-10))
         self.slider_pos = Vec2(0,20)
         self.selected = False
 
@@ -304,11 +300,21 @@ cdef class Slider:
     cpdef draw(self,context,FitBox parent):
         #update apperance:
         self.outline.compute(parent)
+        self.field.compute(self.outline)
 
         # map slider value
-        self.slider_pos.x = int( clampmap(self.sync_val.value,self.minimum,self.maximum,0,self.outline.size.x) )
+        self.slider_pos.x = int( clampmap(self.sync_val.value,self.minimum,self.maximum,0,self.field.size.x) )
         #context.beginPath()
         self.outline.sketch()
+        self.field.sketch()
+
+
+        gl.glPushMatrix()
+        gl.glTranslatef(self.field.org.x,self.field.org.y,0)
+        cdef FitBox s = FitBox(Vec2(self.slider_pos.x-10,0),Vec2(20,20))
+        s.sketch()
+        gl.glPopMatrix()
+
         #context.stroke()
         #then transform locally and render the UI element
         #context.save()
@@ -331,12 +337,12 @@ cdef class Slider:
         global should_redraw
 
         if self.selected and new_input.dm:
-            self.sync_val.value = clampmap(new_input.m.x-self.outline.org.x,0,self.outline.size.x,self.minimum,self.maximum)
+            self.sync_val.value = clampmap(new_input.m.x-self.field.org.x,0,self.field.size.x,self.minimum,self.maximum)
             should_redraw = True
 
         for b in new_input.buttons:
             if b[1] == 1 and visible:
-                if mouse_over_center(self.slider_pos+self.outline.org,self.height,self.height,new_input.m):
+                if mouse_over_center(self.slider_pos+self.field.org,self.height,self.height,new_input.m):
                     new_input.buttons.remove(b)
                     self.selected = True
                     should_redraw = True
@@ -487,7 +493,7 @@ cdef class TextInput:
             for k in new_input.keys:
                 if k == (257,36,0,0): #Enter and key up:
                     self.finish_input()
-                elif k == (259,51,0,0): #Delete and key up:
+                elif k == (259,51,0,0) or k ==(259,51,2,0): #Delete and key up:
                     self.preview = self.preview[:self.caret] + self.preview[self.caret+1:]
                     self.caret -=1
                     self.caret = max(0,self.caret)
