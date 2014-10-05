@@ -89,7 +89,6 @@ def demo():
     glfwInit()
     window = glfwCreateWindow(width, height, "Python NanoVG Demo", None, None)
     glfwSetWindowPos(window,0,0)
-
     # Register callbacks window
     glfwSetWindowSizeCallback(window,on_resize)
     glfwSetWindowCloseCallback(window,on_close)
@@ -99,31 +98,10 @@ def demo():
     glfwSetMouseButtonCallback(window,on_button)
     glfwSetCursorPosCallback(window,on_pos)
     glfwSetScrollCallback(window,on_scroll)
-
-
     basic_gl_setup()
 
     # glfwSwapInterval(0)
     glfwMakeContextCurrent(window)
-
-    # vg = nanovg.Context()
-    import nanovg
-    nanovg.create_shared_context() # only needs to be called once per process.
-    from nanovg import vg, colorRGBAf,GRAPH_RENDER_FPS,GRAPH_RENDER_PERCENT
-    vg.createFont("sans", "Roboto-Regular.ttf")
-
-    img = vg.createImage("../nanovg/example/images/image2.jpg", 0)
-
-    pos = np.arange(0,2000,.1,dtype=np.float)
-    print len(pos)
-    pos = np.vstack((pos*5,2*pos+(np.sin(pos)*100))).T
-    print pos.shape
-
-    fps = nanovg.Graph(vg,GRAPH_RENDER_FPS,"Framerate")
-    fps.pos= (20,20)
-    cpu = nanovg.Graph(vg,GRAPH_RENDER_PERCENT,"CPU load of Process")
-    cpu.pos = (240,20)
-    ts = time.time()
 
     class t(object):
         pass
@@ -147,7 +125,7 @@ def demo():
     m = ui.Menu("MySideBar",pos=(-200,20),size=(0,-20))
     s = ui.StackBox()
 
-    for x in range(20):
+    for x in range(100):
         s.elements.append(ui.Slider("bar",foo,label="bar %s"%x))
         s.elements.append(ui.Slider("bur",foo,label="bur %s"%x))
     m.elements.append(s)
@@ -189,79 +167,16 @@ def demo():
         clear_gl_screen()
         # show some nanovg graphics
 
-        vg.beginFrame(width, height, float(width)/float(height))
-        # draw_lines(0.,0.,100.)
-        # res = vg.textBounds(0.0, 0.0, "here is my text", "t")
-        vg.save()
-        _dt = 0
+        gui.update(None)
 
-        p = vg.linearGradient(0.0, 0.0, 1000.0, 600.0, colorRGBAf(0.0,0.0,1.0,1.0), colorRGBAf(0.,1.,0.2,0.5))
-        rg = vg.radialGradient(0.0, 0.0, 100.0, 120.0, colorRGBAf(0.0,0.0,1.0,1.0), colorRGBAf(0.,1.,0.2,0.5))
-        vg.beginPath()
-        vg.fillColor(colorRGBAf(0.2,0.2,0.2,0.4))
-        vg.roundedRect(10.0, 10.0, 490.0, 290.0, 5.0)
+        foo.bar += .1
+        if foo.bar >= 100:
+            foo.bar = 0
 
-        vg.fillPaint(p)
-        vg.fill()
-
-        rg = vg.linearGradient(500.0, 300.0, 100.0, 200.0, colorRGBAf(0.0,0.0,0.0,0.0), colorRGBAf(0.,1.,0.2,0.5))
-        vg.beginPath()
-        vg.fillPaint(rg)
-        vg.strokeColor(colorRGBAf(0.0,0.4,0.7,0.9))
-        vg.strokeWidth(1.)
-        # if 0:
-        #     vg.beginPath()
-        #     vg.moveTo(0,0)
-        #     for x,y in pos:
-        #         vg.lineTo(x,y)
-        # else:
-        #     # pass
-        #     vg.Polyline(pos)
-
-        # vg.fill()
-        # vg.stroke()
-        # import loaded_module
-        # loaded_module.draw()
-        # # test font rendering
-        txt = "Hello World - Python NanoVG bindings."
-        # # print vg.textBounds(0,0,txt)
-        # # print vg.textMetrics(1.)
-        # # print vg.textBreakLines(txt)
-
-        vg.fontFace("bold")
-        vg.fontSize(24.0)
-        vg.fillColor(colorRGBAf(1.,0.,0.,1.))
-        # vg.text(15.0, 30.0, txt)
-
-        vg.fontFace("regular")
-        vg.fillColor(colorRGBAf(1.,1.,1.,1.))
-        # vg.text(15.0, 50.0, txt)
-
-
-
-        # dt,ts = time.time()-ts,time.time()
-        # # print dt
-        # fps.update(dt)
-        # fps.render()
-
-        # # print foo.bar
-        # # print foo.bur
-        # pct = ps.get_cpu_percent()
-        # # pct = psutil.cpu_percent()
-        # cpu.update(pct)
-        # cpu.render()
-
-        gui.update(vg)
-        # print foo.bar
-        # vg.stroke()
-        # vg.roundedRect(600,100,100,100,3)
-
-        # vg.endFrame()
         glfwSwapBuffers(window)
         glfwPollEvents()
         # time.sleep(.03)
 
-    vg.reset()
     glfwDestroyWindow(window)
     glfwTerminate()
     logger.debug("Process done")
