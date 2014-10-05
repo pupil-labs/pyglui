@@ -158,6 +158,9 @@ def demo():
     for x in range(1):
         s.elements.append(ui.Slider("bur",foo,setter=printer))
         s.elements.append(ui.Button("Say Hi!",print_hello))
+        s.elements.append(ui.Button("Say Hi!",print_hello))
+
+        s.elements.append(ui.Button("Say Hi!",print_hello))
         sm = ui.Menu("SubMenu",pos=(0,20),size=(0,100))
         ss= ui.StackBox()
         ss.elements.append(ui.Slider("bar",foo))
@@ -168,6 +171,9 @@ def demo():
         ss.elements.append(ui.TextInput('mytext',foo,setter=printer))
         sm.elements.append(ss)
         s.elements.append(sm)
+        s.elements.append(ui.Button("Say Hi!",print_hello))
+        s.elements.append(ui.Button("Say Hi!",print_hello))
+        s.elements.append(ui.Button("Say Hi!",print_hello))
     m.elements.append(s)
     gui.elements.append(m)
 
@@ -233,24 +239,24 @@ def demo():
 
 
 
-        dt,ts = time.time()-ts,time.time()
-        # print dt
-        fps.update(dt)
-        fps.render()
+        # dt,ts = time.time()-ts,time.time()
+        # # print dt
+        # fps.update(dt)
+        # fps.render()
 
-        # print foo.bar
-        # print foo.bur
-        pct = ps.get_cpu_percent()
-        # pct = psutil.cpu_percent()
-        cpu.update(pct)
-        cpu.render()
+        # # print foo.bar
+        # # print foo.bur
+        # pct = ps.get_cpu_percent()
+        # # pct = psutil.cpu_percent()
+        # cpu.update(pct)
+        # cpu.render()
 
         gui.update(vg)
         # print foo.bar
         # vg.stroke()
         # vg.roundedRect(600,100,100,100,3)
 
-        vg.endFrame()
+        # vg.endFrame()
         glfwSwapBuffers(window)
         glfwPollEvents()
         # time.sleep(.03)

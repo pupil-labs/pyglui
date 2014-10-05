@@ -5,7 +5,7 @@ cimport gl_utils
 TODO:
 
 GL Backend and functions
-[ ] make gl.h pxd file
+[x] make gl.h pxd file
 [ ] implement shader based lines and points in gl backend
 [ ] add render to texture option if nessesay
 
@@ -89,12 +89,9 @@ cdef class UI:
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadIdentity()
         gl.glOrtho(0, self.window.size.x, self.window.size.y, 0, -1, 1);
-
-        # Switch back to Model View Matrix
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
-        gl_utils.test(1000)
-
+        #gl_utils.test(10000)
         global should_redraw
         cdef Menu e
         for e in self.elements:
@@ -138,7 +135,7 @@ cdef class Menu:
         self.outline.compute(parent_box)
         self.element_space.compute(self.outline)
 
-        context.save()
+        #context.save()
         self.draw_menu(context)
 
         self.handlebar.draw(context,self.outline)
@@ -149,19 +146,19 @@ cdef class Menu:
         for e in self.elements:
             e.draw(context,self.element_space)
 
-        context.restore()
+        #context.restore()
 
     cpdef draw_menu(self,context):
-        context.save()
-        context.beginPath()
-        context.rect(*self.outline.rect)
-        context.stroke()
-        context.translate(self.outline.org.x,self.outline.org.y)
-        context.beginPath()
-        context.textAlign(1<<0)
-        context.text(10, -8.0, self.label)
-        context.stroke()
-        context.restore()
+        #context.save()
+        #context.beginPath()
+        self.outline.sketch()
+        #context.stroke()
+        #context.translate(self.outline.org.x,self.outline.org.y)
+        #context.beginPath()
+        #context.textAlign(1<<0)
+        #context.text(10, -8.0, self.label)
+        #context.stroke()
+        #context.restore()
 
 
     cpdef handle_input(self, Input new_input,bint visible):
@@ -227,13 +224,29 @@ cdef class StackBox:
         if h:
             scroll_factor = float(self.outline.size.y)/h
         else:
-            scroll_factor = 2
+            scroll_factor = 1
 
         if scroll_factor < 1:
             self.outline.size.x -=20
 
+
+
+        gl.glPushAttrib(gl.GL_SCISSOR_BIT)
+        gl.glEnable(gl.GL_SCISSOR_TEST)
         # dont show the stuff that does not fit.
-        context.scissor(*self.outline.rect)
+        cdef int sb[4]
+        gl.glGetIntegerv(gl.GL_SCISSOR_BOX,sb)
+        sb[1] = 600-sb[1]-sb[3] # y-flipped coord system
+        #deal with nested scissors
+        cdef float top_x = max(sb[0],self.outline.org.x)
+        cdef float low_x = min(sb[0]+sb[2],self.outline.org.x+self.outline.size.x)
+        low_x = max(0,low_x-self.outline.org.x)
+        cdef float top_y = max(sb[1],self.outline.org.y)
+        cdef float low_y = min(sb[1]+sb[3],self.outline.org.y+self.outline.size.y)
+        low_y = max(0,low_y-self.outline.org.y)
+
+        gl.glScissor(int(top_x),600-int(top_y)-int(low_y),int(low_x),int(low_y))
+
 
 
         #If the scollbar is not active make sure the content is not scrolled away:
@@ -251,10 +264,13 @@ cdef class StackBox:
         self.outline.org.y -= self.scrollstate.y
         self.outline.org.y -= h
 
+        #restore scissor state
+        gl.glPopAttrib()
+
 
     property height:
         def __get__(self):
-            raise Exception("Stackbox does not have a height. But it into a Menu.")
+            raise Exception("Stackbox does not have a height. Put it into a Menu.")
 
 
 
@@ -291,25 +307,25 @@ cdef class Slider:
 
         # map slider value
         self.slider_pos.x = int( clampmap(self.sync_val.value,self.minimum,self.maximum,0,self.outline.size.x) )
-        context.beginPath()
-        context.rect(*self.outline.rect)
-        context.stroke()
+        #context.beginPath()
+        self.outline.sketch()
+        #context.stroke()
         #then transform locally and render the UI element
-        context.save()
-        context.translate(self.outline.org.x,self.outline.org.y)
-        context.beginPath()
-        context.textAlign(1<<4)
-        context.text(20.0, 20.0, self.label)
+        #context.save()
+        #context.translate(self.outline.org.x,self.outline.org.y)
+        #context.beginPath()
+        #context.textAlign(1<<4)
+        #context.text(20.0, 20.0, self.label)
 
-        if self.selected:
-            context.circle(self.slider_pos.x,self.slider_pos.y,14)
-        else:
-            context.circle(self.slider_pos.x,self.slider_pos.y,18)
-        context.textAlign(1<<1 | 1<<4)
-        context.text(self.slider_pos.x,self.slider_pos.y, str(self.sync_val.value))
+        #if self.selected:
+            #context.circle(self.slider_pos.x,self.slider_pos.y,14)
+        #else:
+            #context.circle(self.slider_pos.x,self.slider_pos.y,18)
+        #context.textAlign(1<<1 | 1<<4)
+        #context.text(self.slider_pos.x,self.slider_pos.y, str(self.sync_val.value))
 
-        context.stroke()
-        context.restore()
+        #context.stroke()
+        #context.restore()
 
     cpdef handle_input(self,Input new_input,bint visible):
         global should_redraw
@@ -364,25 +380,25 @@ cdef class Selector:
         #update apperance:
         self.outline.compute(parent)
         self.field.compute(self.outline)
-        context.beginPath()
-        context.rect(*self.outline.rect)
-        context.stroke()
+        #context.beginPath()
+        self.outline.sketch()
+        #context.stroke()
         #then transform locally and render the UI element
-        context.save()
-        context.translate(self.outline.org.x,self.outline.org.y)
-        context.beginPath()
-        context.textAlign(1<<4)
-        context.text(20.0, 20.0, self.label)
+        #context.save()
+        #context.translate(self.outline.org.x,self.outline.org.y)
+        #context.beginPath()
+        #context.textAlign(1<<4)
+        #context.text(20.0, 20.0, self.label)
 
-        if self.selected:
-            context.circle(self.slider_pos.x,self.slider_pos.y,14)
-        else:
-            context.circle(self.slider_pos.x,self.slider_pos.y,18)
-        context.textAlign(1<<1 | 1<<4)
-        context.text(self.slider_pos.x,self.slider_pos.y, str(self.sync_val.value))
+        #if self.selected:
+            #context.circle(self.slider_pos.x,self.slider_pos.y,14)
+        #else:
+            #context.circle(self.slider_pos.x,self.slider_pos.y,18)
+        #context.textAlign(1<<1 | 1<<4)
+        #context.text(self.slider_pos.x,self.slider_pos.y, str(self.sync_val.value))
 
-        context.stroke()
-        context.restore()
+        #context.stroke()
+        #context.restore()
 
     cpdef handle_input(self,Input new_input,bint visible):
         global should_redraw
@@ -440,24 +456,24 @@ cdef class TextInput:
         self.textfield.compute(self.outline)
 
         #then transform locally and render the UI element
-        context.save()
-        context.beginPath()
-        context.rect(*self.textfield.rect)
-        context.stroke()
-        context.translate(self.textfield.org.x,self.textfield.org.y+self.textfield.size.y/2)
-        context.beginPath()
-        context.textAlign(1<<4)
-        context.text(0.0, 0.0, self.label)
+        #context.save()
+        #context.beginPath()
+        self.textfield.sketch()
+        #context.stroke()
+        #context.translate(self.textfield.org.x,self.textfield.org.y+self.textfield.size.y/2)
+        #context.beginPath()
+        #context.textAlign(1<<4)
+        #context.text(0.0, 0.0, self.label)
 
-        if self.selected:
+        #if self.selected:
             # TODO: the carot pos should be drawn
-            context.fontSize(22)
-            context.text(50.0, 0.0, self.preview)
-        else:
-            context.text(50.0, 0.0, self.sync_val.value)
+            #context.fontSize(22)
+            #context.text(50.0, 0.0, self.preview)
+        #else:
+            #context.text(50.0, 0.0, self.sync_val.value)
 
-        context.stroke()
-        context.restore()
+        #context.stroke()
+        #context.restore()
 
     cpdef handle_input(self,Input new_input,bint visible):
         global should_redraw
@@ -536,21 +552,21 @@ cdef class Button:
         self.button.compute(self.outline)
 
 
-        context.rect(*self.outline.rect)
-        context.stroke()
-        context.save()
-        context.beginPath()
-        context.rect(*self.button.rect)
+        self.outline.sketch()
+        #context.stroke()
+        #context.save()
+        #context.beginPath()
+        self.button.sketch()
 
-        if self.selected:
-            context.fill()
-        else:
-            context.stroke()
-        context.beginPath()
-        context.textAlign(1<<4)
-        context.text(20.0, 20.0, self.label)
-        context.stroke()
-        context.restore()
+        #if self.selected:
+            #context.fill()
+        #else:
+            #context.stroke()
+        #context.beginPath()
+        #context.textAlign(1<<4)
+        #context.text(20.0, 20.0, self.label)
+        #context.stroke()
+        #context.restore()
 
     cpdef handle_input(self,Input new_input,bint visible):
         global should_redraw
@@ -598,9 +614,9 @@ cdef class Draggable:
 
     cdef draw(self,context, FitBox parent_size):
         self.outline.compute(parent_size)
-        context.beginPath()
-        context.rect(*self.outline.rect)
-        context.stroke()
+        #context.beginPath()
+        self.outline.sketch()
+        #context.stroke()
 
     cdef handle_input(self,Input new_input, bint visible):
         global should_redraw
@@ -726,6 +742,13 @@ cdef class FitBox:
     cdef bint mouse_over(self,Vec2 m):
         return self.org.x <= m.x <= self.org.x+self.size.x and self.org.y <= m.y <=self.org.y+self.size.y
 
+    def __repr__(self):
+        return "Fitbox:\n   design org: %s size: %s\n   comptd org: %s size: %s"%(self.design_org,self.design_size,self.org,self.size)
+
+    cdef sketch(self):
+        gl_utils.rect(self.org,self.size)
+
+
 
 cdef class Synced_Value:
     '''
@@ -812,7 +835,7 @@ cdef class Input:
         return 'Current Input: \n   Mouse pos  : %s\n   Mouse delta: %s\n   Scroll: %s\n   Buttons: %s\n   Keys: %s\n   Chars: %s' %(self.m,self.dm,self.s,self.buttons,self.keys,self.chars)
 
 cdef class Vec2:
-    cdef public float x,y
+    #cdef public float x,y declared in pyglui.pxd
 
     def __cinit__(self,float x, float y):
         self.x = x
@@ -860,6 +883,9 @@ cdef class Vec2:
 #        cdef Vec2 vec = self.stack.pop()
 #        self.x = vec.x
 #        self.y = vec.y
+
+
+
 
 
 
