@@ -1,6 +1,4 @@
-[submodule "cyOpenGL"]
-	path = cyOpenGL
-	url = https://github.com/pupil-labs/cyOpenGL
+
 [submodule "pyglui/cygl"]
 	path = pyglui/cygl
-	url = https://github.com/mkassner/cygl/
+	url = https://github.com/pupil-labs/cygl/
