@@ -57,6 +57,8 @@ cdef class UI:
     def update_window(self,w,h):
         self.window.size.x,self.window.size.y = w,h
         self.should_redraw = True
+        gl.glScissor(0,0,int(w),int(h))
+
 
     def update_scroll(self, sx,sy):
         self.new_input.s.x = sx

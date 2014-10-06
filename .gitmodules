@@ -2,3 +2,6 @@
 [submodule "pyglui/cygl"]
 	path = pyglui/cygl
 	url = https://github.com/pupil-labs/cygl/
+[submodule "pyglui/pyfontstash"]
+	path = pyglui/pyfontstash
+	url = https://github.com/pupil-labs/pyfontstash
