@@ -84,7 +84,7 @@ cdef class UI:
                 e.handle_input(self.new_input,True)
             self.new_input.purge()
 
-    cdef draw(self,context):
+    cdef draw(self):
 
 
         gl.glMatrixMode(gl.GL_PROJECTION)
@@ -100,15 +100,15 @@ cdef class UI:
         cdef Menu e
         for e in self.elements:
             win_height =  self.window.size.y
-            e.draw(context,self.window)
+            e.draw(self.window)
         should_redraw = True
 
-    def update(self,context):
+    def update(self):
         global should_redraw
         self.handle_input()
         self.sync()
         if should_redraw:
-            self.draw(context)
+            self.draw()
 
 
 cdef class Menu:
@@ -136,24 +136,24 @@ cdef class Menu:
     def __init__(self,label,pos=(0,0),size=(200,100)):
         pass
 
-    cpdef draw(self,context,FitBox parent_box):
+    cpdef draw(self,FitBox parent_box):
         self.outline.compute(parent_box)
         self.element_space.compute(self.outline)
 
         #context.save()
-        self.draw_menu(context)
+        self.draw_menu()
 
-        self.handlebar.draw(context,self.outline)
-        self.resize_corner.draw(context,self.outline)
+        self.handlebar.draw(self.outline)
+        self.resize_corner.draw(self.outline)
 
         #lets manually resize
 
         for e in self.elements:
-            e.draw(context,self.element_space)
+            e.draw(self.element_space)
 
         #context.restore()
 
-    cpdef draw_menu(self,context):
+    cpdef draw_menu(self):
         self.outline.sketch()
         #context.textAlign(1<<0)
         #context.text(10, -8.0, self.label)
@@ -213,7 +213,7 @@ cdef class StackBox:
             new_input.s.y = 0
 
 
-    cpdef draw(self,context,FitBox parent_size):
+    cpdef draw(self,FitBox parent_size):
         self.outline.compute(parent_size)
 
         # dont show the stuff that does not fit.
@@ -234,7 +234,7 @@ cdef class StackBox:
 
 
         #The draggable may be invisible but it still needs to compute size
-        self.scrollbar.draw(context,self.outline)
+        self.scrollbar.draw(self.outline)
 
         #compute scroll stack height: The stack elemets always have a fixed height.
         h = sum([e.height for e in self.elements])
@@ -256,7 +256,7 @@ cdef class StackBox:
 
         self.outline.org.y += self.scrollstate.y
         for e in self.elements:
-            e.draw(context,self.outline)
+            e.draw(self.outline)
             self.outline.org.y+= e.height
 
         self.outline.org.y -= self.scrollstate.y
@@ -300,7 +300,7 @@ cdef class Slider:
     cpdef sync(self):
         self.sync_val.sync()
 
-    cpdef draw(self,context,FitBox parent):
+    cpdef draw(self,FitBox parent):
         #update apperance:
         self.outline.compute(parent)
         self.field.compute(self.outline)
@@ -384,7 +384,7 @@ cdef class Selector:
     cpdef sync(self):
         self.sync_val.sync()
 
-    cpdef draw(self,context,FitBox parent):
+    cpdef draw(self,FitBox parent):
         #update apperance:
         self.outline.compute(parent)
         self.field.compute(self.outline)
@@ -458,7 +458,7 @@ cdef class TextInput:
     cpdef sync(self):
         self.sync_val.sync()
 
-    cpdef draw(self,context,FitBox parent):
+    cpdef draw(self,FitBox parent):
         #update apperance:
         self.outline.compute(parent)
         self.textfield.compute(self.outline)
@@ -554,7 +554,7 @@ cdef class Button:
     cpdef sync(self):
         pass
 
-    cpdef draw(self,context,FitBox parent):
+    cpdef draw(self,FitBox parent):
         #update apperance:
         self.outline.compute(parent)
         self.button.compute(self.outline)
@@ -620,7 +620,7 @@ cdef class Draggable:
     def __init__(self,Vec2 pos, Vec2 size, Vec2 value, arrest_axis = 0,zero_crossing=True):
         pass
 
-    cdef draw(self,context, FitBox parent_size):
+    cdef draw(self, FitBox parent_size):
         self.outline.compute(parent_size)
         #context.beginPath()
         self.outline.sketch()

@@ -130,7 +130,7 @@ def demo():
     m = ui.Menu("MySideBar",pos=(-200,20),size=(0,-20))
     s = ui.StackBox()
 
-    for x in range(100):
+    for x in range(10):
         s.elements.append(ui.Slider("bar",foo,label="bar %s"%x))
         s.elements.append(ui.Slider("bur",foo,label="bur %s"%x))
     m.elements.append(s)
@@ -172,7 +172,7 @@ def demo():
         clear_gl_screen()
         # show some nanovg graphics
 
-        gui.update(None)
+        gui.update()
 
         foo.bar += .5
         if foo.bar >= 100:
