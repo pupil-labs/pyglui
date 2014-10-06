@@ -1,6 +1,7 @@
 
-cimport cgl as gl
-cimport gl_utils
+from cygl cimport cgl as gl
+from cygl cimport utils
+cimport gldraw
 '''
 TODO:
 
@@ -91,6 +92,7 @@ cdef class UI:
         gl.glOrtho(0, self.window.size.x, self.window.size.y, 0, -1, 1);
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
+        utils.hello(1000)
         #gl_utils.test(10000)
         global should_redraw
         global window_size
@@ -214,19 +216,6 @@ cdef class StackBox:
     cpdef draw(self,context,FitBox parent_size):
         self.outline.compute(parent_size)
 
-        #compute scroll stack height: The stack elemets always have a fixed height.
-        h = sum([e.height for e in self.elements])
-
-        #display that we have scrollable content
-        if h:
-            scroll_factor = float(self.outline.size.y)/h
-        else:
-            scroll_factor = 1
-
-        if scroll_factor < 1:
-            self.outline.size.x -=20
-
-
         # dont show the stuff that does not fit.
         gl.glPushAttrib(gl.GL_SCISSOR_BIT)
         gl.glEnable(gl.GL_SCISSOR_TEST)
@@ -244,12 +233,26 @@ cdef class StackBox:
         gl.glScissor(int(org_x),window_size.y-int(org_y)-int(size_y),int(size_x),int(size_y))
 
 
-        #If the scollbar is not active make sure the content is not scrolled away:
-        if not self.scrollbar.selected:
-            self.scrollstate.y = int(clamp(self.scrollstate.y,min(0,self.outline.size.y-h),0))
-
         #The draggable may be invisible but it still needs to compute size
         self.scrollbar.draw(context,self.outline)
+
+        #compute scroll stack height: The stack elemets always have a fixed height.
+        h = sum([e.height for e in self.elements])
+
+        ##display that we have scrollable content
+        #if h:
+        #    scroll_factor = float(self.outline.size.y)/h
+        #else:
+        #    scroll_factor = 1
+
+        #if scroll_factor < 1:
+        #    self.outline.size.x -=20
+
+
+        #If the scollbar is not active make sure the content is not scrolled away:
+        if not self.scrollbar.selected:
+            self.scrollstate.y = clamp(self.scrollstate.y,min(0,self.outline.size.y-h),0)
+
 
         self.outline.org.y += self.scrollstate.y
         for e in self.elements:
@@ -303,8 +306,7 @@ cdef class Slider:
         self.field.compute(self.outline)
 
         # map slider value
-        self.slider_pos.x = int( clampmap(self.sync_val.value,self.minimum,self.maximum,0,self.field.size.x) )
-        #context.beginPath()
+        self.slider_pos.x = clampmap(self.sync_val.value,self.minimum,self.maximum,0,self.field.size.x)
         self.outline.sketch()
         self.field.sketch()
 
@@ -542,7 +544,7 @@ cdef class Button:
         self.uid = id(self)
         self.label = label
         self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
-        self.button = FitBox(Vec2(10,10),Vec2(-10,-10))
+        self.button = FitBox(Vec2(20,10),Vec2(-20,-10))
         self.selected = False
         self.function = setter
 
@@ -752,7 +754,7 @@ cdef class FitBox:
         return "Fitbox:\n   design org: %s size: %s\n   comptd org: %s size: %s"%(self.design_org,self.design_size,self.org,self.size)
 
     cdef sketch(self):
-        gl_utils.rect(self.org,self.size)
+        gldraw.rect(self.org,self.size)
 
 
 

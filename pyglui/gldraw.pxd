@@ -1,5 +1,5 @@
-cimport cgl as gl
-from pyglui cimport Vec2
+from cygl cimport cgl as gl
+from ui cimport Vec2
 
 
 cdef inline test(int maxx):

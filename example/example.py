@@ -124,7 +124,7 @@ def demo():
         print 'setting to :',val
 
 
-    import pyglui as ui
+    from pyglui import ui
     gui = ui.UI()
     gui.update_window(width,height)
     m = ui.Menu("MySideBar",pos=(-200,20),size=(0,-20))
@@ -144,7 +144,7 @@ def demo():
         s.elements.append(ui.Button("Say Hi!",print_hello))
 
         s.elements.append(ui.Button("Say Hi!",print_hello))
-        sm = ui.Menu("SubMenu",pos=(0,20),size=(0,100))
+        sm = ui.Menu("SubMenu",pos=(0,0),size=(0,100))
         ss= ui.StackBox()
         ss.elements.append(ui.Slider("bar",foo))
         ss.elements.append(ui.Slider("bar",foo))
@@ -174,7 +174,7 @@ def demo():
 
         gui.update(None)
 
-        foo.bar += .1
+        foo.bar += .5
         if foo.bar >= 100:
             foo.bar = 0
 

@@ -1,5 +1,4 @@
 import os, platform
-import numpy
 
 from distutils.core import setup
 from distutils.extension import Extension
@@ -17,8 +16,14 @@ else:
 
 
 extensions = [
-	Extension(	name="pyglui",
-				sources=['pyglui.pyx'],
+	Extension(	name="pyglui.ui",
+				sources=['pyglui/ui.pyx'],
+				include_dirs = includes,
+				libraries = libs,
+				extra_link_args=link_args,
+				extra_compile_args=[]),
+	Extension(	name="pyglui.cygl.utils",
+				sources=['pyglui/cygl/utils.pyx'],
 				include_dirs = includes,
 				libraries = libs,
 				extra_link_args=link_args,
@@ -27,6 +32,8 @@ extensions = [
 
 setup( 	name="pyglui",
 		version="0.0.1",
-		description="OpenGL UI using Nanovg",
+		packages = ['pyglui'],
+		py_modules = ['pyglui.cygl.'], #add  __init__.py in pyglui/cygl
+		description="OpenGL UI powered by cython",
 		ext_modules=cythonize(extensions)
 )
