@@ -177,9 +177,9 @@ def demo():
 
         gui.update()
         glfont.set_font('roboto')
-        for x in range(0):
-            glfont.set_size(x/2.)
-            glfont.draw_text(100,10*x,"Oh my dea")
+        for x in range(10):
+            glfont.set_size(x*4)
+            glfont.draw_text(300,50*x,"Oh my dear this is awesome.")
         foo.bar += .5
         if foo.bar >= 100:
             foo.bar = 0

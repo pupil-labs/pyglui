@@ -103,7 +103,7 @@ cdef class UI:
         utils.hello(10)
         cdef int x
         for x in range(100):
-            glfont.draw_text(100,x+10,bytes("HELLO WORLD"))
+            glfont.draw_text(100,x*10,bytes("HELLO WORLD"))
         #gl_utils.test(10000)
         global should_redraw
         global window_size
