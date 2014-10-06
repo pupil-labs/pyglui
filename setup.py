@@ -18,19 +18,21 @@ else:
 extensions = [
 	Extension(	name="pyglui.ui",
 				sources=['pyglui/ui.pyx'],
-				include_dirs = includes,
+				include_dirs = includes+['pyglui/pyfontstash/fontstash/src'],
 				libraries = libs,
 				extra_link_args=link_args,
 				extra_compile_args=[]),
+
 	Extension(	name="pyglui.cygl.utils",
 				sources=['pyglui/cygl/utils.pyx'],
 				include_dirs = includes,
 				libraries = libs,
 				extra_link_args=link_args,
 				extra_compile_args=[]),
-	Extension(	name="pyglui.pyfontstash",
+
+	Extension(	name="pyglui.pyfontstash.pyfontstash",
 				sources=['pyglui/pyfontstash/pyfontstash.pyx'],
-				include_dirs = includes,
+				include_dirs = includes+['pyglui/pyfontstash/fontstash/src'],
 				libraries = libs,
 				extra_link_args=link_args,
 				extra_compile_args=['-D FONTSTASH_IMPLEMENTATION','-D GLFONTSTASH_IMPLEMENTATION'])
@@ -39,7 +41,7 @@ extensions = [
 setup( 	name="pyglui",
 		version="0.0.1",
 		packages = ['pyglui'],
-		py_modules = ['pyglui.cygl.'], #add  __init__.py in pyglui/cygl
+		py_modules = ['pyglui.cygl.__init__','pyglui.pyfontstash.__init__'], #add  __init__.py files
 		description="OpenGL UI powered by cython",
 		ext_modules=cythonize(extensions)
 )

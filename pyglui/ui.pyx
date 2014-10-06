@@ -1,8 +1,3 @@
-
-from cygl cimport cgl as gl
-from cygl cimport utils
-cimport gldraw
-cimport pyfontstash
 '''
 TODO:
 
@@ -32,6 +27,16 @@ UI value syncing
 
 '''
 
+cimport gldraw
+from cygl cimport cgl as gl
+from cygl cimport utils
+
+from pyfontstash cimport pyfontstash as fs
+
+#global init of gl fonts
+cdef fs.Context glfont = fs.Context()
+
+glfont.add_font('roboto', 'Roboto-Regular.ttf')
 
 cdef class UI:
     '''
@@ -90,13 +95,15 @@ cdef class UI:
 
     cdef draw(self):
 
-
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadIdentity()
         gl.glOrtho(0, self.window.size.x, self.window.size.y, 0, -1, 1);
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
         utils.hello(10)
+        cdef int x
+        for x in range(100):
+            glfont.draw_text(100,x+10,bytes("HELLO WORLD"))
         #gl_utils.test(10000)
         global should_redraw
         global window_size

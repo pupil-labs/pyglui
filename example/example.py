@@ -2,6 +2,7 @@ import logging
 from glfw import *
 import OpenGL
 from OpenGL.GL import *
+import pyfontstash as fs
 
 import numpy as np
 # create logger for the context of this function
@@ -161,6 +162,8 @@ def demo():
     gui.elements.append(m)
 
 
+    glfont = fs.Context()
+    glfont.add_font('roboto', 'Roboto-Regular.ttf')
     import os
     import psutil
 
@@ -173,7 +176,10 @@ def demo():
         # show some nanovg graphics
 
         gui.update()
-
+        glfont.set_font('roboto')
+        for x in range(0):
+            glfont.set_size(x/2.)
+            glfont.draw_text(100,10*x,"Oh my dea")
         foo.bar += .5
         if foo.bar >= 100:
             foo.bar = 0
