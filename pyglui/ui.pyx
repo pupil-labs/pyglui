@@ -92,7 +92,7 @@ cdef class UI:
         gl.glOrtho(0, self.window.size.x, self.window.size.y, 0, -1, 1);
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
-        utils.hello(1000)
+        utils.hello(10)
         #gl_utils.test(10000)
         global should_redraw
         global window_size
