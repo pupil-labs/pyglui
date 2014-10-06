@@ -2,6 +2,7 @@
 from cygl cimport cgl as gl
 from cygl cimport utils
 cimport gldraw
+cimport pyfontstash
 '''
 TODO:
 
@@ -12,7 +13,8 @@ GL Backend and functions
 
 GL Fonts:
 [x] Select GL Font Lib : https://github.com/memononen/fontstash
-[ ] and use GL Font lib
+[x] Write cython binding
+[ ] use in this lib
 
 UI features
 [ ] implement selector box
