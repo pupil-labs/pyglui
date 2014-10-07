@@ -131,9 +131,18 @@ def demo():
     m = ui.Menu("MySideBar",pos=(-200,20),size=(0,-20))
     s = ui.StackBox()
 
-    for x in range(10):
+    for x in range(1):
         s.elements.append(ui.Slider("bar",foo,label="bar %s"%x))
         s.elements.append(ui.Slider("bur",foo,label="bur %s"%x))
+        sm = ui.Menu("SubMenu",pos=(0,0),size=(0,100))
+        ss= ui.StackBox()
+        ss.elements.append(ui.Slider("bar",foo))
+        ss.elements.append(ui.TextInput('mytext',foo,setter=printer))
+        sm.elements.append(ss)
+        s.elements.append(sm)
+        s.elements.append(ui.Button("Say Hi!",print_hello))
+        s.elements.append(ui.Button("Say Hi!",print_hello))
+        s.elements.append(ui.Button("Say Hi!",print_hello))
     m.elements.append(s)
     gui.elements.append(m)
 
@@ -175,14 +184,15 @@ def demo():
         clear_gl_screen()
         # show some nanovg graphics
 
-        gui.update()
         glfont.set_font('roboto')
-        for x in range(10):
+        for x in range(0):
+            glfont.set_color_float(.1,.4,.7,.5)
             glfont.set_size(x*4)
             glfont.draw_text(300,50*x,"Oh my dear this is awesome.")
-        foo.bar += .5
-        if foo.bar >= 100:
-            foo.bar = 0
+        # foo.bar += .5
+        # if foo.bar >= 100:
+        #     foo.bar = 0
+        gui.update()
 
         glfwSwapBuffers(window)
         glfwPollEvents()

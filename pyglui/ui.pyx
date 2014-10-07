@@ -35,8 +35,8 @@ from pyfontstash cimport pyfontstash as fs
 
 #global init of gl fonts
 cdef fs.Context glfont = fs.Context()
+glfont.add_font('opensans', 'OpenSans-Regular.ttf')
 
-glfont.add_font('roboto', 'Roboto-Regular.ttf')
 
 cdef class UI:
     '''
@@ -94,25 +94,24 @@ cdef class UI:
             self.new_input.purge()
 
     cdef draw(self):
-
-        gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glLoadIdentity()
-        gl.glOrtho(0, self.window.size.x, self.window.size.y, 0, -1, 1);
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glLoadIdentity()
-        utils.hello(10)
-        cdef int x
-        for x in range(100):
-            glfont.draw_text(100,x*10,bytes("HELLO WORLD"))
-        #gl_utils.test(10000)
         global should_redraw
         global window_size
         window_size = self.window.size
+        gl.glPushMatrix()
+        glfont.push_state()
+        glfont.clear_state()
+        glfont.set_size(18)
+        glfont.set_color_float(1,1,1,.9)
+        glfont.set_align(fs.FONS_ALIGN_TOP)
+        gldraw.adjust_view(self.window.size)
+
         cdef Menu e
         for e in self.elements:
-            win_height =  self.window.size.y
             e.draw(self.window)
+
         should_redraw = True
+        glfont.push_state()
+        gl.glPopMatrix()
 
     def update(self):
         global should_redraw
@@ -151,31 +150,30 @@ cdef class Menu:
         self.outline.compute(parent_box)
         self.element_space.compute(self.outline)
 
-        #context.save()
         self.draw_menu()
-
         self.handlebar.draw(self.outline)
         self.resize_corner.draw(self.outline)
 
-        #lets manually resize
+        #if elements are not visible, no need to draw them.
+        if self.element_space.size.x and self.element_space.size.y:
+            for e in self.elements:
+                e.draw(self.element_space)
 
-        for e in self.elements:
-            e.draw(self.element_space)
-
-        #context.restore()
 
     cpdef draw_menu(self):
         self.outline.sketch()
-        #context.textAlign(1<<0)
-        #context.text(10, -8.0, self.label)
+        glfont.draw_text(self.outline.org.x+10,self.outline.org.y,self.label)
 
 
 
     cpdef handle_input(self, Input new_input,bint visible):
         self.resize_corner.handle_input(new_input,visible)
         self.handlebar.handle_input(new_input,visible)
-        for e in self.elements:
-            e.handle_input(new_input,visible)
+
+        #if elements are not visible, no need to interact with them.
+        if self.element_space.size.x and self.element_space.size.y:
+            for e in self.elements:
+                e.handle_input(new_input,visible)
 
     cpdef sync(self):
         for e in self.elements:
@@ -195,12 +193,14 @@ cdef class StackBox:
     cdef FitBox outline
     cdef Draggable scrollbar
     cdef Vec2 scrollstate
+    cdef float scroll_factor
     cdef public list elements
 
     def __cinit__(self):
         self.outline = FitBox(Vec2(0,0),Vec2(0,0))
         self.scrollstate = Vec2(0,0)
         self.scrollbar = Draggable(Vec2(0,0),Vec2(0,0),self.scrollstate,arrest_axis=1,zero_crossing=True)
+        self.scroll_factor = 1.
     def __init__(self):
         self.elements = []
 
@@ -216,12 +216,13 @@ cdef class StackBox:
             e.handle_input(new_input, mouse_over_menu)
         # handle scrollbar interaction after menu items
         # so grabbing a slider does not trigger scrolling
-        self.scrollbar.handle_input(new_input,visible)
+        if self.scroll_factor < 1:
+            self.scrollbar.handle_input(new_input,visible)
 
-        #since this is one of the rare occasions where you could use the scrollwheel:
-        if visible and self.scrollbar.outline.mouse_over(new_input.m):
-            self.scrollstate.y += new_input.s.y * 3
-            new_input.s.y = 0
+            #since this is one of the rare occasions where you could use the scrollwheel:
+            if visible and self.scrollbar.outline.mouse_over(new_input.m):
+                self.scrollstate.y += new_input.s.y * 3
+                new_input.s.y = 0
 
 
     cpdef draw(self,FitBox parent_size):
@@ -250,12 +251,12 @@ cdef class StackBox:
         #compute scroll stack height: The stack elemets always have a fixed height.
         h = sum([e.height for e in self.elements])
 
-        ##display that we have scrollable content
-        #if h:
-        #    scroll_factor = float(self.outline.size.y)/h
-        #else:
-        #    scroll_factor = 1
+        if h:
+            self.scroll_factor = float(self.outline.size.y)/h
+        else:
+            self.scroll_factor = 1
 
+        #display that we have scrollable content
         #if scroll_factor < 1:
         #    self.outline.size.x -=20
 
@@ -300,7 +301,7 @@ cdef class Slider:
         self.maximum = max
         self.step = step
         self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
-        self.field = FitBox(Vec2(20,10),Vec2(-20,-10))
+        self.field = FitBox(Vec2(10,10),Vec2(-10,-10))
         self.slider_pos = Vec2(0,20)
         self.selected = False
 
@@ -324,27 +325,24 @@ cdef class Slider:
 
         gl.glPushMatrix()
         gl.glTranslatef(self.field.org.x,self.field.org.y,0)
-        cdef FitBox s = FitBox(Vec2(self.slider_pos.x-10,0),Vec2(20,20))
+        cdef FitBox s
+        if self.selected:
+            s = FitBox(Vec2(self.slider_pos.x-9,1),Vec2(18,18))
+        else:
+            s = FitBox(Vec2(self.slider_pos.x-10,0),Vec2(20,20))
         s.sketch()
+
+        glfont.push_state()
+        glfont.draw_text(10,0,self.label)
+        glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)
+        if type(self.sync_val.value) == float:
+            glfont.draw_text(self.field.size.x-10,0,bytes('%0.2f'%self.sync_val.value) )
+        else:
+            glfont.draw_text(self.field.size.x-10,0,bytes(self.sync_val.value ))
+        glfont.pop_state()
         gl.glPopMatrix()
 
-        #context.stroke()
-        #then transform locally and render the UI element
-        #context.save()
-        #context.translate(self.outline.org.x,self.outline.org.y)
-        #context.beginPath()
-        #context.textAlign(1<<4)
-        #context.text(20.0, 20.0, self.label)
 
-        #if self.selected:
-            #context.circle(self.slider_pos.x,self.slider_pos.y,14)
-        #else:
-            #context.circle(self.slider_pos.x,self.slider_pos.y,18)
-        #context.textAlign(1<<1 | 1<<4)
-        #context.text(self.slider_pos.x,self.slider_pos.y, str(self.sync_val.value))
-
-        #context.stroke()
-        #context.restore()
 
     cpdef handle_input(self,Input new_input,bint visible):
         global should_redraw
@@ -399,25 +397,8 @@ cdef class Selector:
         #update apperance:
         self.outline.compute(parent)
         self.field.compute(self.outline)
-        #context.beginPath()
         self.outline.sketch()
-        #context.stroke()
-        #then transform locally and render the UI element
-        #context.save()
-        #context.translate(self.outline.org.x,self.outline.org.y)
-        #context.beginPath()
-        #context.textAlign(1<<4)
-        #context.text(20.0, 20.0, self.label)
 
-        #if self.selected:
-            #context.circle(self.slider_pos.x,self.slider_pos.y,14)
-        #else:
-            #context.circle(self.slider_pos.x,self.slider_pos.y,18)
-        #context.textAlign(1<<1 | 1<<4)
-        #context.text(self.slider_pos.x,self.slider_pos.y, str(self.sync_val.value))
-
-        #context.stroke()
-        #context.restore()
 
     cpdef handle_input(self,Input new_input,bint visible):
         global should_redraw
@@ -472,27 +453,21 @@ cdef class TextInput:
     cpdef draw(self,FitBox parent):
         #update apperance:
         self.outline.compute(parent)
+
+        gl.glPushMatrix()
+        gl.glTranslatef(self.outline.org.x,self.outline.org.y,0)
+        dx = glfont.draw_text(10,10,self.label)
+        dx += 10
+        self.textfield.design_org.x = dx
         self.textfield.compute(self.outline)
+        gl.glPopMatrix()
 
+        gl.glPushMatrix()
         #then transform locally and render the UI element
-        #context.save()
-        #context.beginPath()
         self.textfield.sketch()
-        #context.stroke()
-        #context.translate(self.textfield.org.x,self.textfield.org.y+self.textfield.size.y/2)
-        #context.beginPath()
-        #context.textAlign(1<<4)
-        #context.text(0.0, 0.0, self.label)
-
-        #if self.selected:
-            # TODO: the carot pos should be drawn
-            #context.fontSize(22)
-            #context.text(50.0, 0.0, self.preview)
-        #else:
-            #context.text(50.0, 0.0, self.sync_val.value)
-
-        #context.stroke()
-        #context.restore()
+        gl.glTranslatef(self.textfield.org.x,self.textfield.org.y,0)
+        glfont.draw_text(10,0,self.preview)
+        gl.glPopMatrix()
 
     cpdef handle_input(self,Input new_input,bint visible):
         global should_redraw
@@ -555,7 +530,7 @@ cdef class Button:
         self.uid = id(self)
         self.label = label
         self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
-        self.button = FitBox(Vec2(20,10),Vec2(-20,-10))
+        self.button = FitBox(Vec2(10,10),Vec2(-10,-10))
         self.selected = False
         self.function = setter
 
@@ -572,20 +547,13 @@ cdef class Button:
 
 
         self.outline.sketch()
-        #context.stroke()
-        #context.save()
-        #context.beginPath()
         self.button.sketch()
 
-        #if self.selected:
-            #context.fill()
-        #else:
-            #context.stroke()
-        #context.beginPath()
-        #context.textAlign(1<<4)
-        #context.text(20.0, 20.0, self.label)
-        #context.stroke()
-        #context.restore()
+        gl.glPushMatrix()
+        gl.glTranslatef(self.button.org.x,self.button.org.y,0)
+        glfont.draw_text(10,0,self.label)
+        gl.glPopMatrix()
+
 
     cpdef handle_input(self,Input new_input,bint visible):
         global should_redraw
@@ -884,28 +852,6 @@ cdef class Vec2:
 
     def __repr__(self):
         return 'x: %s y: %s'%(self.x,self.y)
-
-#cdef class Stack2(Vec2):
-#    cdef list stack
-
-#    def __cinit__(self,int x, int y):
-#        self.x = x
-#        self.y = y
-
-#    def __init__(self,x,y):
-#        self.stack = []
-
-#    cpdef push(self):
-#        self.stack.append(Vec2(self.x,self.y))
-
-#    cpdef pop(self):
-#        cdef Vec2 vec = self.stack.pop()
-#        self.x = vec.x
-#        self.y = vec.y
-
-
-
-
 
 
 cdef inline float lmap(float value, float istart, float istop, float ostart, float ostop):
