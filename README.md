@@ -17,5 +17,5 @@ Cython powered OpenGL gui.
 
 ##Install
 * clone with `--recursive` flag
-* 'python setup.py install'
+* `python setup.py install`
 
