@@ -4,7 +4,7 @@ TODO:
 GL Backend and functions
 [x] make gl.h pxd file
 [ ] implement shader based lines and points in gl backend
-[ ] add render to texture option if nessesay
+[x] add render to texture option if nessesay
 
 GL Fonts:
 [x] Select GL Font Lib : https://github.com/memononen/fontstash
@@ -109,18 +109,16 @@ cdef class UI:
         if should_redraw:
             render_to_ui_texture(self.ui_layer)
             gl.glPushMatrix()
-            glfont.push_state()
+            gldraw.adjust_view(self.window.size)
+
             glfont.clear_state()
             glfont.set_size(18)
-            glfont.set_color_float(1,1,1,.9)
+            glfont.set_color_float(1.,1,1,1)
             glfont.set_align(fs.FONS_ALIGN_TOP)
-            gldraw.adjust_view(self.window.size)
 
             for e in self.elements:
                 e.draw(self.window)
 
-
-            glfont.push_state()
             gl.glPopMatrix()
             render_to_screen()
 
@@ -165,8 +163,6 @@ cdef class Menu:
         self.element_space.compute(self.outline)
 
         self.draw_menu()
-        self.handlebar.draw(self.outline)
-        self.resize_corner.draw(self.outline)
 
         #if elements are not visible, no need to draw them.
         if self.element_space.size.x and self.element_space.size.y:
@@ -176,8 +172,9 @@ cdef class Menu:
 
     cpdef draw_menu(self):
         self.outline.sketch()
+        self.handlebar.draw(self.outline)
+        self.resize_corner.draw(self.outline)
         glfont.draw_text(self.outline.org.x+10,self.outline.org.y,self.label)
-
 
 
     cpdef handle_input(self, Input new_input,bint visible):
@@ -190,8 +187,9 @@ cdef class Menu:
                 e.handle_input(new_input,visible)
 
     cpdef sync(self):
-        for e in self.elements:
-            e.sync()
+        if self.element_space.size.x and self.element_space.size.y:
+            for e in self.elements:
+                e.sync()
 
     property height:
         def __get__(self):
@@ -916,13 +914,11 @@ cdef inline bint mouse_over_center(Vec2 center, int w, int h, Vec2 m):
 
 
 
-###gl funcs
-
-
+### OpenGL funtions for rendering to texture.
+### Using this saves us considerable cpu/gpu time when the UI remains static.
 cdef class fbo_tex_id:
     cdef gl.GLuint fbo_id
     cdef gl.GLuint tex_id
-
 
 cdef fbo_tex_id create_ui_texture(Vec2 tex_size):
     cdef fbo_tex_id ui_layer = fbo_tex_id()
@@ -930,12 +926,8 @@ cdef fbo_tex_id create_ui_texture(Vec2 tex_size):
     ui_layer.tex_id = 0
 
     # create Framebufer Object
-
-
-    #require opegn ext or opengl 3.0
+    #requires gl ext or opengl > 3.0
     gl.glGenFramebuffers(1, &ui_layer.fbo_id)
-
-
     gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, ui_layer.fbo_id)
 
     #create texture object
@@ -953,7 +945,6 @@ cdef fbo_tex_id create_ui_texture(Vec2 tex_size):
     if gl.glCheckFramebufferStatus(gl.GL_FRAMEBUFFER) != gl.GL_FRAMEBUFFER_COMPLETE:
         raise Exception("UI Framebuffer could not be created.")
 
-
     #unbind fbo and texture
     gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
     gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)
@@ -968,23 +959,28 @@ cdef resize_ui_texture(fbo_tex_id ui_layer, Vec2 tex_size):
 
 cdef render_to_ui_texture(fbo_tex_id ui_layer):
     # set fbo as render target
+    # blending method after:
+    # http://stackoverflow.com/questions/24346585/opengl-render-to-texture-with-partial-transparancy-translucency-and-then-rende/24380226#24380226
+    gl.glBlendFuncSeparateEXT(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA, gl.GL_ONE_MINUS_DST_ALPHA, gl.GL_ONE)
     gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, ui_layer.fbo_id)
-    gl.glClearColor(.8,.8,.8,1.)
+    gl.glClearColor(0.,0.,0.,0.)
     gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-
 
 
 cdef render_to_screen():
     # set rendertarget 0
     gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)
+    gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
 cdef draw_ui_texture(fbo_tex_id ui_layer):
     # render texture
 
-    # bind it and use program.
+    # set blending
+    gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA)
+
+    # bind texture and use.
     gl.glBindTexture(gl.GL_TEXTURE_2D, ui_layer.tex_id)
     gl.glEnable(gl.GL_TEXTURE_2D)
-
 
     #set up coord system
     gl.glMatrixMode(gl.GL_PROJECTION)
@@ -1018,5 +1014,6 @@ cdef draw_ui_texture(fbo_tex_id ui_layer):
 
     gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
     gl.glDisable(gl.GL_TEXTURE_2D)
+    gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
 

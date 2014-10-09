@@ -21,8 +21,9 @@ def basic_gl_setup():
     glClearColor(.8,.8,.8,1.)
     glEnable(GL_LINE_SMOOTH)
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
-    # glEnable(GL_POINT_SMOOTH)
-
+    glEnable(GL_LINE_SMOOTH)
+    glEnable(GL_POINT_SMOOTH)
+    glEnable(GL_POLYGON_SMOOTH)
 
 def adjust_gl_view(w,h,window):
     """
@@ -38,7 +39,7 @@ def adjust_gl_view(w,h,window):
 
 
 def clear_gl_screen():
-
+    glClearColor(.8,.8,0.8,1.)
     glClear(GL_COLOR_BUFFER_BIT)
 
 
@@ -135,7 +136,7 @@ def demo():
         s.elements.append(ui.Slider("bar",foo,label="bar %s"%x))
         s.elements.append(ui.Slider("bur",foo,label="bur %s"%x))
         sm = ui.Menu("SubMenu",pos=(0,0),size=(0,100))
-        ss= ui.StackBox()
+        ss = ui.StackBox()
         ss.elements.append(ui.Slider("bar",foo))
         ss.elements.append(ui.TextInput('mytext',foo,setter=printer))
         sm.elements.append(ss)
@@ -185,10 +186,10 @@ def demo():
         # show some nanovg graphics
 
         glfont.set_font('roboto')
-        for x in range(0):
+        for x in range(100):
             glfont.set_color_float(.1,.4,.7,.5)
             glfont.set_size(x*4)
-            glfont.draw_text(300,50*x,"Oh my dear this is awesome.")
+            glfont.draw_text(50*x,50*x,"Oh my dear this is awesome.")
         # foo.bar += .5
         # if foo.bar >= 100:
         #     foo.bar = 0

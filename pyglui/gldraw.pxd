@@ -11,7 +11,7 @@ cdef inline adjust_view(Vec2 size):
 
 
 cdef inline rect(Vec2 org, Vec2 size):
-    gl.glColor4f(0.,0.,0.,.05)
+    gl.glColor4f(.0,.0,.0,.1)
     gl.glLineWidth(1)
     gl.glBegin(gl.GL_LINE_LOOP)
     gl.glVertex3f(org.x,org.y,0.0)
