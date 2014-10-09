@@ -131,7 +131,7 @@ def demo():
     m = ui.Menu("MySideBar",pos=(-200,20),size=(0,-20))
     s = ui.StackBox()
 
-    for x in range(1):
+    for x in range(100):
         s.elements.append(ui.Slider("bar",foo,label="bar %s"%x))
         s.elements.append(ui.Slider("bur",foo,label="bur %s"%x))
         sm = ui.Menu("SubMenu",pos=(0,0),size=(0,100))

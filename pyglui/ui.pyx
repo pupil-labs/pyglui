@@ -27,9 +27,10 @@ UI value syncing
 
 '''
 
-cimport gldraw
+
 from cygl cimport cgl as gl
 from cygl cimport utils
+cimport gldraw
 
 from pyfontstash cimport pyfontstash as fs
 
@@ -47,6 +48,8 @@ cdef class UI:
     cdef public list elements
     cdef FitBox window
 
+    cdef fbo_tex_id ui_layer
+
     def __cinit__(self):
         self.elements = []
         self.new_input = Input()
@@ -54,6 +57,8 @@ cdef class UI:
 
     def __init__(self):
         self.should_redraw = True
+        self.ui_layer = create_ui_texture(Vec2(200,200))
+
 
     def update_mouse(self,mx,my):
         if self.window.mouse_over(Vec2(mx,my)):
@@ -62,9 +67,11 @@ cdef class UI:
 
 
     def update_window(self,w,h):
+        global should_redraw
+        should_redraw = True
         self.window.size.x,self.window.size.y = w,h
-        self.should_redraw = True
         gl.glScissor(0,0,int(w),int(h))
+        resize_ui_texture(self.ui_layer,self.window.size)
 
 
     def update_scroll(self, sx,sy):
@@ -94,31 +101,38 @@ cdef class UI:
             self.new_input.purge()
 
     cdef draw(self):
+        cdef Menu e
         global should_redraw
         global window_size
         window_size = self.window.size
-        gl.glPushMatrix()
-        glfont.push_state()
-        glfont.clear_state()
-        glfont.set_size(18)
-        glfont.set_color_float(1,1,1,.9)
-        glfont.set_align(fs.FONS_ALIGN_TOP)
-        gldraw.adjust_view(self.window.size)
 
-        cdef Menu e
-        for e in self.elements:
-            e.draw(self.window)
+        if should_redraw:
+            render_to_ui_texture(self.ui_layer)
+            gl.glPushMatrix()
+            glfont.push_state()
+            glfont.clear_state()
+            glfont.set_size(18)
+            glfont.set_color_float(1,1,1,.9)
+            glfont.set_align(fs.FONS_ALIGN_TOP)
+            gldraw.adjust_view(self.window.size)
 
-        should_redraw = True
-        glfont.push_state()
-        gl.glPopMatrix()
+            for e in self.elements:
+                e.draw(self.window)
+
+
+            glfont.push_state()
+            gl.glPopMatrix()
+            render_to_screen()
+
+            should_redraw = False
+
+        draw_ui_texture(self.ui_layer)
 
     def update(self):
         global should_redraw
         self.handle_input()
         self.sync()
-        if should_redraw:
-            self.draw()
+        self.draw()
 
 
 cdef class Menu:
@@ -366,27 +380,25 @@ cdef class Slider:
             return self.outline.size.y
 
 
-
-cdef class Selector:
+cdef class Switch:
     cdef readonly bytes label
     cdef readonly long  uid
     cdef public FitBox outline,field
     cdef bint selected
-    cdef Vec2 slider_pos
     cdef Synced_Value sync_val
-    cdef list selection
+    cdef obj
 
-    def __cinit__(self,bytes attribute_name, object attribute_context,label = None,list selection = [],setter= None,getter= None):
+    def __cinit__(self,bytes attribute_name, object attribute_context, on_val = 1, off_val = 0,label = None, setter= None,getter= None):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
-        self.selection = selection
+
         self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
-        self.field = FitBox(Vec2(10,10),Vec2(-10,-10)) # we only fix the height
-        self.pop_up = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
+        self.field = FitBox(Vec2(10,10),Vec2(20,-10))
+        self.slider_pos = Vec2(0,20)
         self.selected = False
 
-    def __init__(self,bytes attribute_name, object attribute_context,label = None,list selection = [],setter= None,getter= None):
+    def __init__(self,bytes attribute_name, object attribute_context,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
         pass
 
 
@@ -397,19 +409,44 @@ cdef class Selector:
         #update apperance:
         self.outline.compute(parent)
         self.field.compute(self.outline)
+
+        # map slider value
+        self.slider_pos.x = clampmap(self.sync_val.value,self.minimum,self.maximum,0,self.field.size.x)
         self.outline.sketch()
+        self.field.sketch()
+
+
+        gl.glPushMatrix()
+        gl.glTranslatef(self.field.org.x,self.field.org.y,0)
+        cdef FitBox s
+        if self.selected:
+            s = FitBox(Vec2(self.slider_pos.x-9,1),Vec2(18,18))
+        else:
+            s = FitBox(Vec2(self.slider_pos.x-10,0),Vec2(20,20))
+        s.sketch()
+
+        glfont.push_state()
+        glfont.draw_text(10,0,self.label)
+        glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)
+        if type(self.sync_val.value) == float:
+            glfont.draw_text(self.field.size.x-10,0,bytes('%0.2f'%self.sync_val.value) )
+        else:
+            glfont.draw_text(self.field.size.x-10,0,bytes(self.sync_val.value ))
+        glfont.pop_state()
+        gl.glPopMatrix()
+
 
 
     cpdef handle_input(self,Input new_input,bint visible):
         global should_redraw
 
         if self.selected and new_input.dm:
-            self.sync_val.value = clampmap(new_input.m.x-self.outline.org.x,0,self.outline.size.x,self.minimum,self.maximum)
+            self.sync_val.value = clampmap(new_input.m.x-self.field.org.x,0,self.field.size.x,self.minimum,self.maximum)
             should_redraw = True
 
         for b in new_input.buttons:
             if b[1] == 1 and visible:
-                if mouse_over_center(self.slider_pos+self.outline.org,self.height,self.height,new_input.m):
+                if mouse_over_center(self.slider_pos+self.field.org,self.height,self.height,new_input.m):
                     new_input.buttons.remove(b)
                     self.selected = True
                     should_redraw = True
@@ -420,6 +457,9 @@ cdef class Selector:
     property height:
         def __get__(self):
             return self.outline.size.y
+
+
+
 
 
 cdef class TextInput:
@@ -545,9 +585,11 @@ cdef class Button:
         self.outline.compute(parent)
         self.button.compute(self.outline)
 
-
         self.outline.sketch()
-        self.button.sketch()
+        if self.selected:
+            pass
+        else:
+            self.button.sketch()
 
         gl.glPushMatrix()
         gl.glTranslatef(self.button.org.x,self.button.org.y,0)
@@ -651,11 +693,11 @@ cdef class FitBox:
     '''
     A box that will fit itself into a context.
     Specified by rules for x and y respectivly:
-        size positive will size from self.org
-        size 0 will span into parent context and lock it like this. If you want it draggable use -.001 or .001
-        size negative make the box to up to size pixels to the parent container.
-        position negative will align to the opposite side of context
-        position 0 will span into parent context and lock it like this. If you want it draggable use -.001 or .001
+        size positive -> size from self.org
+        size 0 -> span into parent context and lock it like this. If you want it draggable use -.001 or .001
+        size negative -> make the box to up to size pixels to the parent container.
+        position negative -> align to the opposite side of context
+        position 0  -> span into parent context and lock it like this. If you want it draggable use -.001 or .001
 
 
     This is quite expressive but does have a limitation:
@@ -666,6 +708,8 @@ cdef class FitBox:
 
         "org" and "size" are the computed results of the box
             fitted and translated by its parent context
+
+    Vec2 min_size is optional.
     '''
     cdef Vec2 design_org,org,design_size,size,min_size
 
@@ -868,5 +912,111 @@ cdef inline float clampmap(float value, float istart, float istop, float ostart,
 
 cdef inline bint mouse_over_center(Vec2 center, int w, int h, Vec2 m):
     return center.x-w/2 <= m.x <=center.x+w/2 and center.y-h/2 <= m.y <=center.y+h/2
+
+
+
+
+###gl funcs
+
+
+cdef class fbo_tex_id:
+    cdef gl.GLuint fbo_id
+    cdef gl.GLuint tex_id
+
+
+cdef fbo_tex_id create_ui_texture(Vec2 tex_size):
+    cdef fbo_tex_id ui_layer = fbo_tex_id()
+    ui_layer.fbo_id = 0
+    ui_layer.tex_id = 0
+
+    # create Framebufer Object
+
+
+    #require opegn ext or opengl 3.0
+    gl.glGenFramebuffers(1, &ui_layer.fbo_id)
+
+
+    gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, ui_layer.fbo_id)
+
+    #create texture object
+    gl.glGenTextures(1, &ui_layer.tex_id)
+    gl.glBindTexture(gl.GL_TEXTURE_2D, ui_layer.tex_id)
+    # configure Texture
+    gl.glTexImage2D(gl.GL_TEXTURE_2D, 0,gl.GL_RGBA, int(tex_size.x), int(tex_size.y), 0,gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, NULL)
+    #set filtering
+    gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
+    gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST)
+
+    #attach texture to fbo
+    gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0,gl.GL_TEXTURE_2D, ui_layer.tex_id, 0)
+
+    if gl.glCheckFramebufferStatus(gl.GL_FRAMEBUFFER) != gl.GL_FRAMEBUFFER_COMPLETE:
+        raise Exception("UI Framebuffer could not be created.")
+
+
+    #unbind fbo and texture
+    gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+    gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)
+
+    return ui_layer
+
+cdef resize_ui_texture(fbo_tex_id ui_layer, Vec2 tex_size):
+    gl.glBindTexture(gl.GL_TEXTURE_2D, ui_layer.tex_id)
+    gl.glTexImage2D(gl.GL_TEXTURE_2D, 0,gl.GL_RGBA, int(tex_size.x), int(tex_size.y), 0,gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, NULL)
+    gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+
+
+cdef render_to_ui_texture(fbo_tex_id ui_layer):
+    # set fbo as render target
+    gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, ui_layer.fbo_id)
+    gl.glClearColor(.8,.8,.8,1.)
+    gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+
+
+
+cdef render_to_screen():
+    # set rendertarget 0
+    gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)
+
+cdef draw_ui_texture(fbo_tex_id ui_layer):
+    # render texture
+
+    # bind it and use program.
+    gl.glBindTexture(gl.GL_TEXTURE_2D, ui_layer.tex_id)
+    gl.glEnable(gl.GL_TEXTURE_2D)
+
+
+    #set up coord system
+    gl.glMatrixMode(gl.GL_PROJECTION)
+    gl.glPushMatrix()
+    gl.glLoadIdentity()
+    gl.glOrtho(0, 1, 1, 0, -1, 1)
+    gl.glMatrixMode(gl.GL_MODELVIEW)
+    gl.glPushMatrix()
+    gl.glLoadIdentity()
+
+    gl.glEnable(gl.GL_TEXTURE_2D)
+    gl.glColor4f(1.0,1.0,1.0,1.0)
+    # Draw textured Quad.
+    gl.glBegin(gl.GL_QUADS)
+    gl.glTexCoord2f(0.0, 1.0)
+    gl.glVertex2f(0,0)
+    gl.glTexCoord2f(1.0, 1.0)
+    gl.glVertex2f(1,0)
+    gl.glTexCoord2f(1.0, 0.0)
+    gl.glVertex2f(1,1)
+    gl.glTexCoord2f(0.0, 0.0)
+    gl.glVertex2f(0,1)
+    gl.glEnd()
+    gl.glDisable(gl.GL_TEXTURE_2D)
+
+    #pop coord systems
+    gl.glMatrixMode(gl.GL_PROJECTION)
+    gl.glPopMatrix()
+    gl.glMatrixMode(gl.GL_MODELVIEW)
+    gl.glPopMatrix()
+
+    gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+    gl.glDisable(gl.GL_TEXTURE_2D)
 
 

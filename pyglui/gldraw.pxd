@@ -5,11 +5,9 @@ from ui cimport Vec2
 cdef inline adjust_view(Vec2 size):
     gl.glMatrixMode(gl.GL_PROJECTION)
     gl.glLoadIdentity()
-    gl.glOrtho(0, size.x, size.y, 0, -1, 1);
+    gl.glOrtho(0, size.x, size.y, 0, -1, 1)
     gl.glMatrixMode(gl.GL_MODELVIEW)
     gl.glLoadIdentity()
-
-
 
 
 cdef inline rect(Vec2 org, Vec2 size):
@@ -27,3 +25,5 @@ cdef inline rect(Vec2 org, Vec2 size):
     gl.glVertex3f(org.x+size.x,org.y+size.y,0.0)
     gl.glVertex3f(org.x+size.x,org.y,0.0)
     gl.glEnd()
+
+
