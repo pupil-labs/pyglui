@@ -13,9 +13,9 @@ Cython powered OpenGL gui.
 
 * Uses pyfonstash for rendering text.
 
+
+
+##Install
 * clone with `--recursive` flag
-
-
-##Install:
-python setup.py install
+* 'python setup.py install'
 
