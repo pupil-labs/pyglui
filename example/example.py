@@ -92,7 +92,7 @@ def demo():
 
     # get glfw started
     glfwInit()
-    window = glfwCreateWindow(width, height, "Python NanoVG Demo", None, None)
+    window = glfwCreateWindow(width, height, "pyglui demo", None, None)
     glfwSetWindowPos(window,0,0)
     # Register callbacks window
     glfwSetWindowSizeCallback(window,on_resize)
