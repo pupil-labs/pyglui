@@ -27,3 +27,22 @@ cdef inline rect(Vec2 org, Vec2 size):
     gl.glEnd()
 
 
+
+cdef inline tripple_h(Vec2 org, Vec2 size):
+    gl.glColor4f(1,1,1,.5)
+    gl.glLineWidth(2)
+    gl.glBegin(gl.GL_LINES)
+    gl.glVertex3f(org.x+3,org.y+3,0)
+    gl.glVertex3f(org.x + size.x- 3 ,org.y+ 3,0)
+
+    gl.glVertex3f(org.x+3,org.y+size.y/2,0)
+    gl.glVertex3f(org.x + size.x -3 ,org.y+size.y/2,0)
+
+    gl.glVertex3f(org.x+3,org.y+size.y-3,0)
+    gl.glVertex3f(org.x + size.x -3 ,org.y+size.y-3,0)
+
+
+    gl.glEnd()
+
+
+

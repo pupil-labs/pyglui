@@ -9,7 +9,7 @@ GL Backend and functions
 GL Fonts:
 [x] Select GL Font Lib : https://github.com/memononen/fontstash
 [x] Write cython binding
-[ ] use in this lib
+[x] use in this lib
 
 UI features
 [ ] implement selector box
@@ -138,24 +138,25 @@ cdef class Menu:
     Menu is a movable object on the canvas that contains other elements.
     '''
     cdef public list elements
-    cdef FitBox outline, element_space
-    cdef public bint iconified
+    cdef FitBox outline, uncollapsed_outline, element_space
     cdef bytes label
     cdef long uid
     cdef Draggable handlebar, resize_corner
 
-    def __cinit__(self,label,pos=(0,0),size=(200,100)):
+    def __cinit__(self,label,pos=(0,0),size=(200,100),min_size = (25,20)):
         self.uid = id(self)
         self.label = label
-        self.outline = FitBox(position=Vec2(*pos),size=Vec2(*size),min_size=Vec2(20,20))
-        self.element_space = FitBox(position=Vec2(0,20),size=Vec2(0,-20))
+        self.outline = FitBox(position=Vec2(*pos),size=Vec2(*size),min_size=Vec2(*min_size))
+        self.uncollapsed_outline = self.outline.copy()
+
+        self.element_space = FitBox(position=Vec2(25,0),size=Vec2(0,0))
         arrest_axis = 0
-        self.handlebar = Draggable(Vec2(0,0),Vec2(0,20),self.outline.design_org,arrest_axis,zero_crossing = False)
+        self.handlebar = Draggable(Vec2(0,0),Vec2(25,0),self.outline.design_org,arrest_axis,zero_crossing = False,click_cb=self.toggle_iconified )
         self.resize_corner = Draggable(Vec2(-20,-20),Vec2(0,0),self.outline.design_size,arrest_axis,zero_crossing = False)
         self.elements = []
 
 
-    def __init__(self,label,pos=(0,0),size=(200,100)):
+    def __init__(self,label,pos=(0,0),size=(200,100),min_size = (20,20)):
         pass
 
     cpdef draw(self,FitBox parent_box):
@@ -171,10 +172,16 @@ cdef class Menu:
 
 
     cpdef draw_menu(self):
-        self.outline.sketch()
+        self.element_space.sketch()
+        self.handlebar.outline.compute(self.outline)
+        self.resize_corner.outline.compute(self.outline)
+        self.handlebar.draw(self.outline)
+        self.handlebar.draw(self.outline)
         self.handlebar.draw(self.outline)
         self.resize_corner.draw(self.outline)
-        glfont.draw_text(self.outline.org.x+10,self.outline.org.y,self.label)
+        gldraw.tripple_h(self.handlebar.outline.org,Vec2(25,20))
+        #gldraw.tripple_h(self.resize_corner.org,Vec2(20,20))
+        glfont.draw_text(self.outline.org.x+30,self.outline.org.y,self.label)
 
 
     cpdef handle_input(self, Input new_input,bint visible):
@@ -196,6 +203,16 @@ cdef class Menu:
             return self.outline.size.y+self.outline.design_org.y
 
 
+    def toggle_iconified(self):
+        print "toggle %s"%self.label
+        global should_redraw
+        should_redraw = True
+
+        if self.outline.is_collapsed():
+            self.outline.inflate(self.uncollapsed_outline)
+        else:
+            self.uncollapsed_outline = self.outline.copy()
+            self.outline.collapse()
 
 cdef class StackBox:
     '''
@@ -222,6 +239,7 @@ cdef class StackBox:
 
 
     cpdef handle_input(self,Input new_input,visible=True):
+        global should_redraw
         cdef bint mouse_over_menu = 0 <= new_input.m.y-self.outline.org.y <= +self.outline.size.y
         mouse_over_menu  = mouse_over_menu and visible
         for e in self.elements:
@@ -235,6 +253,8 @@ cdef class StackBox:
             if visible and self.scrollbar.outline.mouse_over(new_input.m):
                 self.scrollstate.y += new_input.s.y * 3
                 new_input.s.y = 0
+                should_redraw = True
+
 
 
     cpdef draw(self,FitBox parent_size):
@@ -269,7 +289,7 @@ cdef class StackBox:
             self.scroll_factor = 1
 
         #display that we have scrollable content
-        #if scroll_factor < 1:
+        #if self.scroll_factor < 1:
         #    self.outline.size.x -=20
 
 
@@ -622,11 +642,12 @@ cdef class Draggable:
     '''
     cdef FitBox outline
     cdef Vec2 touch_point,drag_accumulator
-    cdef bint selected,zero_crossing
+    cdef bint selected,zero_crossing,dragged
     cdef Vec2 value
     cdef int arrest_axis
+    cdef object click_cb
 
-    def __cinit__(self,Vec2 pos, Vec2 size, Vec2 value, arrest_axis = 0,zero_crossing=True):
+    def __cinit__(self,Vec2 pos, Vec2 size, Vec2 value, arrest_axis = 0,zero_crossing=True,click_cb = None):
         self.outline = FitBox(pos,size)
         self.value = value
         self.selected = False
@@ -635,21 +656,24 @@ cdef class Draggable:
 
         self.arrest_axis = arrest_axis
         self.zero_crossing = zero_crossing
+        self.click_cb = click_cb
+        self.dragged = False
 
-    def __init__(self,Vec2 pos, Vec2 size, Vec2 value, arrest_axis = 0,zero_crossing=True):
+    def __init__(self,Vec2 pos, Vec2 size, Vec2 value, arrest_axis = 0,zero_crossing=True,click_cb = None):
         pass
 
     cdef draw(self, FitBox parent_size):
         self.outline.compute(parent_size)
-        #context.beginPath()
         self.outline.sketch()
-        #context.stroke()
 
     cdef handle_input(self,Input new_input, bint visible):
         global should_redraw
         if self.selected and new_input.dm:
             self.value -= self.drag_accumulator
             self.drag_accumulator = new_input.m-self.touch_point
+            if self.drag_accumulator.x < 2 or self.drag_accumulator.y  < 2:
+                self.dragged  = True
+
             if self.arrest_axis == 1:
                 self.drag_accumulator.x = 0
             elif self.arrest_axis == 2:
@@ -677,12 +701,15 @@ cdef class Draggable:
             if b[1] == 1 and visible:
                 if self.outline.mouse_over(new_input.m):
                     self.selected = True
+                    self.dragged  = False
                     new_input.buttons.remove(b)
                     self.touch_point.x = new_input.m.x
                     self.touch_point.y = new_input.m.y
                     self.drag_accumulator = Vec2(0,0)
             if self.selected and b[1] == 0:
                 self.selected = False
+                if self.click_cb and not self.dragged:
+                    self.click_cb()
 
     cdef sync(self):
         pass
@@ -720,12 +747,88 @@ cdef class FitBox:
         self.size = Vec2(size.x,size.y)
         self.min_size = Vec2(min_size.x,min_size.y)
 
+
     def __init__(self,Vec2 position,Vec2 size, Vec2 min_size = Vec2(0,0)):
         pass
 
-    cdef compute(self,FitBox context):
-        # all x
+    cdef collapse(self):
 
+        #object is positioned from left(resp. top) and sized from obct org
+        if self.design_org.x >= 0 and  self.design_size.x  > 0:
+            self.design_size.x = self.min_size.x
+        #object is positioned from right (resp. bottom) and sized from context size
+        elif self.design_org.x < 0 and self.design_size.x <= 0:
+            self.design_org.x = self.design_size.x - self.min_size.x
+            #self.design_size.x = self.min_size.x
+        #object is positiond from left (top) and sized from context size:
+        elif self.design_org.x >= 0 and self.design_size.x <= 0:
+            pass
+        #object is positioned from right and sized deom object org
+        elif self.design_org.x < 0 and self.design_size.x > 0:
+            self.design_size.x = self.min_size.x
+        else:
+            pass
+
+        #object is positioned from left(resp. top) and sized from obct org
+        if self.design_org.y >= 0 and self.design_size.y  > 0:
+            self.design_size.y = self.min_size.y
+        #object is positions from right (resp. bottom) and sized from context size
+        elif self.design_org.y < 0 and self.design_size.y <= 0:
+            self.design_org.y = self.design_size.y -self.min_size.y
+            #self.design_size.y = self.min_size.y
+        #object is positiond from left (top) and sized from context size:
+        elif self.design_org.y >= 0 and self.design_size.y <= 0:
+            pass
+        #object is positioned from right and sized deom object org
+        elif self.design_org.y < 0 and self.design_size.y > 0:
+            self.design_size.y = self.min_size.y
+        else:
+            pass
+
+
+    cdef inflate(self,FitBox target):
+
+        #object is positioned from left(resp. top) and sized from obct org
+        if self.design_org.x >= 0 and  self.design_size.x  > 0:
+            self.design_size.x = target.design_size.x
+        #object is positioned from right (resp. bottom) and sized from context size
+        elif self.design_org.x < 0 and self.design_size.x <= 0:
+            self.design_org.x = target.design_org.x
+            #self.design_size.x = self.min_size.x
+        #object is positiond from left (top) and sized from context size:
+        elif self.design_org.x >= 0 and self.design_size.x <= 0:
+            pass
+        #object is positioned from right and sized deom object org
+        elif self.design_org.x < 0 and self.design_size.x > 0:
+            self.design_size.x = target.design_size.x
+        else:
+            pass
+
+        #object is positioned from left(resp. top) and sized from obct org
+        if self.design_org.y >= 0 and  self.design_size.y  > 0:
+            self.design_size.y = target.design_size.y
+        #object is positioned from right (resp. bottom) and sized from context size
+        elif self.design_org.y < 0 and self.design_size.y <= 0:
+            self.design_org.y = target.design_org.y
+            #self.design_size.y = self.min_size.y
+        #object is positiond from left (top) and sized from context size:
+        elif self.design_org.y >= 0 and self.design_size.y <= 0:
+            pass
+        #object is positioned from right and sized deom object org
+        elif self.design_org.y < 0 and self.design_size.y > 0:
+            self.design_size.y = target.design_size.y
+        else:
+            pass
+
+    cdef is_collapsed(self):
+        cdef FitBox collapser = self.copy()
+        collapser.collapse()
+        return self.same_design(collapser)
+
+
+    cdef compute(self,FitBox context):
+
+        # all x
         if self.design_org.x >=0:
             self.org.x = self.design_org.x
         else:
@@ -741,7 +844,6 @@ cdef class FitBox:
         self.org.x +=context.org.x
 
 
-
         if self.design_org.y >=0:
             self.org.y = self.design_org.y
         else:
@@ -752,9 +854,12 @@ cdef class FitBox:
         else:
             self.size.y = context.size.y - self.org.y + self.design_size.y #design size is negative - double substaction
 
+
         self.size.y = max(self.min_size.y,self.size.y)
         # finally translate into scene by parent org
         self.org.y +=context.org.y
+
+
 
     property rect:
         def __get__(self):
@@ -774,8 +879,14 @@ cdef class FitBox:
     def __repr__(self):
         return "Fitbox:\n   design org: %s size: %s\n   comptd org: %s size: %s"%(self.design_org,self.design_size,self.org,self.size)
 
+    cdef same_design(self,FitBox other):
+        return bool(self.design_org == other.design_org and self.design_size == other.design_size)
+
     cdef sketch(self):
         gldraw.rect(self.org,self.size)
+
+    cdef copy(self):
+        return FitBox( Vec2(*self.design_org), Vec2(*self.design_size), Vec2(*self.min_size) )
 
 
 
@@ -895,6 +1006,28 @@ cdef class Vec2:
     def __repr__(self):
         return 'x: %s y: %s'%(self.x,self.y)
 
+    def __richcmp__(self,Vec2 other,int op):
+        '''
+        <   0
+        ==  2
+        >   4
+        <=  1
+        !=  3
+        >=  5
+        '''
+        if op == 2:
+            return bool(self.x == other.x and self.y == other.y)
+        else:
+            return NotImplemented
+
+
+    def __getitem__(self,idx):
+        if idx==0:
+            return self.x
+        if idx==1:
+            return self.y
+        raise IndexError()
+
 
 cdef inline float lmap(float value, float istart, float istop, float ostart, float ostop):
     '''
@@ -934,13 +1067,16 @@ cdef fbo_tex_id create_ui_texture(Vec2 tex_size):
     gl.glGenTextures(1, &ui_layer.tex_id)
     gl.glBindTexture(gl.GL_TEXTURE_2D, ui_layer.tex_id)
     # configure Texture
-    gl.glTexImage2D(gl.GL_TEXTURE_2D, 0,gl.GL_RGBA, int(tex_size.x), int(tex_size.y), 0,gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, NULL)
+    gl.glTexImage2D(gl.GL_TEXTURE_2D, 0,gl.GL_RGBA, int(tex_size.x),
+                    int(tex_size.y), 0,gl.GL_RGBA, gl.GL_UNSIGNED_BYTE,
+                    NULL)
     #set filtering
     gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
     gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST)
 
     #attach texture to fbo
-    gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0,gl.GL_TEXTURE_2D, ui_layer.tex_id, 0)
+    gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0,
+                                gl.GL_TEXTURE_2D, ui_layer.tex_id, 0)
 
     if gl.glCheckFramebufferStatus(gl.GL_FRAMEBUFFER) != gl.GL_FRAMEBUFFER_COMPLETE:
         raise Exception("UI Framebuffer could not be created.")
@@ -953,7 +1089,9 @@ cdef fbo_tex_id create_ui_texture(Vec2 tex_size):
 
 cdef resize_ui_texture(fbo_tex_id ui_layer, Vec2 tex_size):
     gl.glBindTexture(gl.GL_TEXTURE_2D, ui_layer.tex_id)
-    gl.glTexImage2D(gl.GL_TEXTURE_2D, 0,gl.GL_RGBA, int(tex_size.x), int(tex_size.y), 0,gl.GL_RGBA, gl.GL_UNSIGNED_BYTE, NULL)
+    gl.glTexImage2D(gl.GL_TEXTURE_2D, 0,gl.GL_RGBA, int(tex_size.x),
+                    int(tex_size.y), 0,gl.GL_RGBA, gl.GL_UNSIGNED_BYTE,
+                    NULL)
     gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
 
 
@@ -961,7 +1099,8 @@ cdef render_to_ui_texture(fbo_tex_id ui_layer):
     # set fbo as render target
     # blending method after:
     # http://stackoverflow.com/questions/24346585/opengl-render-to-texture-with-partial-transparancy-translucency-and-then-rende/24380226#24380226
-    gl.glBlendFuncSeparateEXT(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA, gl.GL_ONE_MINUS_DST_ALPHA, gl.GL_ONE)
+    gl.glBlendFuncSeparateEXT(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA,
+                                gl.GL_ONE_MINUS_DST_ALPHA, gl.GL_ONE)
     gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, ui_layer.fbo_id)
     gl.glClearColor(0.,0.,0.,0.)
     gl.glClear(gl.GL_COLOR_BUFFER_BIT)

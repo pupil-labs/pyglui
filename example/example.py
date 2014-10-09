@@ -106,7 +106,7 @@ def demo():
     glfwSetScrollCallback(window,on_scroll)
 
 
-    # glfwSwapInterval(0)
+    glfwSwapInterval(0)
     glfwMakeContextCurrent(window)
     basic_gl_setup()
 
@@ -121,7 +121,6 @@ def demo():
     def print_hello():
         print 'hello'
 
-
     def printer(val):
         print 'setting to :',val
 
@@ -129,10 +128,10 @@ def demo():
     from pyglui import ui
     gui = ui.UI()
     gui.update_window(width,height)
-    m = ui.Menu("MySideBar",pos=(-200,20),size=(0,-20))
+    m = ui.Menu("MySideBar",pos=(-200,0),size=(0,0))
     s = ui.StackBox()
 
-    for x in range(100):
+    for x in range(10):
         s.elements.append(ui.Slider("bar",foo,label="bar %s"%x))
         s.elements.append(ui.Slider("bur",foo,label="bur %s"%x))
         sm = ui.Menu("SubMenu",pos=(0,0),size=(0,100))
@@ -147,7 +146,7 @@ def demo():
     m.elements.append(s)
     gui.elements.append(m)
 
-    m = ui.Menu("MyMenu",pos=(400,-200),size=(300,150))
+    m = ui.Menu("MyMenu",pos=(400,200),size=(300,150),min_size=(200,20))
     s = ui.StackBox()
     for x in range(1):
         s.elements.append(ui.Slider("bur",foo,setter=printer))
@@ -186,10 +185,10 @@ def demo():
         # show some nanovg graphics
 
         glfont.set_font('roboto')
-        for x in range(100):
-            glfont.set_color_float(.1,.4,.7,.5)
-            glfont.set_size(x*4)
-            glfont.draw_text(50*x,50*x,"Oh my dear this is awesome.")
+        # for x in range(100):
+        #     glfont.set_color_float(.1,.4,.7,.5)
+        #     glfont.set_size(x*4)
+        #     glfont.draw_text(50*x,50*x,"Oh my dear this is awesome.")
         # foo.bar += .5
         # if foo.bar >= 100:
         #     foo.bar = 0
