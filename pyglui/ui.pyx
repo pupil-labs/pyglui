@@ -155,7 +155,6 @@ cdef class Menu:
         self.header_pos = header_pos
 
 
-
     property header_pos:
         def __get__(self):
             header_pos_list = ['top','botton','left','right','hidden']
@@ -169,7 +168,6 @@ cdef class Menu:
                                             arrest_axis=0,zero_crossing = False,
                                             click_cb=self.toggle_iconified )
                 if self.outline.design_size:
-
                     self.resize_corner = Draggable(Vec2(-25,-25),Vec2(0,0),
                                                 self.outline.design_size,
                                                 arrest_axis=0,zero_crossing = False)
@@ -243,16 +241,18 @@ cdef class Menu:
 
     cpdef draw_menu(self):
         self.element_space.sketch()
+
         if self.handlebar:
             self.handlebar.outline.compute(self.outline)
             #self.handlebar.draw(self.outline)
             #self.handlebar.draw(self.outline)
             #self.handlebar.draw(self.outline)
-            glfont.draw_text(self.handlebar.outline.org.x+30,self.handlebar.outline.org.y,self.label)
             if 2<= self.header_pos_id <= 3:
                 gldraw.tripple_v(self.handlebar.outline.org,Vec2(25,25))
             else:
                 gldraw.tripple_h(self.handlebar.outline.org,Vec2(25,25))
+                glfont.draw_text(self.handlebar.outline.org.x+30,
+                                 self.handlebar.outline.org.y,self.label)
 
         if self.resize_corner:
             self.resize_corner.outline.compute(self.outline)
