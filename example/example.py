@@ -128,7 +128,7 @@ def demo():
     from pyglui import ui
     gui = ui.UI()
     gui.update_window(width,height)
-    m = ui.Menu("MySideBar",pos=(-200,0),size=(0,0))
+    m = ui.Menu("MySideBar",pos=(-200,0),size=(0,0),header_pos='left')
     s = ui.StackBox()
 
     for x in range(10):
@@ -146,7 +146,7 @@ def demo():
     m.elements.append(s)
     gui.elements.append(m)
 
-    m = ui.Menu("MyMenu",pos=(400,200),size=(300,150),min_size=(200,20))
+    m = ui.Menu("MyMenu",pos=(400,200),size=(300,150),min_size=(200,25))
     s = ui.StackBox()
     for x in range(1):
         s.elements.append(ui.Slider("bur",foo,setter=printer))

@@ -142,22 +142,92 @@ cdef class Menu:
     cdef bytes label
     cdef long uid
     cdef Draggable handlebar, resize_corner
-
-    def __cinit__(self,label,pos=(0,0),size=(200,100),min_size = (25,20)):
+    cdef int header_pos_id
+    def __cinit__(self,label,pos=(0,0),size=(200,100),min_size = (25,25),header_pos = 'top'):
         self.uid = id(self)
         self.label = label
         self.outline = FitBox(position=Vec2(*pos),size=Vec2(*size),min_size=Vec2(*min_size))
         self.uncollapsed_outline = self.outline.copy()
-
-        self.element_space = FitBox(position=Vec2(25,0),size=Vec2(0,0))
-        arrest_axis = 0
-        self.handlebar = Draggable(Vec2(0,0),Vec2(25,0),self.outline.design_org,arrest_axis,zero_crossing = False,click_cb=self.toggle_iconified )
-        self.resize_corner = Draggable(Vec2(-20,-20),Vec2(0,0),self.outline.design_size,arrest_axis,zero_crossing = False)
         self.elements = []
 
 
-    def __init__(self,label,pos=(0,0),size=(200,100),min_size = (20,20)):
-        pass
+    def __init__(self,label,pos=(0,0),size=(200,100),min_size = (25,25),header_pos = 'top'):
+        self.header_pos = header_pos
+
+
+
+    property header_pos:
+        def __get__(self):
+            header_pos_list = ['top','botton','left','right','hidden']
+            return header_pos_list[self.header_pos_id]
+
+        def __set__(self, header_pos):
+            if header_pos == 'top':
+                self.element_space = FitBox(Vec2(0,25),Vec2(0,0))
+                self.handlebar = Draggable(Vec2(0,0),Vec2(0,25),
+                                            self.outline.design_org,
+                                            arrest_axis=0,zero_crossing = False,
+                                            click_cb=self.toggle_iconified )
+                if self.outline.design_size:
+
+                    self.resize_corner = Draggable(Vec2(-25,-25),Vec2(0,0),
+                                                self.outline.design_size,
+                                                arrest_axis=0,zero_crossing = False)
+                else:
+                    self.resize_corner = None
+
+            elif header_pos == 'bottom':
+                self.element_space = FitBox(Vec2(0,0),Vec2(0,-25))
+                self.handlebar = Draggable(Vec2(0,-25),Vec2(0,0),
+                                            self.outline.design_size,
+                                            arrest_axis=0,zero_crossing = False,
+                                            click_cb=self.toggle_iconified )
+
+                if self.outline.design_org:
+                    self.resize_corner = Draggable(Vec2(0,0),Vec2(25,25),
+                                                self.outline.design_org,
+                                                arrest_axis=0,zero_crossing = False)
+                else:
+                    self.resize_corner = None
+
+            elif header_pos == 'right':
+                self.element_space = FitBox(Vec2(0,0),Vec2(-25,0))
+                self.handlebar = Draggable(Vec2(-25,0),Vec2(0,0),
+                                            self.outline.design_size,
+                                            arrest_axis=0,zero_crossing = False,
+                                            click_cb=self.toggle_iconified )
+
+                if self.outline.design_org:
+                    self.resize_corner = Draggable(Vec2(0,0),Vec2(25,25),
+                                                self.outline.design_org,
+                                                arrest_axis=0,zero_crossing = False)
+                else:
+                    self.resize_corner = None
+
+            elif header_pos == 'left':
+                self.element_space = FitBox(Vec2(25,0),Vec2(0,0))
+                self.handlebar = Draggable(Vec2(0,0),Vec2(25,0),
+                                            self.outline.design_org,
+                                            arrest_axis=0,zero_crossing = False,
+                                            click_cb=self.toggle_iconified )
+
+                if self.outline.design_size:
+                    self.resize_corner = Draggable(Vec2(-25,-25),Vec2(0,0),
+                                                    self.outline.design_size,
+                                                    arrest_axis=0,zero_crossing = False)
+
+            elif header_pos == 'hidden':
+                self.element_space = FitBox(Vec2(0,0),Vec2(0,0))
+                self.resize_corner = None
+                self.handlebar = None
+
+
+            else:
+                raise Exception("Header Positon argument needs to be one of 'top,right,left,bottom', was %s "%header_pos)
+
+            self.header_pos_id = ['top','botton','left','right','hidden'].index(header_pos)
+
+
 
     cpdef draw(self,FitBox parent_box):
         self.outline.compute(parent_box)
@@ -173,20 +243,27 @@ cdef class Menu:
 
     cpdef draw_menu(self):
         self.element_space.sketch()
-        self.handlebar.outline.compute(self.outline)
-        self.resize_corner.outline.compute(self.outline)
-        self.handlebar.draw(self.outline)
-        self.handlebar.draw(self.outline)
-        self.handlebar.draw(self.outline)
-        self.resize_corner.draw(self.outline)
-        gldraw.tripple_h(self.handlebar.outline.org,Vec2(25,20))
-        #gldraw.tripple_h(self.resize_corner.org,Vec2(20,20))
-        glfont.draw_text(self.outline.org.x+30,self.outline.org.y,self.label)
+        if self.handlebar:
+            self.handlebar.outline.compute(self.outline)
+            #self.handlebar.draw(self.outline)
+            #self.handlebar.draw(self.outline)
+            #self.handlebar.draw(self.outline)
+            glfont.draw_text(self.handlebar.outline.org.x+30,self.handlebar.outline.org.y,self.label)
+            if 2<= self.header_pos_id <= 3:
+                gldraw.tripple_v(self.handlebar.outline.org,Vec2(25,25))
+            else:
+                gldraw.tripple_h(self.handlebar.outline.org,Vec2(25,25))
+
+        if self.resize_corner:
+            self.resize_corner.outline.compute(self.outline)
+            self.resize_corner.draw(self.outline)
 
 
     cpdef handle_input(self, Input new_input,bint visible):
-        self.resize_corner.handle_input(new_input,visible)
-        self.handlebar.handle_input(new_input,visible)
+        if self.resize_corner:
+            self.resize_corner.handle_input(new_input,visible)
+        if self.handlebar:
+            self.handlebar.handle_input(new_input,visible)
 
         #if elements are not visible, no need to interact with them.
         if self.element_space.size.x and self.element_space.size.y:
@@ -860,7 +937,6 @@ cdef class FitBox:
         self.org.y +=context.org.y
 
 
-
     property rect:
         def __get__(self):
             return self.org.x,self.org.y,self.size.x,self.size.y
@@ -877,7 +953,7 @@ cdef class FitBox:
         return self.org.x <= m.x <= self.org.x+self.size.x and self.org.y <= m.y <=self.org.y+self.size.y
 
     def __repr__(self):
-        return "Fitbox:\n   design org: %s size: %s\n   comptd org: %s size: %s"%(self.design_org,self.design_size,self.org,self.size)
+        return "FitBox:\n   design org: %s size: %s\n   comptd org: %s size: %s"%(self.design_org,self.design_size,self.org,self.size)
 
     cdef same_design(self,FitBox other):
         return bool(self.design_org == other.design_org and self.design_size == other.design_size)
