@@ -14,7 +14,7 @@ GL Fonts:
 UI features
 [ ] implement selector box
 [ ] implement toggle
-[ ] make menu move resize and minimize fn selectable and lockalbe in x or y
+[x] make menu move resize and minimize fn selectable and lockalbe in x or y
 [ ] design the UI and implement using gl calls above
 [ ] Optional: Add global UI scale option
 [ ] Implement Perf graph in cython
@@ -119,12 +119,15 @@ cdef class UI:
             for e in self.elements:
                 e.draw(self.window)
 
+
             gl.glPopMatrix()
             render_to_screen()
 
             should_redraw = False
 
+
         draw_ui_texture(self.ui_layer)
+
 
     def update(self):
         global should_redraw
@@ -143,13 +146,13 @@ cdef class Menu:
     cdef long uid
     cdef Draggable handlebar, resize_corner
     cdef int header_pos_id
+
     def __cinit__(self,label,pos=(0,0),size=(200,100),min_size = (25,25),header_pos = 'top'):
         self.uid = id(self)
         self.label = label
         self.outline = FitBox(position=Vec2(*pos),size=Vec2(*size),min_size=Vec2(*min_size))
         self.uncollapsed_outline = self.outline.copy()
         self.elements = []
-
 
     def __init__(self,label,pos=(0,0),size=(200,100),min_size = (25,25),header_pos = 'top'):
         self.header_pos = header_pos
@@ -252,7 +255,7 @@ cdef class Menu:
             else:
                 gldraw.tripple_h(self.handlebar.outline.org,Vec2(25,25))
                 glfont.draw_text(self.handlebar.outline.org.x+30,
-                                 self.handlebar.outline.org.y,self.label)
+                                 self.handlebar.outline.org.y+4,self.label)
 
         if self.resize_corner:
             self.resize_corner.outline.compute(self.outline)
@@ -434,12 +437,6 @@ cdef class Slider:
 
         gl.glPushMatrix()
         gl.glTranslatef(self.field.org.x,self.field.org.y,0)
-        cdef FitBox s
-        if self.selected:
-            s = FitBox(Vec2(self.slider_pos.x-9,1),Vec2(18,18))
-        else:
-            s = FitBox(Vec2(self.slider_pos.x-10,0),Vec2(20,20))
-        s.sketch()
 
         glfont.push_state()
         glfont.draw_text(10,0,self.label)
@@ -449,6 +446,14 @@ cdef class Slider:
         else:
             glfont.draw_text(self.field.size.x-10,0,bytes(self.sync_val.value ))
         glfont.pop_state()
+
+        if self.selected:
+            utils.draw_points(((self.slider_pos.x,11),),size=30, color=(.0,.0,.0,.8),sharpness=.3)
+            utils.draw_points(((self.slider_pos.x,10),),size=20, color=(.5,.5,.9,.9))
+        else:
+            utils.draw_points(((self.slider_pos.x,11),),size=30, color=(.0,.0,.0,.8),sharpness=.3)
+            utils.draw_points(((self.slider_pos.x,10),),size=20, color=(.5,.5,.5,.9))
+
         gl.glPopMatrix()
 
 
@@ -1175,7 +1180,7 @@ cdef render_to_ui_texture(fbo_tex_id ui_layer):
     # set fbo as render target
     # blending method after:
     # http://stackoverflow.com/questions/24346585/opengl-render-to-texture-with-partial-transparancy-translucency-and-then-rende/24380226#24380226
-    gl.glBlendFuncSeparateEXT(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA,
+    gl.glBlendFuncSeparate(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA,
                                 gl.GL_ONE_MINUS_DST_ALPHA, gl.GL_ONE)
     gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, ui_layer.fbo_id)
     gl.glClearColor(0.,0.,0.,0.)

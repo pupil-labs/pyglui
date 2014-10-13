@@ -30,6 +30,13 @@ extensions = [
 				extra_link_args=link_args,
 				extra_compile_args=[]),
 
+	Extension(	name="pyglui.cygl.shader",
+				sources=['pyglui/cygl/shader.pyx'],
+				include_dirs = includes,
+				libraries = libs,
+				extra_link_args=link_args,
+				extra_compile_args=[]),
+
 	Extension(	name="pyglui.pyfontstash.pyfontstash",
 				sources=['pyglui/pyfontstash/pyfontstash.pyx'],
 				include_dirs = includes+['pyglui/pyfontstash/fontstash/src'],
