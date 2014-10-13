@@ -5,14 +5,19 @@ from distutils.extension import Extension
 from Cython.Build import cythonize
 
 if platform.system() == 'Darwin':
-	includes = ['/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/']
-	f = '-framework'
-	link_args = [f, 'OpenGL']
-	libs = []
+    includes = ['/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/']
+    f = '-framework'
+    link_args = [f, 'OpenGL']
+    libs = []
+    gl_compile_args = []
+
+
 else:
     includes = ['/usr/include/GL',]
     libs = ['GL']
     link_args = []
+    gl_compile_args = ['-D GL_GLEXT_PROTOTYPES']
+
 
 
 extensions = [
@@ -21,21 +26,21 @@ extensions = [
 				include_dirs = includes+['pyglui/pyfontstash/fontstash/src'],
 				libraries = libs,
 				extra_link_args=link_args,
-				extra_compile_args=[]),
+				extra_compile_args=[]+gl_compile_args),
 
 	Extension(	name="pyglui.cygl.utils",
 				sources=['pyglui/cygl/utils.pyx'],
 				include_dirs = includes,
 				libraries = libs,
 				extra_link_args=link_args,
-				extra_compile_args=[]),
+				extra_compile_args=[]+gl_compile_args),
 
 	Extension(	name="pyglui.cygl.shader",
 				sources=['pyglui/cygl/shader.pyx'],
 				include_dirs = includes,
 				libraries = libs,
 				extra_link_args=link_args,
-				extra_compile_args=[]),
+				extra_compile_args=[]+gl_compile_args),
 
 	Extension(	name="pyglui.pyfontstash.pyfontstash",
 				sources=['pyglui/pyfontstash/pyfontstash.pyx'],
