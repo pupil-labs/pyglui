@@ -3,7 +3,7 @@ TODO:
 
 GL Backend and functions
 [x] make gl.h pxd file
-[ ] implement shader based lines and points in gl backend
+[x] implement shader based lines and points in gl backend
 [x] add render to texture option if nessesay
 
 GL Fonts:
@@ -48,16 +48,16 @@ cdef class UI:
     cdef public list elements
     cdef FitBox window
 
-    cdef fbo_tex_id ui_layer
+    cdef gldraw.fbo_tex_id ui_layer
 
     def __cinit__(self):
         self.elements = []
         self.new_input = Input()
         self.window = FitBox(Vec2(0,0),Vec2(0,0))
+        self.ui_layer = gldraw.create_ui_texture(Vec2(200,200))
 
     def __init__(self):
         self.should_redraw = True
-        self.ui_layer = create_ui_texture(Vec2(200,200))
 
 
     def update_mouse(self,mx,my):
@@ -71,7 +71,7 @@ cdef class UI:
         should_redraw = True
         self.window.size.x,self.window.size.y = w,h
         gl.glScissor(0,0,int(w),int(h))
-        resize_ui_texture(self.ui_layer,self.window.size)
+        gldraw.resize_ui_texture(self.ui_layer,self.window.size)
 
 
     def update_scroll(self, sx,sy):
@@ -87,7 +87,7 @@ cdef class UI:
     def update_button(self,button,action,mods):
         self.new_input.buttons.append((button,action,mods))
 
-    def sync(self):
+    cdef sync(self):
         cdef Menu e
         for e in self.elements:
             e.sync()
@@ -107,7 +107,7 @@ cdef class UI:
         window_size = self.window.size
 
         if should_redraw:
-            render_to_ui_texture(self.ui_layer)
+            gldraw.render_to_ui_texture(self.ui_layer)
             gl.glPushMatrix()
             gldraw.adjust_view(self.window.size)
 
@@ -121,12 +121,12 @@ cdef class UI:
 
 
             gl.glPopMatrix()
-            render_to_screen()
+            gldraw.render_to_screen()
 
             should_redraw = False
 
 
-        draw_ui_texture(self.ui_layer)
+        gldraw.draw_ui_texture(self.ui_layer)
 
 
     def update(self):
@@ -284,7 +284,7 @@ cdef class Menu:
 
 
     def toggle_iconified(self):
-        print "toggle %s"%self.label
+        #print "toggle %s"%self.label
         global should_redraw
         should_redraw = True
 
@@ -357,8 +357,7 @@ cdef class StackBox:
         gl.glScissor(int(org_x),window_size.y-int(org_y)-int(size_y),int(size_x),int(size_y))
 
 
-        #The draggable may be invisible but it still needs to compute size
-        self.scrollbar.draw(self.outline)
+        self.scrollbar.outline.compute(self.outline)
 
         #compute scroll stack height: The stack elemets always have a fixed height.
         h = sum([e.height for e in self.elements])
@@ -448,10 +447,10 @@ cdef class Slider:
         glfont.pop_state()
 
         if self.selected:
-            utils.draw_points(((self.slider_pos.x,11),),size=30, color=(.0,.0,.0,.8),sharpness=.3)
-            utils.draw_points(((self.slider_pos.x,10),),size=20, color=(.5,.5,.9,.9))
+            utils.draw_points(((self.slider_pos.x,10),),size=40, color=(.0,.0,.0,.8),sharpness=.3)
+            utils.draw_points(((self.slider_pos.x,10),),size=30, color=(.5,.5,.9,.9))
         else:
-            utils.draw_points(((self.slider_pos.x,11),),size=30, color=(.0,.0,.0,.8),sharpness=.3)
+            utils.draw_points(((self.slider_pos.x,10),),size=30, color=(.0,.0,.0,.8),sharpness=.3)
             utils.draw_points(((self.slider_pos.x,10),),size=20, color=(.5,.5,.5,.9))
 
         gl.glPopMatrix()
@@ -806,7 +805,6 @@ cdef class FitBox:
         position negative -> align to the opposite side of context
         position 0  -> span into parent context and lock it like this. If you want it draggable use -.001 or .001
 
-
     This is quite expressive but does have a limitation:
         You cannot design a box that is outside of the parent context.
 
@@ -1124,116 +1122,3 @@ cdef inline float clampmap(float value, float istart, float istop, float ostart,
 
 cdef inline bint mouse_over_center(Vec2 center, int w, int h, Vec2 m):
     return center.x-w/2 <= m.x <=center.x+w/2 and center.y-h/2 <= m.y <=center.y+h/2
-
-
-
-
-### OpenGL funtions for rendering to texture.
-### Using this saves us considerable cpu/gpu time when the UI remains static.
-cdef class fbo_tex_id:
-    cdef gl.GLuint fbo_id
-    cdef gl.GLuint tex_id
-
-cdef fbo_tex_id create_ui_texture(Vec2 tex_size):
-    cdef fbo_tex_id ui_layer = fbo_tex_id()
-    ui_layer.fbo_id = 0
-    ui_layer.tex_id = 0
-
-    # create Framebufer Object
-    #requires gl ext or opengl > 3.0
-    gl.glGenFramebuffers(1, &ui_layer.fbo_id)
-    gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, ui_layer.fbo_id)
-
-    #create texture object
-    gl.glGenTextures(1, &ui_layer.tex_id)
-    gl.glBindTexture(gl.GL_TEXTURE_2D, ui_layer.tex_id)
-    # configure Texture
-    gl.glTexImage2D(gl.GL_TEXTURE_2D, 0,gl.GL_RGBA, int(tex_size.x),
-                    int(tex_size.y), 0,gl.GL_RGBA, gl.GL_UNSIGNED_BYTE,
-                    NULL)
-    #set filtering
-    gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
-    gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST)
-
-    #attach texture to fbo
-    gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0,
-                                gl.GL_TEXTURE_2D, ui_layer.tex_id, 0)
-
-    if gl.glCheckFramebufferStatus(gl.GL_FRAMEBUFFER) != gl.GL_FRAMEBUFFER_COMPLETE:
-        raise Exception("UI Framebuffer could not be created.")
-
-    #unbind fbo and texture
-    gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
-    gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)
-
-    return ui_layer
-
-cdef resize_ui_texture(fbo_tex_id ui_layer, Vec2 tex_size):
-    gl.glBindTexture(gl.GL_TEXTURE_2D, ui_layer.tex_id)
-    gl.glTexImage2D(gl.GL_TEXTURE_2D, 0,gl.GL_RGBA, int(tex_size.x),
-                    int(tex_size.y), 0,gl.GL_RGBA, gl.GL_UNSIGNED_BYTE,
-                    NULL)
-    gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
-
-
-cdef render_to_ui_texture(fbo_tex_id ui_layer):
-    # set fbo as render target
-    # blending method after:
-    # http://stackoverflow.com/questions/24346585/opengl-render-to-texture-with-partial-transparancy-translucency-and-then-rende/24380226#24380226
-    gl.glBlendFuncSeparate(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA,
-                                gl.GL_ONE_MINUS_DST_ALPHA, gl.GL_ONE)
-    gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, ui_layer.fbo_id)
-    gl.glClearColor(0.,0.,0.,0.)
-    gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-
-
-cdef render_to_screen():
-    # set rendertarget 0
-    gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)
-    gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-
-cdef draw_ui_texture(fbo_tex_id ui_layer):
-    # render texture
-
-    # set blending
-    gl.glBlendFunc(gl.GL_ONE, gl.GL_ONE_MINUS_SRC_ALPHA)
-
-    # bind texture and use.
-    gl.glBindTexture(gl.GL_TEXTURE_2D, ui_layer.tex_id)
-    gl.glEnable(gl.GL_TEXTURE_2D)
-
-    #set up coord system
-    gl.glMatrixMode(gl.GL_PROJECTION)
-    gl.glPushMatrix()
-    gl.glLoadIdentity()
-    gl.glOrtho(0, 1, 1, 0, -1, 1)
-    gl.glMatrixMode(gl.GL_MODELVIEW)
-    gl.glPushMatrix()
-    gl.glLoadIdentity()
-
-    gl.glEnable(gl.GL_TEXTURE_2D)
-    gl.glColor4f(1.0,1.0,1.0,1.0)
-    # Draw textured Quad.
-    gl.glBegin(gl.GL_QUADS)
-    gl.glTexCoord2f(0.0, 1.0)
-    gl.glVertex2f(0,0)
-    gl.glTexCoord2f(1.0, 1.0)
-    gl.glVertex2f(1,0)
-    gl.glTexCoord2f(1.0, 0.0)
-    gl.glVertex2f(1,1)
-    gl.glTexCoord2f(0.0, 0.0)
-    gl.glVertex2f(0,1)
-    gl.glEnd()
-    gl.glDisable(gl.GL_TEXTURE_2D)
-
-    #pop coord systems
-    gl.glMatrixMode(gl.GL_PROJECTION)
-    gl.glPopMatrix()
-    gl.glMatrixMode(gl.GL_MODELVIEW)
-    gl.glPopMatrix()
-
-    gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
-    gl.glDisable(gl.GL_TEXTURE_2D)
-    gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-
-

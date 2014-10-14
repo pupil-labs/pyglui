@@ -2,7 +2,6 @@ import logging
 from glfw import *
 import OpenGL
 from OpenGL.GL import *
-import pyfontstash as fs
 
 import numpy as np
 # create logger for the context of this function
@@ -114,7 +113,7 @@ def demo():
 
     foo = t()
     foo.bar = 34
-    foo.bur = 60
+    foo.bur = 60.
     foo.mytext = 'change me!'
 
     def print_hello():
@@ -170,8 +169,6 @@ def demo():
     gui.elements.append(m)
 
 
-    glfont = fs.Context()
-    glfont.add_font('roboto', 'Roboto-Regular.ttf')
     import os
     import psutil
 
@@ -181,16 +178,10 @@ def demo():
 
     while not quit:
         clear_gl_screen()
-        # show some nanovg graphics
 
-        glfont.set_font('roboto')
-        # for x in range(100):
-        #     glfont.set_color_float(.1,.4,.7,.5)
-        #     glfont.set_size(x*4)
-        #     glfont.draw_text(50*x,50*x,"Oh my dear this is awesome.")
-        # foo.bar += .5
-        # if foo.bar >= 100:
-        #     foo.bar = 0
+        foo.bar += .5
+        if foo.bar >= 100:
+            foo.bar = 0
         gui.update()
 
         glfwSwapBuffers(window)
