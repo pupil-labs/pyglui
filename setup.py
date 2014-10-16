@@ -28,6 +28,13 @@ extensions = [
 				extra_link_args=link_args,
 				extra_compile_args=[]+gl_compile_args),
 
+	Extension(	name="pyglui.graph",
+				sources=['pyglui/graph.pyx'],
+				include_dirs = includes+['pyglui/pyfontstash/fontstash/src'],
+				libraries = libs,
+				extra_link_args=link_args,
+				extra_compile_args=[]+gl_compile_args),
+
 	Extension(	name="pyglui.cygl.utils",
 				sources=['pyglui/cygl/utils.pyx'],
 				include_dirs = includes,

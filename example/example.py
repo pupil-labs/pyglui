@@ -18,9 +18,9 @@ def basic_gl_setup():
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     glEnable(GL_BLEND)
     glClearColor(.8,.8,.8,1.)
-    glEnable(GL_LINE_SMOOTH)
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
-    glEnable(GL_LINE_SMOOTH)
+    # glEnable(GL_LINE_SMOOTH)
+    # glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
+    # glEnable(GL_LINE_SMOOTH)
     glEnable(GL_POLYGON_SMOOTH)
 
 def adjust_gl_view(w,h,window):
@@ -104,7 +104,7 @@ def demo():
     glfwSetScrollCallback(window,on_scroll)
 
 
-    glfwSwapInterval(0)
+    glfwSwapInterval(1)
     glfwMakeContextCurrent(window)
     basic_gl_setup()
 
@@ -169,16 +169,30 @@ def demo():
     gui.elements.append(m)
 
 
+    from pyglui import graph
+
+    cpu_g = graph.Graph()
+    cpu_g.pos = (50,100)
+
+    fps_g = graph.Graph()
+    fps_g.pos = (300,100)
     import os
     import psutil
 
     pid = os.getpid()
     ps = psutil.Process(pid)
 
+    ts = time.time()
 
     while not quit:
         clear_gl_screen()
 
+        dt,ts = time.time()-ts,time.time()
+
+        cpu_g.update(ps.get_cpu_percent())
+        cpu_g.draw()
+        fps_g.update(1./dt)
+        fps_g.draw()
         foo.bar += .5
         if foo.bar >= 100:
             foo.bar = 0

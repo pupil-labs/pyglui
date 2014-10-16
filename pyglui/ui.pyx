@@ -30,14 +30,14 @@ UI value syncing
 
 from cygl cimport cgl as gl
 from cygl cimport utils
-cimport gldraw
-
 from pyfontstash cimport pyfontstash as fs
+
+include 'gldraw.pxi'
+include 'helpers.pxi'
 
 #global init of gl fonts
 cdef fs.Context glfont = fs.Context()
 glfont.add_font('opensans', 'OpenSans-Regular.ttf')
-
 
 cdef class UI:
     '''
@@ -48,13 +48,13 @@ cdef class UI:
     cdef public list elements
     cdef FitBox window
 
-    cdef gldraw.fbo_tex_id ui_layer
+    cdef fbo_tex_id ui_layer
 
     def __cinit__(self):
         self.elements = []
         self.new_input = Input()
         self.window = FitBox(Vec2(0,0),Vec2(0,0))
-        self.ui_layer = gldraw.create_ui_texture(Vec2(200,200))
+        self.ui_layer = create_ui_texture(Vec2(200,200))
 
     def __init__(self):
         self.should_redraw = True
@@ -71,7 +71,7 @@ cdef class UI:
         should_redraw = True
         self.window.size.x,self.window.size.y = w,h
         gl.glScissor(0,0,int(w),int(h))
-        gldraw.resize_ui_texture(self.ui_layer,self.window.size)
+        resize_ui_texture(self.ui_layer,self.window.size)
 
 
     def update_scroll(self, sx,sy):
@@ -107,9 +107,9 @@ cdef class UI:
         window_size = self.window.size
 
         if should_redraw:
-            gldraw.render_to_ui_texture(self.ui_layer)
+            render_to_ui_texture(self.ui_layer)
             gl.glPushMatrix()
-            gldraw.adjust_view(self.window.size)
+            adjust_view(self.window.size)
 
             glfont.clear_state()
             glfont.set_size(18)
@@ -121,12 +121,12 @@ cdef class UI:
 
 
             gl.glPopMatrix()
-            gldraw.render_to_screen()
+            render_to_screen()
 
             should_redraw = False
 
 
-        gldraw.draw_ui_texture(self.ui_layer)
+        draw_ui_texture(self.ui_layer)
 
 
     def update(self):
@@ -251,9 +251,9 @@ cdef class Menu:
             #self.handlebar.draw(self.outline)
             #self.handlebar.draw(self.outline)
             if 2<= self.header_pos_id <= 3:
-                gldraw.tripple_v(self.handlebar.outline.org,Vec2(25,25))
+                tripple_v(self.handlebar.outline.org,Vec2(25,25))
             else:
-                gldraw.tripple_h(self.handlebar.outline.org,Vec2(25,25))
+                tripple_h(self.handlebar.outline.org,Vec2(25,25))
                 glfont.draw_text(self.handlebar.outline.org.x+30,
                                  self.handlebar.outline.org.y+4,self.label)
 
@@ -962,7 +962,7 @@ cdef class FitBox:
         return bool(self.design_org == other.design_org and self.design_size == other.design_size)
 
     cdef sketch(self):
-        gldraw.rect(self.org,self.size)
+        rect(self.org,self.size)
 
     cdef copy(self):
         return FitBox( Vec2(*self.design_org), Vec2(*self.design_size), Vec2(*self.min_size) )
@@ -1016,7 +1016,6 @@ cdef class Synced_Value:
                 self.setter(self._value)
 
             self.attribute_context.__dict__[self.attribute_name] = self._value
-
 
 
 cdef class Input:
@@ -1107,18 +1106,3 @@ cdef class Vec2:
             return self.y
         raise IndexError()
 
-
-cdef inline float lmap(float value, float istart, float istop, float ostart, float ostop):
-    '''
-    linear mapping of val from space1 to space 2
-    '''
-    return ostart + (ostop - ostart) * ((value - istart) / (istop - istart))
-
-cdef inline float clamp(float value, float minium, float maximum):
-    return max(min(value,maximum),minium)
-
-cdef inline float clampmap(float value, float istart, float istop, float ostart, float ostop):
-    return clamp(lmap(value,istart,istop,ostart,ostop),ostart,ostop)
-
-cdef inline bint mouse_over_center(Vec2 center, int w, int h, Vec2 m):
-    return center.x-w/2 <= m.x <=center.x+w/2 and center.y-h/2 <= m.y <=center.y+h/2

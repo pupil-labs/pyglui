@@ -1,6 +1,3 @@
-from cygl cimport cgl as gl
-from ui cimport Vec2
-
 
 cdef inline adjust_view(Vec2 size):
     gl.glMatrixMode(gl.GL_PROJECTION)
@@ -60,7 +57,7 @@ ctypedef struct fbo_tex_id:
     gl.GLuint fbo_id
     gl.GLuint tex_id
 
-cdef inline fbo_tex_id create_ui_texture(Vec2 tex_size):
+cdef fbo_tex_id create_ui_texture(Vec2 tex_size):
     cdef fbo_tex_id ui_layer
     ui_layer.fbo_id = 0
     ui_layer.tex_id = 0
@@ -94,7 +91,7 @@ cdef inline fbo_tex_id create_ui_texture(Vec2 tex_size):
 
     return ui_layer
 
-cdef inline resize_ui_texture(fbo_tex_id ui_layer, Vec2 tex_size):
+cdef resize_ui_texture(fbo_tex_id ui_layer, Vec2 tex_size):
     gl.glBindTexture(gl.GL_TEXTURE_2D, ui_layer.tex_id)
     gl.glTexImage2D(gl.GL_TEXTURE_2D, 0,gl.GL_RGBA, int(tex_size.x),
                     int(tex_size.y), 0,gl.GL_RGBA, gl.GL_UNSIGNED_BYTE,
@@ -102,7 +99,7 @@ cdef inline resize_ui_texture(fbo_tex_id ui_layer, Vec2 tex_size):
     gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
 
 
-cdef inline render_to_ui_texture(fbo_tex_id ui_layer):
+cdef render_to_ui_texture(fbo_tex_id ui_layer):
     # set fbo as render target
     # blending method after:
     # http://stackoverflow.com/questions/24346585/opengl-render-to-texture-with-partial-transparancy-translucency-and-then-rende/24380226#24380226
@@ -113,12 +110,12 @@ cdef inline render_to_ui_texture(fbo_tex_id ui_layer):
     gl.glClear(gl.GL_COLOR_BUFFER_BIT)
 
 
-cdef inline render_to_screen():
+cdef render_to_screen():
     # set rendertarget 0
     gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)
     gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
-cdef inline draw_ui_texture(fbo_tex_id ui_layer):
+cdef draw_ui_texture(fbo_tex_id ui_layer):
     # render texture
 
     # set blending
