@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 import time
 
-width, height = (1000,600)
+width, height = (1280,720)
 
 
 def basic_gl_setup():
@@ -129,7 +129,7 @@ def demo():
     m = ui.Menu("MySideBar",pos=(-200,0),size=(0,0),header_pos='left')
     s = ui.StackBox()
 
-    for x in range(10):
+    for x in range(2):
         s.elements.append(ui.Slider("bar",foo,label="bar %s"%x))
         s.elements.append(ui.Slider("bur",foo,label="bur %s"%x))
         sm = ui.Menu("SubMenu",pos=(0,0),size=(0,100))
@@ -156,51 +156,54 @@ def demo():
         ss= ui.StackBox()
         ss.elements.append(ui.Slider("bar",foo))
         ss.elements.append(ui.Slider("bar",foo))
-        ss.elements.append(ui.Slider("bar",foo))
-        ss.elements.append(ui.Slider("bar",foo))
-        ss.elements.append(ui.Slider("bar",foo))
+
         ss.elements.append(ui.TextInput('mytext',foo,setter=printer))
         sm.elements.append(ss)
         s.elements.append(sm)
         s.elements.append(ui.Button("Say Hi!",print_hello))
-        s.elements.append(ui.Button("Say Hi!",print_hello))
-        s.elements.append(ui.Button("Say Hi!",print_hello))
+
     m.elements.append(s)
     gui.elements.append(m)
 
 
-    from pyglui import graph
 
-    cpu_g = graph.Graph()
-    cpu_g.pos = (50,100)
-
-    fps_g = graph.Graph()
-    fps_g.pos = (300,100)
     import os
     import psutil
-
     pid = os.getpid()
     ps = psutil.Process(pid)
-
     ts = time.time()
 
-    while not quit:
-        clear_gl_screen()
+    from pyglui import graph
+    cpu_g = graph.Graph()
+    cpu_g.pos = (20,100)
+    cpu_g.update_fn = ps.get_cpu_percent
+    cpu_g.update_rate = 5
+    cpu_g.label = 'CPU %0.1f'
 
+    fps_g = graph.Graph()
+    fps_g.pos = (140,100)
+    fps_g.update_rate = 5
+    fps_g.label = "%0.0f FPS"
+    fps_g.bar_width = 4
+
+    while not quit:
         dt,ts = time.time()-ts,time.time()
 
-        cpu_g.update(ps.get_cpu_percent())
+        clear_gl_screen()
+
+
+        cpu_g.update()
         cpu_g.draw()
-        fps_g.update(1./dt)
+        fps_g.add(1./dt)
         fps_g.draw()
-        foo.bar += .5
-        if foo.bar >= 100:
-            foo.bar = 0
+        # foo.bar += .5
+        # if foo.bar >= 100:
+            # foo.bar = 0
         gui.update()
 
         glfwSwapBuffers(window)
         glfwPollEvents()
-        # time.sleep(.03)
+        time.sleep(.03)
 
     glfwDestroyWindow(window)
     glfwTerminate()

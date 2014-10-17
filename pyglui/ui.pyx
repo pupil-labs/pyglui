@@ -117,7 +117,7 @@ cdef class UI:
             glfont.set_align(fs.FONS_ALIGN_TOP)
 
             for e in self.elements:
-                e.draw(self.window)
+                e.draw(self.window,nested=False)
 
 
             gl.glPopMatrix()
@@ -230,11 +230,11 @@ cdef class Menu:
 
 
 
-    cpdef draw(self,FitBox parent_box):
-        self.outline.compute(parent_box)
+    cpdef draw(self,FitBox parent,bint nested=True):
+        self.outline.compute(parent)
         self.element_space.compute(self.outline)
 
-        self.draw_menu()
+        self.draw_menu(nested)
 
         #if elements are not visible, no need to draw them.
         if self.element_space.size.x and self.element_space.size.y:
@@ -242,8 +242,11 @@ cdef class Menu:
                 e.draw(self.element_space)
 
 
-    cpdef draw_menu(self):
-        self.element_space.sketch()
+    cdef draw_menu(self,bint nested):
+        if nested:
+            pass
+        else:
+            self.element_space.sketch()
 
         if self.handlebar:
             self.handlebar.outline.compute(self.outline)
@@ -330,15 +333,15 @@ cdef class StackBox:
             self.scrollbar.handle_input(new_input,visible)
 
             #since this is one of the rare occasions where you could use the scrollwheel:
-            if visible and self.scrollbar.outline.mouse_over(new_input.m):
+            if new_input.s.y and visible and self.scrollbar.outline.mouse_over(new_input.m):
                 self.scrollstate.y += new_input.s.y * 3
                 new_input.s.y = 0
                 should_redraw = True
 
 
 
-    cpdef draw(self,FitBox parent_size):
-        self.outline.compute(parent_size)
+    cpdef draw(self,FitBox parent, bint nested=True):
+        self.outline.compute(parent)
 
         # dont show the stuff that does not fit.
         gl.glPushAttrib(gl.GL_SCISSOR_BIT)
@@ -423,7 +426,7 @@ cdef class Slider:
     cpdef sync(self):
         self.sync_val.sync()
 
-    cpdef draw(self,FitBox parent):
+    cpdef draw(self,FitBox parent, bint nested=True):
         #update apperance:
         self.outline.compute(parent)
         self.field.compute(self.outline)
@@ -504,7 +507,7 @@ cdef class Switch:
     cpdef sync(self):
         self.sync_val.sync()
 
-    cpdef draw(self,FitBox parent):
+    cpdef draw(self,FitBox parent,bint nested=True):
         #update apperance:
         self.outline.compute(parent)
         self.field.compute(self.outline)
@@ -589,7 +592,7 @@ cdef class TextInput:
     cpdef sync(self):
         self.sync_val.sync()
 
-    cpdef draw(self,FitBox parent):
+    cpdef draw(self,FitBox parent,bint nested=True):
         #update apperance:
         self.outline.compute(parent)
 
@@ -679,7 +682,7 @@ cdef class Button:
     cpdef sync(self):
         pass
 
-    cpdef draw(self,FitBox parent):
+    cpdef draw(self,FitBox parent,bint nested=True):
         #update apperance:
         self.outline.compute(parent)
         self.button.compute(self.outline)
@@ -743,7 +746,7 @@ cdef class Draggable:
     def __init__(self,Vec2 pos, Vec2 size, Vec2 value, arrest_axis = 0,zero_crossing=True,click_cb = None):
         pass
 
-    cdef draw(self, FitBox parent_size):
+    cdef draw(self, FitBox parent_size,bint nested=True):
         self.outline.compute(parent_size)
         self.outline.sketch()
 
@@ -900,10 +903,12 @@ cdef class FitBox:
         else:
             pass
 
-    cdef is_collapsed(self):
+
+    cdef is_collapsed(self,float slack = 30):
         cdef FitBox collapser = self.copy()
         collapser.collapse()
-        return self.same_design(collapser)
+        return self.similar_design(collapser,slack)
+
 
 
     cdef compute(self,FitBox context):
@@ -960,6 +965,14 @@ cdef class FitBox:
 
     cdef same_design(self,FitBox other):
         return bool(self.design_org == other.design_org and self.design_size == other.design_size)
+
+    cdef similar_design(self,FitBox other,float dist = 30):
+        cdef float d = 0
+        d += abs(self.design_size.x-other.design_size.x)
+        d += abs(self.design_size.y-other.design_size.y)
+        d += abs(self.design_org.x-other.design_org.x)
+        d += abs(self.design_org.y-other.design_org.y)
+        return d <= dist
 
     cdef sketch(self):
         rect(self.org,self.size)
