@@ -503,9 +503,9 @@ cdef class Scrolling_Menu:
 
         # handle scrollbar interaction after menu items
         # so grabbing a slider does not trigger scrolling
+        #mouse:
         self.scrollbar.handle_input(new_input,visible)
-
-        #since this is one of the rare occasions where you could use the scrollwheel:
+        #scrollwheel:
         if new_input.s.y and visible and self.element_space.mouse_over(new_input.m):
             self.scrollstate.y += new_input.s.y * 3
             new_input.s.y = 0
@@ -524,7 +524,6 @@ cdef class Scrolling_Menu:
 
 
     def toggle_iconified(self):
-        #print "toggle %s"%self.label
         global should_redraw
         should_redraw = True
 
@@ -533,108 +532,6 @@ cdef class Scrolling_Menu:
         else:
             self.uncollapsed_outline = self.outline.copy()
             self.outline.collapse()
-
-cdef class StackBox:
-    '''
-    An element that contains stacks of other elements
-    It will be scrollable if the content does not fit.
-
-    This is not used anymore but instead build into "Scrolling_Menu"
-    '''
-    cdef FitBox outline
-    cdef Draggable scrollbar
-    cdef Vec2 scrollstate
-    cdef float scroll_factor
-    cdef public list elements
-
-    def __cinit__(self):
-        self.outline = FitBox(Vec2(0,0),Vec2(0,0))
-        self.scrollstate = Vec2(0,0)
-        self.scrollbar = Draggable(Vec2(0,0),Vec2(0,0),self.scrollstate,arrest_axis=1,zero_crossing=True)
-        self.scroll_factor = 1.
-    def __init__(self):
-        self.elements = []
-
-    cpdef sync(self):
-        for e in self.elements:
-            e.sync()
-
-
-    cpdef handle_input(self,Input new_input,visible=True):
-        global should_redraw
-        cdef bint mouse_over_menu = 0 <= new_input.m.y-self.outline.org.y <= +self.outline.size.y
-        mouse_over_menu  = mouse_over_menu and visible
-        for e in self.elements:
-            e.handle_input(new_input, mouse_over_menu)
-        # handle scrollbar interaction after menu items
-        # so grabbing a slider does not trigger scrolling
-        if self.scroll_factor < 1:
-            self.scrollbar.handle_input(new_input,visible)
-
-            #since this is one of the rare occasions where you could use the scrollwheel:
-            if new_input.s.y and visible and self.scrollbar.outline.mouse_over(new_input.m):
-                self.scrollstate.y += new_input.s.y * 3
-                new_input.s.y = 0
-                should_redraw = True
-
-
-
-    cpdef draw(self,FitBox parent, bint nested=True):
-        self.outline.compute(parent)
-
-        # dont show the stuff that does not fit.
-        gl.glPushAttrib(gl.GL_SCISSOR_BIT)
-        gl.glEnable(gl.GL_SCISSOR_TEST)
-        cdef int sb[4]
-        global window_size
-        gl.glGetIntegerv(gl.GL_SCISSOR_BOX,sb)
-        sb[1] = window_size.y-sb[1]-sb[3] # y-flipped coord system
-        #deal with nested scissors
-        cdef float org_x = max(sb[0],self.outline.org.x)
-        cdef float size_x = min(sb[0]+sb[2],self.outline.org.x+self.outline.size.x)
-        size_x = max(0,size_x-org_x)
-        cdef float org_y = max(sb[1],self.outline.org.y)
-        cdef float size_y = min(sb[1]+sb[3],self.outline.org.y+self.outline.size.y)
-        size_y = max(0,size_y-org_y)
-        gl.glScissor(int(org_x),window_size.y-int(org_y)-int(size_y),int(size_x),int(size_y))
-
-
-        self.scrollbar.outline.compute(self.outline)
-
-        #compute scroll stack height: The stack elemets always have a fixed height.
-        h = sum([e.height for e in self.elements])
-
-        if h:
-            self.scroll_factor = float(self.outline.size.y)/h
-        else:
-            self.scroll_factor = 1
-
-        #display that we have scrollable content
-        #if self.scroll_factor < 1:
-        #    self.outline.size.x -=20
-
-
-        #If the scollbar is not active make sure the content is not scrolled away:
-        if not self.scrollbar.selected:
-            self.scrollstate.y = clamp(self.scrollstate.y,min(0,self.outline.size.y-h),-h)
-
-
-        self.outline.org.y += self.scrollstate.y
-        for e in self.elements:
-            e.draw(self.outline)
-            self.outline.org.y+= e.height
-
-        self.outline.org.y -= self.scrollstate.y
-        self.outline.org.y -= h
-
-        #restore scissor state
-        gl.glPopAttrib()
-
-
-    property height:
-        def __get__(self):
-            raise Exception("Stackbox does not have a height. Put it into a Menu.")
-
 
 
 cdef class Slider:
@@ -1148,7 +1045,7 @@ cdef class FitBox:
     cdef is_collapsed(self,float slack = 30):
         cdef FitBox collapser = self.copy()
         collapser.collapse()
-        return self.similar_design(collapser,slack)
+        return slack >= self.design_distance(collapser)
 
 
 
@@ -1207,13 +1104,13 @@ cdef class FitBox:
     cdef same_design(self,FitBox other):
         return bool(self.design_org == other.design_org and self.design_size == other.design_size)
 
-    cdef similar_design(self,FitBox other,float dist = 30):
+    cdef design_distance(self,FitBox other):
         cdef float d = 0
         d += abs(self.design_size.x-other.design_size.x)
         d += abs(self.design_size.y-other.design_size.y)
         d += abs(self.design_org.x-other.design_org.x)
         d += abs(self.design_org.y-other.design_org.y)
-        return d <= dist
+        return d
 
     cdef sketch(self):
         rect(self.org,self.size)
