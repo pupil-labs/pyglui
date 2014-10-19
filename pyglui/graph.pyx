@@ -6,7 +6,7 @@ from pyfontstash cimport pyfontstash as fs
 
 #global init of gl fonts
 cdef fs.Context glfont = fs.Context()
-glfont.add_font('opensans', 'OpenSans-Regular.ttf')
+glfont.add_font('opensans', 'Roboto-Regular.ttf')
 glfont.set_size(18)
 
 

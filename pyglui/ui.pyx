@@ -17,7 +17,7 @@ UI features
 [x] make menu move resize and minimize fn selectable and lockalbe in x or y
 [ ] design the UI and implement using gl calls above
 [ ] Optional: Add global UI scale option
-[ ] Implement Perf graph in cython
+[x] Implement Perf graph in cython
 [x] Implement scrolling
 
 Done:
@@ -37,7 +37,7 @@ include 'helpers.pxi'
 
 #global init of gl fonts
 cdef fs.Context glfont = fs.Context()
-glfont.add_font('opensans', 'OpenSans-Regular.ttf')
+glfont.add_font('opensans', 'Roboto-Regular.ttf')
 
 cdef class UI:
     '''
@@ -88,12 +88,10 @@ cdef class UI:
         self.new_input.buttons.append((button,action,mods))
 
     cdef sync(self):
-        cdef Menu e
         for e in self.elements:
             e.sync()
 
     cdef handle_input(self):
-        cdef Menu e
         if self.new_input:
             #print self.new_input
             for e in self.elements:
@@ -101,7 +99,6 @@ cdef class UI:
             self.new_input.purge()
 
     cdef draw(self):
-        cdef Menu e
         global should_redraw
         global window_size
         window_size = self.window.size
@@ -125,7 +122,6 @@ cdef class UI:
 
             should_redraw = False
 
-
         draw_ui_texture(self.ui_layer)
 
 
@@ -135,8 +131,178 @@ cdef class UI:
         self.sync()
         self.draw()
 
+cdef class Growing_Menu:
+    '''
+    Menu is a movable object on the canvas that contains other elements.
+    '''
+    cdef public list elements
+    cdef FitBox outline, element_space
+    cdef bint is_collapsed
+    cdef bytes label
+    cdef long uid
+    cdef int header_pos_id
+    cdef Draggable handlebar, resize_corner
 
-cdef class Menu:
+    def __cinit__(self,label,pos=(0,0),size=(200,100),min_size = (25,0),header_pos = 'top'):
+        self.uid = id(self)
+        self.label = label
+        #design height will be overwritten in draw.
+        self.outline = FitBox(position=Vec2(*pos),size=Vec2(*size),min_size=Vec2(*min_size))
+        self.elements = []
+
+
+    def __init__(self,label,pos=(0,0),size=(200,100),min_size = (25,0),header_pos = 'top'):
+        self.header_pos = header_pos
+
+
+    property header_pos:
+        def __get__(self):
+            header_pos_list = ['top','botton','left','right','hidden']
+            return header_pos_list[self.header_pos_id]
+
+        def __set__(self, header_pos):
+            if header_pos == 'top':
+                self.element_space = FitBox(Vec2(0,25),Vec2(0,0))
+                self.handlebar = Draggable(Vec2(0,0),Vec2(0,25),
+                                            self.outline.design_org,
+                                            arrest_axis=0,zero_crossing = False,
+                                            click_cb=self.toggle_iconified )
+                if self.outline.design_size.x:
+                    self.resize_corner = Draggable(Vec2(-25,-25),Vec2(0,0),
+                                                self.outline.design_size,
+                                                arrest_axis=2,zero_crossing = False)
+                else:
+                    self.resize_corner = None
+
+            elif header_pos == 'bottom':
+                self.element_space = FitBox(Vec2(0,0),Vec2(0,-25))
+                self.handlebar = Draggable(Vec2(0,-25),Vec2(0,0),
+                                            self.outline.design_size,
+                                            arrest_axis=0,zero_crossing = False,
+                                            click_cb=self.toggle_iconified )
+
+                if self.outline.design_org:
+                    self.resize_corner = Draggable(Vec2(0,0),Vec2(25,25),
+                                                self.outline.design_org,
+                                                arrest_axis=2,zero_crossing = False)
+                else:
+                    self.resize_corner = None
+
+            elif header_pos == 'right':
+                self.element_space = FitBox(Vec2(0,0),Vec2(-25,0))
+                self.handlebar = Draggable(Vec2(-25,0),Vec2(0,0),
+                                            self.outline.design_size,
+                                            arrest_axis=0,zero_crossing = False,
+                                            click_cb=self.toggle_iconified )
+
+                if self.outline.design_org.x:
+                    self.resize_corner = Draggable(Vec2(0,0),Vec2(25,25),
+                                                self.outline.design_org,
+                                                arrest_axis=2,zero_crossing = False)
+                else:
+                    self.resize_corner = None
+
+            elif header_pos == 'left':
+                self.element_space = FitBox(Vec2(25,0),Vec2(0,0))
+                self.handlebar = Draggable(Vec2(0,0),Vec2(25,0),
+                                            self.outline.design_org,
+                                            arrest_axis=0,zero_crossing = False,
+                                            click_cb=self.toggle_iconified )
+
+                if self.outline.design_size.x:
+                    self.resize_corner = Draggable(Vec2(-25,-25),Vec2(0,0),
+                                                    self.outline.design_size,
+                                                    arrest_axis=2,zero_crossing = False)
+
+            elif header_pos == 'hidden':
+                self.element_space = FitBox(Vec2(0,0),Vec2(0,0))
+                self.resize_corner = None
+                self.handlebar = None
+
+
+            else:
+                raise Exception("Header Positon argument needs to be one of 'top,right,left,bottom', was %s "%header_pos)
+
+            self.header_pos_id = ['top','botton','left','right','hidden'].index(header_pos)
+
+
+
+    cpdef draw(self,FitBox parent,bint nested=True):
+        #here we compute the requred design height of this menu.
+        self.outline.design_size.y  = self.height
+        self.outline.compute(parent)
+        self.element_space.compute(self.outline)
+
+        self.draw_menu(nested)
+
+        cdef float org_y = self.element_space.org.y
+        #if elements are not visible, no need to draw them.
+        if self.element_space.size.x and self.element_space.size.y:
+            for e in self.elements:
+                e.draw(self.element_space)
+                self.element_space.org.y+= e.height
+            self.outline.org.y = org_y
+
+    cdef draw_menu(self,bint nested):
+        if nested:
+            pass
+        else:
+            self.element_space.sketch()
+
+        if self.handlebar:
+            self.handlebar.outline.compute(self.outline)
+            if 2<= self.header_pos_id <= 3:
+                tripple_v(self.handlebar.outline.org,Vec2(25,25))
+            else:
+                tripple_h(self.handlebar.outline.org,Vec2(25,25))
+                glfont.draw_text(self.handlebar.outline.org.x+30,
+                                 self.handlebar.outline.org.y+4,self.label)
+
+        if self.resize_corner:
+            self.resize_corner.outline.compute(self.outline)
+            self.resize_corner.draw(self.outline)
+
+
+    cpdef handle_input(self, Input new_input,bint visible):
+        global should_redraw
+
+        if self.resize_corner:
+            self.resize_corner.handle_input(new_input,visible)
+        if self.handlebar:
+            self.handlebar.handle_input(new_input,visible)
+
+        #if elements are not visible, no need to interact with them.
+        if self.element_space.size.x and self.element_space.size.y:
+            for e in self.elements:
+                e.handle_input(new_input, visible)
+
+
+    cpdef sync(self):
+        if self.element_space.size.x and self.element_space.size.y:
+            for e in self.elements:
+                e.sync()
+
+    property height:
+        def __get__(self):
+            cdef float height = 0
+            #space from outline to element space at top
+            height += self.element_space.design_org.y
+            #space from elementspace to outline at bottom
+            height -= self.element_space.design_size.y #double neg
+            if self.is_collapsed:
+                #elemnt space is 0
+                pass
+            else:
+                height += sum([e.height for e in self.elements])
+            return height
+
+
+    def toggle_iconified(self):
+        global should_redraw
+        should_redraw = True
+        self.is_collapsed = not self.is_collapsed
+
+cdef class Scrolling_Menu:
     '''
     Menu is a movable object on the canvas that contains other elements.
     '''
@@ -144,8 +310,10 @@ cdef class Menu:
     cdef FitBox outline, uncollapsed_outline, element_space
     cdef bytes label
     cdef long uid
-    cdef Draggable handlebar, resize_corner
     cdef int header_pos_id
+    cdef Draggable handlebar, resize_corner, scrollbar
+    cdef Vec2 scrollstate
+    cdef float scroll_factor
 
     def __cinit__(self,label,pos=(0,0),size=(200,100),min_size = (25,25),header_pos = 'top'):
         self.uid = id(self)
@@ -153,6 +321,10 @@ cdef class Menu:
         self.outline = FitBox(position=Vec2(*pos),size=Vec2(*size),min_size=Vec2(*min_size))
         self.uncollapsed_outline = self.outline.copy()
         self.elements = []
+
+        self.scrollstate = Vec2(0,0)
+        self.scrollbar = Draggable(Vec2(0,0),Vec2(0,0),self.scrollstate,arrest_axis=1,zero_crossing=True)
+        self.scroll_factor = 1.
 
     def __init__(self,label,pos=(0,0),size=(200,100),min_size = (25,25),header_pos = 'top'):
         self.header_pos = header_pos
@@ -238,8 +410,57 @@ cdef class Menu:
 
         #if elements are not visible, no need to draw them.
         if self.element_space.size.x and self.element_space.size.y:
-            for e in self.elements:
-                e.draw(self.element_space)
+            self.draw_scroll_window_elements()
+
+    cdef draw_scroll_window_elements(self):
+
+        # dont show the stuff that does not fit.
+        gl.glPushAttrib(gl.GL_SCISSOR_BIT)
+        gl.glEnable(gl.GL_SCISSOR_TEST)
+        cdef int sb[4]
+        global window_size
+        gl.glGetIntegerv(gl.GL_SCISSOR_BOX,sb)
+        sb[1] = window_size.y-sb[1]-sb[3] # y-flipped coord system
+        #deal with nested scissors
+        cdef float org_x = max(sb[0],self.element_space.org.x)
+        cdef float size_x = min(sb[0]+sb[2],self.element_space.org.x+self.element_space.size.x)
+        size_x = max(0,size_x-org_x)
+        cdef float org_y = max(sb[1],self.element_space.org.y)
+        cdef float size_y = min(sb[1]+sb[3],self.element_space.org.y+self.element_space.size.y)
+        size_y = max(0,size_y-org_y)
+        gl.glScissor(int(org_x),window_size.y-int(org_y)-int(size_y),int(size_x),int(size_y))
+
+
+        self.scrollbar.outline.compute(self.element_space)
+
+        #compute scroll stack height: The stack elemets always have a fixed height.
+        h = sum([e.height for e in self.elements])
+
+        if h:
+            self.scroll_factor = float(self.element_space.size.y)/h
+        else:
+            self.scroll_factor = 1
+
+        #display that we have scrollable content
+        #if self.scroll_factor < 1:
+        #    self.element_space.size.x -=20
+
+
+        #If the scollbar is not active make sure the content is not scrolled away:
+        if not self.scrollbar.selected:
+            #self.scrollstate.y = clamp(self.scrollstate.y,min(-h,self.element_space.size.y-h),0)
+            self.scrollstate.y = clamp(self.scrollstate.y,-h+35,0)
+
+        self.element_space.org.y += self.scrollstate.y
+        for e in self.elements:
+            e.draw(self.element_space)
+            self.element_space.org.y+= e.height
+
+        self.element_space.org.y -= self.scrollstate.y
+        self.element_space.org.y -= h
+
+        #restore scissor state
+        gl.glPopAttrib()
 
 
     cdef draw_menu(self,bint nested):
@@ -250,9 +471,6 @@ cdef class Menu:
 
         if self.handlebar:
             self.handlebar.outline.compute(self.outline)
-            #self.handlebar.draw(self.outline)
-            #self.handlebar.draw(self.outline)
-            #self.handlebar.draw(self.outline)
             if 2<= self.header_pos_id <= 3:
                 tripple_v(self.handlebar.outline.org,Vec2(25,25))
             else:
@@ -266,6 +484,9 @@ cdef class Menu:
 
 
     cpdef handle_input(self, Input new_input,bint visible):
+        global should_redraw
+        cdef bint mouse_over_menu = 0
+
         if self.resize_corner:
             self.resize_corner.handle_input(new_input,visible)
         if self.handlebar:
@@ -273,8 +494,24 @@ cdef class Menu:
 
         #if elements are not visible, no need to interact with them.
         if self.element_space.size.x and self.element_space.size.y:
+            # let the elements know that the mouse should be ignored
+            # if outside of the visible scroll section
+            mouse_over_menu =  self.element_space.org.y <= new_input.m.y <= self.element_space.org.y+self.element_space.size.y
+            mouse_over_menu = mouse_over_menu and visible
             for e in self.elements:
-                e.handle_input(new_input,visible)
+                e.handle_input(new_input, mouse_over_menu)
+
+        # handle scrollbar interaction after menu items
+        # so grabbing a slider does not trigger scrolling
+        self.scrollbar.handle_input(new_input,visible)
+
+        #since this is one of the rare occasions where you could use the scrollwheel:
+        if new_input.s.y and visible and self.element_space.mouse_over(new_input.m):
+            self.scrollstate.y += new_input.s.y * 3
+            new_input.s.y = 0
+            should_redraw = True
+
+
 
     cpdef sync(self):
         if self.element_space.size.x and self.element_space.size.y:
@@ -283,7 +520,7 @@ cdef class Menu:
 
     property height:
         def __get__(self):
-            return self.outline.size.y+self.outline.design_org.y
+            return self.outline.size.y
 
 
     def toggle_iconified(self):
@@ -301,6 +538,8 @@ cdef class StackBox:
     '''
     An element that contains stacks of other elements
     It will be scrollable if the content does not fit.
+
+    This is not used anymore but instead build into "Scrolling_Menu"
     '''
     cdef FitBox outline
     cdef Draggable scrollbar
@@ -377,7 +616,7 @@ cdef class StackBox:
 
         #If the scollbar is not active make sure the content is not scrolled away:
         if not self.scrollbar.selected:
-            self.scrollstate.y = clamp(self.scrollstate.y,min(0,self.outline.size.y-h),0)
+            self.scrollstate.y = clamp(self.scrollstate.y,min(0,self.outline.size.y-h),-h)
 
 
         self.outline.org.y += self.scrollstate.y
@@ -475,6 +714,8 @@ cdef class Slider:
                     should_redraw = True
             if self.selected and b[1] == 0:
                 self.selected = False
+                should_redraw = True
+
 
 
     property height:

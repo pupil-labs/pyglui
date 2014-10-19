@@ -126,43 +126,42 @@ def demo():
     from pyglui import ui
     gui = ui.UI()
     gui.update_window(width,height)
-    m = ui.Menu("MySideBar",pos=(-200,0),size=(0,0),header_pos='left')
-    s = ui.StackBox()
+    m = ui.Scrolling_Menu("MySideBar",pos=(-200,0),size=(0,0),header_pos='left')
 
-    for x in range(2):
-        s.elements.append(ui.Slider("bar",foo,label="bar %s"%x))
-        s.elements.append(ui.Slider("bur",foo,label="bur %s"%x))
-        sm = ui.Menu("SubMenu",pos=(0,0),size=(0,100))
-        ss = ui.StackBox()
-        ss.elements.append(ui.Slider("bar",foo))
-        ss.elements.append(ui.TextInput('mytext',foo,setter=printer))
-        sm.elements.append(ss)
-        s.elements.append(sm)
-        s.elements.append(ui.Button("Say Hi!",print_hello))
-        s.elements.append(ui.Button("Say Hi!",print_hello))
-        s.elements.append(ui.Button("Say Hi!",print_hello))
-    m.elements.append(s)
+    for x in range(300):
+        m.elements.append(ui.Slider("bar",foo,label="bar %s"%x))
+        m.elements.append(ui.Slider("bur",foo,label="bur %s"%x))
+        sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
+        sm.elements.append(ui.Slider("bar",foo))
+        sm.elements.append(ui.TextInput('mytext',foo,setter=printer))
+
+        ssm = ui.Growing_Menu("SubSubMenu",pos=(0,0),size=(0,100))
+        ssm.elements.append(ui.Slider("bar",foo))
+        ssm.elements.append(ui.TextInput('mytext',foo,setter=printer))
+        sm.elements.append(ssm)
+
+
+        m.elements.append(sm)
+        m.elements.append(ui.Button("Say Hi!",print_hello))
+        m.elements.append(ui.Button("Say Hi!",print_hello))
+        m.elements.append(ui.Button("Say Hi!",print_hello))
     gui.elements.append(m)
 
-    m = ui.Menu("MyMenu",pos=(400,200),size=(300,150),min_size=(200,25))
-    s = ui.StackBox()
+    m = ui.Scrolling_Menu("MyMenu",pos=(400,200),size=(300,150),min_size=(200,25))
     for x in range(1):
-        s.elements.append(ui.Slider("bur",foo,setter=printer))
-        s.elements.append(ui.Button("Say Hi!",print_hello))
-        s.elements.append(ui.Button("Say Hi!",print_hello))
+        m.elements.append(ui.Slider("bur",foo,setter=printer))
+        m.elements.append(ui.Button("Say Hi!",print_hello))
+        m.elements.append(ui.Button("Say Hi!",print_hello))
 
-        s.elements.append(ui.Button("Say Hi!",print_hello))
-        sm = ui.Menu("SubMenu",pos=(0,0),size=(0,100))
-        ss= ui.StackBox()
-        ss.elements.append(ui.Slider("bar",foo))
-        ss.elements.append(ui.Slider("bar",foo))
+        m.elements.append(ui.Button("Say Hi!",print_hello))
+        sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
+        sm.elements.append(ui.Slider("bar",foo))
+        sm.elements.append(ui.Slider("bar",foo))
 
-        ss.elements.append(ui.TextInput('mytext',foo,setter=printer))
-        sm.elements.append(ss)
-        s.elements.append(sm)
-        s.elements.append(ui.Button("Say Hi!",print_hello))
+        sm.elements.append(ui.TextInput('mytext',foo,setter=printer))
+        m.elements.append(sm)
+        m.elements.append(ui.Button("Say Hi!",print_hello))
 
-    m.elements.append(s)
     gui.elements.append(m)
 
 
@@ -184,7 +183,6 @@ def demo():
     fps_g.pos = (140,100)
     fps_g.update_rate = 5
     fps_g.label = "%0.0f FPS"
-    fps_g.bar_width = 4
 
     while not quit:
         dt,ts = time.time()-ts,time.time()
@@ -203,7 +201,7 @@ def demo():
 
         glfwSwapBuffers(window)
         glfwPollEvents()
-        time.sleep(.03)
+        # time.sleep(.03)
 
     glfwDestroyWindow(window)
     glfwTerminate()
