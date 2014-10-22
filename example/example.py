@@ -128,9 +128,9 @@ def demo():
     gui.update_window(width,height)
     m = ui.Scrolling_Menu("MySideBar",pos=(-200,0),size=(0,0),header_pos='left')
 
-    for x in range(300):
-        m.elements.append(ui.Slider("bar",foo,label="bar %s"%x))
-        m.elements.append(ui.Slider("bur",foo,label="bur %s"%x))
+    for x in range(10):
+        # m.elements.append(ui.Slider("bar",foo,label="bar %s"%x))
+        # m.elements.append(ui.Slider("bur",foo,label="bur %s"%x))
         sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
         sm.elements.append(ui.Slider("bar",foo))
         sm.elements.append(ui.TextInput('mytext',foo,setter=printer))
@@ -147,7 +147,8 @@ def demo():
         m.elements.append(ui.Button("Say Hi!",print_hello))
     gui.elements.append(m)
 
-    m = ui.Scrolling_Menu("MyMenu",pos=(400,200),size=(300,150),min_size=(200,25))
+
+    m = ui.Scrolling_Menu("MyMenu",pos=(20,300),size=(300,500),header_pos='bottom')
     for x in range(1):
         m.elements.append(ui.Slider("bur",foo,setter=printer))
         m.elements.append(ui.Button("Say Hi!",print_hello))
@@ -194,9 +195,9 @@ def demo():
         cpu_g.draw()
         fps_g.add(1./dt)
         fps_g.draw()
-        # foo.bar += .5
-        # if foo.bar >= 100:
-            # foo.bar = 0
+        foo.bar += .5
+        if foo.bar >= 100:
+            foo.bar = 0
         gui.update()
 
         glfwSwapBuffers(window)
