@@ -1,7 +1,7 @@
 
 cdef inline float lmap(float value, float istart, float istop, float ostart, float ostop):
     '''
-    linear mapping of val from space1 to space 2
+    linear mapping of val from space 1 to space 2
     '''
     return ostart + (ostop - ostart) * ((value - istart) / (istop - istart))
 
