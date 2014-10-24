@@ -13,7 +13,7 @@ GL Fonts:
 
 UI features
 [ ] implement selector box
-[ ] implement toggle
+[x] implement toggle / switch
 [x] make menu move resize and minimize fn selectable and lockalbe in x or y
 [ ] design the UI and implement using gl calls above
 [ ] Optional: Add global UI scale option
@@ -224,7 +224,7 @@ cdef class Input:
 
 cdef class Draggable:
     '''
-    A rectable that can be dragged.
+    A rectangle that can be dragged.
     Does not move itself but the drag vector is added to 'value'
     '''
     cdef FitBox outline
@@ -304,7 +304,7 @@ cdef class Draggable:
 cdef class FitBox:
     '''
     A box that will fit itself into a context.
-    Specified by rules for x and y respectivly:
+    Specified by rules for x and y respectively:
         size positive -> size from self.org
         size 0 -> span into parent context and lock it like this. If you want it draggable use -.001 or .001
         size negative -> make the box to up to size pixels to the parent container.
@@ -339,33 +339,33 @@ cdef class FitBox:
 
     cdef collapse(self):
 
-        #object is positioned from left(resp. top) and sized from obct org
+        #object is positioned from left(resp. top) and sized from object org
         if self.design_org.x >= 0 and  self.design_size.x  > 0:
             self.design_size.x = self.min_size.x
         #object is positioned from right (resp. bottom) and sized from context size
         elif self.design_org.x < 0 and self.design_size.x <= 0:
             self.design_org.x = self.design_size.x - self.min_size.x
             #self.design_size.x = self.min_size.x
-        #object is positiond from left (top) and sized from context size:
+        #object is positioned from left (top) and sized from context size:
         elif self.design_org.x >= 0 and self.design_size.x <= 0:
             pass
-        #object is positioned from right and sized deom object org
+        #object is positioned from right and sized from object org
         elif self.design_org.x < 0 and self.design_size.x > 0:
             self.design_size.x = self.min_size.x
         else:
             pass
 
-        #object is positioned from left(resp. top) and sized from obct org
+        #object is positioned from left(resp. top) and sized from object org
         if self.design_org.y >= 0 and self.design_size.y  > 0:
             self.design_size.y = self.min_size.y
         #object is positions from right (resp. bottom) and sized from context size
         elif self.design_org.y < 0 and self.design_size.y <= 0:
             self.design_org.y = self.design_size.y -self.min_size.y
             #self.design_size.y = self.min_size.y
-        #object is positiond from left (top) and sized from context size:
+        #object is positioned from left (top) and sized from context size:
         elif self.design_org.y >= 0 and self.design_size.y <= 0:
             pass
-        #object is positioned from right and sized deom object org
+        #object is positioned from right and sized from object org
         elif self.design_org.y < 0 and self.design_size.y > 0:
             self.design_size.y = self.min_size.y
         else:
@@ -374,33 +374,33 @@ cdef class FitBox:
 
     cdef inflate(self,FitBox target):
 
-        #object is positioned from left(resp. top) and sized from obct org
+        #object is positioned from left(resp. top) and sized from object org
         if self.design_org.x >= 0 and  self.design_size.x  > 0:
             self.design_size.x = target.design_size.x
         #object is positioned from right (resp. bottom) and sized from context size
         elif self.design_org.x < 0 and self.design_size.x <= 0:
             self.design_org.x = target.design_org.x
             #self.design_size.x = self.min_size.x
-        #object is positiond from left (top) and sized from context size:
+        #object is positioned from left (top) and sized from context size:
         elif self.design_org.x >= 0 and self.design_size.x <= 0:
             pass
-        #object is positioned from right and sized deom object org
+        #object is positioned from right and sized from object org
         elif self.design_org.x < 0 and self.design_size.x > 0:
             self.design_size.x = target.design_size.x
         else:
             pass
 
-        #object is positioned from left(resp. top) and sized from obct org
+        #object is positioned from left(resp. top) and sized from object org
         if self.design_org.y >= 0 and  self.design_size.y  > 0:
             self.design_size.y = target.design_size.y
         #object is positioned from right (resp. bottom) and sized from context size
         elif self.design_org.y < 0 and self.design_size.y <= 0:
             self.design_org.y = target.design_org.y
             #self.design_size.y = self.min_size.y
-        #object is positiond from left (top) and sized from context size:
+        #object is positioned from left (top) and sized from context size:
         elif self.design_org.y >= 0 and self.design_size.y <= 0:
             pass
-        #object is positioned from right and sized deom object org
+        #object is positioned from right and sized from object org
         elif self.design_org.y < 0 and self.design_size.y > 0:
             self.design_size.y = target.design_size.y
         else:
@@ -420,12 +420,12 @@ cdef class FitBox:
         if self.design_org.x >=0:
             self.org.x = self.design_org.x
         else:
-            self.org.x = context.size.x+self.design_org.x #design org is negative - double substaction
+            self.org.x = context.size.x+self.design_org.x #design org is negative - double subtraction
         if self.design_size.x > 0:
             # size is direcly specified
             self.size.x = self.design_size.x
         else:
-            self.size.x = context.size.x - self.org.x + self.design_size.x #design size is negative - double substaction
+            self.size.x = context.size.x - self.org.x + self.design_size.x #design size is negative - double subtraction
 
         self.size.x = max(self.min_size.x,self.size.x)
         # finally translate into scene by parent org
@@ -435,12 +435,12 @@ cdef class FitBox:
         if self.design_org.y >=0:
             self.org.y = self.design_org.y
         else:
-            self.org.y = context.size.y+self.design_org.y #design size is negative - double substaction
+            self.org.y = context.size.y+self.design_org.y #design size is negative - double subtraction
         if self.design_size.y > 0:
             # size is direcly specified
             self.size.y = self.design_size.y
         else:
-            self.size.y = context.size.y - self.org.y + self.design_size.y #design size is negative - double substaction
+            self.size.y = context.size.y - self.org.y + self.design_size.y #design size is negative - double subtraction
 
 
         self.size.y = max(self.min_size.y,self.size.y)
