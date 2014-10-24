@@ -28,7 +28,7 @@ cdef class Slider:
         self.sync_val.sync()
 
     cpdef draw(self,FitBox parent, bint nested=True):
-        #update apperance:
+        #update appearance:
         self.outline.compute(parent)
         self.field.compute(self.outline)
 
@@ -119,7 +119,7 @@ cdef class Switch:
         self.field.compute(self.outline)
         self.button.compute(self.field)
 
-        self.outline.sketch()
+        # self.outline.sketch()
         # self.field.sketch()
         # self.button.sketch()
         if self.sync_val.value == self.on_val:
@@ -197,7 +197,7 @@ cdef class TextInput:
         self.sync_val.sync()
 
     cpdef draw(self,FitBox parent,bint nested=True):
-        #update apperance:
+        #update appearance:
         self.outline.compute(parent)
 
         gl.glPushMatrix()
@@ -287,7 +287,7 @@ cdef class Button:
         pass
 
     cpdef draw(self,FitBox parent,bint nested=True):
-        #update apperance:
+        #update appearance:
         self.outline.compute(parent)
         self.button.compute(self.outline)
 
