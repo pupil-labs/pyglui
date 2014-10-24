@@ -88,9 +88,11 @@ cdef class Slider:
 cdef class Switch:
     cdef readonly bytes label
     cdef readonly long  uid
-    cdef public FitBox outline,field
+    cdef public FitBox outline,field,button
     cdef bint selected
+    cdef int on_val, off_val
     cdef Synced_Value sync_val
+    cdef Vec2 slider_pos
     cdef obj
 
     def __cinit__(self,bytes attribute_name, object attribute_context, on_val = 1, off_val = 0,label = None, setter= None,getter= None):
@@ -99,11 +101,11 @@ cdef class Switch:
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
 
         self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
-        self.field = FitBox(Vec2(10,10),Vec2(20,-10))
-        self.slider_pos = Vec2(0,20)
+        self.field = FitBox(Vec2(10,10),Vec2(-10,-10))
+        self.button = FitBox(Vec2(-20,0),Vec2(20,20))
         self.selected = False
 
-    def __init__(self,bytes attribute_name, object attribute_context,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
+    def __init__(self,bytes attribute_name, object attribute_context,label = None, on_val = 0, off_val = 0, step = 1,setter= None,getter= None):
         pass
 
 
@@ -111,24 +113,38 @@ cdef class Switch:
         self.sync_val.sync()
 
     cpdef draw(self,FitBox parent,bint nested=True):
+        
         #update apperance:
         self.outline.compute(parent)
         self.field.compute(self.outline)
+        self.button.compute(self.field)
 
         # map slider value
-        self.slider_pos.x = clampmap(self.sync_val.value,self.minimum,self.maximum,0,self.field.size.x)
-        #self.outline.sketch()
-        #self.field.sketch()
+        # self.slider_pos.x = clampmap(self.sync_val.value,self.minimum,self.maximum,0,self.field.size.x)
+        self.outline.sketch()
+        # self.field.sketch()
+        self.button.sketch()
+
+        if self.selected:
+            utils.draw_points(((self.button.center),),size=40, color=(.0,.0,.0,.8),sharpness=.3)
+            utils.draw_points(((self.button.center),),size=30, color=(.5,.5,.9,.9))
+        else:
+            utils.draw_points(((self.button.center),),size=30, color=(.0,.0,.0,.8),sharpness=.3)
+            utils.draw_points(((self.button.center),),size=20, color=(.5,.5,.5,.9))
 
 
         gl.glPushMatrix()
         gl.glTranslatef(self.field.org.x,self.field.org.y,0)
-        cdef FitBox s
-        if self.selected:
-            s = FitBox(Vec2(self.slider_pos.x-9,1),Vec2(18,18))
-        else:
-            s = FitBox(Vec2(self.slider_pos.x-10,0),Vec2(20,20))
-        s.sketch()
+        # now we're at the origin of the field element
+        # cdef FitBox s
+        # if self.selected:
+        #     # pos, size
+        #     s = FitBox(Vec2(self.field.size.x-20,0),Vec2(20,20))
+        # else:
+        #     s = FitBox(Vec2(self.field.size.x-18,1),Vec2(18,18))
+        # s.compute(self.field)
+        # s.sketch()
+
 
         glfont.push_state()
         glfont.draw_text(10,0,self.label)
@@ -145,18 +161,22 @@ cdef class Switch:
     cpdef handle_input(self,Input new_input,bint visible):
         global should_redraw
 
-        if self.selected and new_input.dm:
-            self.sync_val.value = clampmap(new_input.m.x-self.field.org.x,0,self.field.size.x,self.minimum,self.maximum)
-            should_redraw = True
+        # if self.selected and new_input.dm:
+        #     self.sync_val.value = clampmap(new_input.m.x-self.field.org.x,0,self.field.size.x,self.minimum,self.maximum)
+        #     should_redraw = True
 
         for b in new_input.buttons:
-            if b[1] == 1 and visible:
-                if mouse_over_center(self.slider_pos+self.field.org,self.height,self.height,new_input.m):
+            if visible and self.button.mouse_over(new_input.m):
+                if b[1] == 1 and visible:
                     new_input.buttons.remove(b)
                     self.selected = True
+                    print "i'm over the button"
                     should_redraw = True
             if self.selected and b[1] == 0:
+                new_input.buttons.remove(b)
                 self.selected = False
+                should_redraw = True
+
 
 
     property height:

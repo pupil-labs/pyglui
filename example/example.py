@@ -115,6 +115,7 @@ def demo():
     foo.bar = 34
     foo.bur = 60.
     foo.mytext = 'change me!'
+    foo.myswitch = 0
 
     def print_hello():
         print 'hello'
@@ -153,6 +154,7 @@ def demo():
         m.elements.append(ui.Slider("bur",foo,setter=printer))
         m.elements.append(ui.Button("Say Hi!",print_hello))
         m.elements.append(ui.Button("Say Hi!",print_hello))
+        m.elements.append(ui.Switch("myswitch",foo,setter=printer))
 
         m.elements.append(ui.Button("Say Hi!",print_hello))
         sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
