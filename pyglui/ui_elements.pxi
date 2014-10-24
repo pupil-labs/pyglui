@@ -90,21 +90,22 @@ cdef class Switch:
     cdef readonly long  uid
     cdef public FitBox outline,field,button
     cdef bint selected
-    cdef int on_val, off_val
+    cdef int on_val,off_val
     cdef Synced_Value sync_val
     cdef obj
 
-    def __cinit__(self,bytes attribute_name, object attribute_context, on_val = 1, off_val = 0,label = None, setter= None,getter= None):
+    def __cinit__(self,bytes attribute_name, object attribute_context, on_val=1, off_val=0, label=None, setter=None, getter=None):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
-
+        self.on_val = on_val
+        self.off_val = off_val
         self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
         self.field = FitBox(Vec2(10,10),Vec2(-10,-10))
         self.button = FitBox(Vec2(-20,0),Vec2(20,20))
         self.selected = False
 
-    def __init__(self,bytes attribute_name, object attribute_context,label = None, on_val = 0, off_val = 0, step = 1,setter= None,getter= None):
+    def __init__(self,bytes attribute_name, object attribute_context,label = None, on_val = 1, off_val = 0,setter= None,getter= None):
         pass
 
 
@@ -121,8 +122,7 @@ cdef class Switch:
         self.outline.sketch()
         # self.field.sketch()
         # self.button.sketch()
-
-        if self.selected:
+        if self.sync_val.value == self.on_val:
             utils.draw_points(((self.button.center),),size=40, color=(.0,.0,.0,.8),sharpness=.3)
             utils.draw_points(((self.button.center),),size=30, color=(.5,.5,.9,.9))
         else:
@@ -134,8 +134,9 @@ cdef class Switch:
 
         glfont.push_state()
         glfont.draw_text(10,0,self.label)
-        glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT) 
-        glfont.draw_text(self.field.size.x-10,0,bytes(self.sync_val.value))
+        # turn on text for debugging and rebuild if you want to check the value
+        # glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT) 
+        # glfont.draw_text(self.field.size.x-5,0,bytes(self.sync_val.value))
         glfont.pop_state()
         
         gl.glPopMatrix()
@@ -147,15 +148,23 @@ cdef class Switch:
             if visible and self.button.mouse_over(new_input.m):
                 if b[1] == 1:
                     new_input.buttons.remove(b)
-                    self.selected = not self.selected
+                    self.selected = True
                     should_redraw = True
-                    self.sync_val.value = not self.sync_val.value
+            if self.selected and b[1] == 0 and (self.sync_val.value == self.on_val):
+                new_input.buttons.remove(b)
+                self.sync_val.value = self.off_val
+                self.selected = False
+                should_redraw = True
+            if self.selected and b[1] == 0 and (self.sync_val.value == self.off_val):
+                new_input.buttons.remove(b)
+                self.sync_val.value = self.on_val
+                self.selected = False
+                should_redraw = True
+
 
     property height:
         def __get__(self):
             return self.outline.size.y
-
-
 
 
 
