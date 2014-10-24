@@ -176,7 +176,7 @@ cdef class Synced_Value:
         self.on_change = on_change
 
     def __init__(self,bytes attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None):
-        if self.getter is not None:
+        if self.attribute_context is not None:
             if self.use_dict:
                 try:
                     _ = self.attribute_context[self.attribute_name]

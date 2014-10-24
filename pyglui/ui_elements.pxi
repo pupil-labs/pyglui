@@ -85,7 +85,8 @@ cdef class Slider(UI_element):
 
 
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
-        pass
+        self.sync()
+        assert isinstance(self.sync_val.value,(float,int) )
 
 
     cpdef sync(self):
