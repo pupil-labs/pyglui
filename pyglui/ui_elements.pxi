@@ -92,7 +92,6 @@ cdef class Switch:
     cdef bint selected
     cdef int on_val, off_val
     cdef Synced_Value sync_val
-    cdef Vec2 slider_pos
     cdef obj
 
     def __cinit__(self,bytes attribute_name, object attribute_context, on_val = 1, off_val = 0,label = None, setter= None,getter= None):
@@ -114,16 +113,14 @@ cdef class Switch:
 
     cpdef draw(self,FitBox parent,bint nested=True):
         
-        #update apperance:
+        #update appearance
         self.outline.compute(parent)
         self.field.compute(self.outline)
         self.button.compute(self.field)
 
-        # map slider value
-        # self.slider_pos.x = clampmap(self.sync_val.value,self.minimum,self.maximum,0,self.field.size.x)
         self.outline.sketch()
         # self.field.sketch()
-        self.button.sketch()
+        # self.button.sketch()
 
         if self.selected:
             utils.draw_points(((self.button.center),),size=40, color=(.0,.0,.0,.8),sharpness=.3)
@@ -132,52 +129,27 @@ cdef class Switch:
             utils.draw_points(((self.button.center),),size=30, color=(.0,.0,.0,.8),sharpness=.3)
             utils.draw_points(((self.button.center),),size=20, color=(.5,.5,.5,.9))
 
-
         gl.glPushMatrix()
         gl.glTranslatef(self.field.org.x,self.field.org.y,0)
-        # now we're at the origin of the field element
-        # cdef FitBox s
-        # if self.selected:
-        #     # pos, size
-        #     s = FitBox(Vec2(self.field.size.x-20,0),Vec2(20,20))
-        # else:
-        #     s = FitBox(Vec2(self.field.size.x-18,1),Vec2(18,18))
-        # s.compute(self.field)
-        # s.sketch()
-
 
         glfont.push_state()
         glfont.draw_text(10,0,self.label)
-        glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)
-        if type(self.sync_val.value) == float:
-            glfont.draw_text(self.field.size.x-10,0,bytes('%0.2f'%self.sync_val.value) )
-        else:
-            glfont.draw_text(self.field.size.x-10,0,bytes(self.sync_val.value ))
+        glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT) 
+        glfont.draw_text(self.field.size.x-10,0,bytes(self.sync_val.value))
         glfont.pop_state()
+        
         gl.glPopMatrix()
-
-
 
     cpdef handle_input(self,Input new_input,bint visible):
         global should_redraw
 
-        # if self.selected and new_input.dm:
-        #     self.sync_val.value = clampmap(new_input.m.x-self.field.org.x,0,self.field.size.x,self.minimum,self.maximum)
-        #     should_redraw = True
-
         for b in new_input.buttons:
             if visible and self.button.mouse_over(new_input.m):
-                if b[1] == 1 and visible:
+                if b[1] == 1:
                     new_input.buttons.remove(b)
-                    self.selected = True
-                    print "i'm over the button"
+                    self.selected = not self.selected
                     should_redraw = True
-            if self.selected and b[1] == 0:
-                new_input.buttons.remove(b)
-                self.selected = False
-                should_redraw = True
-
-
+                    self.sync_val.value = not self.sync_val.value
 
     property height:
         def __get__(self):
