@@ -12,16 +12,14 @@ DEF menu_sidebar_min_height = 20
 DEF resize_corner_size = 25
 
 
-cdef class Base_Menu:
+cdef class Base_Menu(UI_element):
     """
     Base class that other menu inherit from. Dont use this.
     This contains all methods/attributed shared by all derived menus.
     """
 
     cdef public list elements
-    cdef FitBox outline, element_space
-    cdef readonly bytes label
-    cdef readonly long uid
+    cdef FitBox element_space
     cdef int header_pos_id
     cdef Draggable handlebar, resize_corner
 

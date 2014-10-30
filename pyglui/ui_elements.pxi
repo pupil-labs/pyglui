@@ -1,9 +1,7 @@
 
-cdef class Slider:
-    cdef readonly bytes label
-    cdef readonly long  uid
+cdef class Slider(UI_element):
     cdef float minimum,maximum,step
-    cdef public FitBox outline,field
+    cdef public FitBox field
     cdef bint selected
     cdef Vec2 slider_pos
     cdef Synced_Value sync_val
@@ -85,10 +83,8 @@ cdef class Slider:
             return self.outline.size.y
 
 
-cdef class Switch:
-    cdef readonly bytes label
-    cdef readonly long  uid
-    cdef public FitBox outline,field,button
+cdef class Switch(UI_element):
+    cdef public FitBox field,button
     cdef bint selected
     cdef int on_val,off_val
     cdef Synced_Value sync_val
@@ -113,7 +109,7 @@ cdef class Switch:
         self.sync_val.sync()
 
     cpdef draw(self,FitBox parent,bint nested=True):
-        
+
         #update appearance
         self.outline.compute(parent)
         self.field.compute(self.outline)
@@ -135,10 +131,10 @@ cdef class Switch:
         glfont.push_state()
         glfont.draw_text(10,0,self.label)
         # turn on text for debugging and rebuild if you want to check the value
-        # glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT) 
+        # glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)
         # glfont.draw_text(self.field.size.x-5,0,bytes(self.sync_val.value))
         glfont.pop_state()
-        
+
         gl.glPopMatrix()
 
     cpdef handle_input(self,Input new_input,bint visible):
@@ -168,10 +164,8 @@ cdef class Switch:
 
 
 
-cdef class TextInput:
-    cdef readonly bytes label
-    cdef readonly long  uid
-    cdef public FitBox outline,textfield
+cdef class TextInput(UI_element):
+    cdef FitBox textfield
     cdef bint selected
     cdef Vec2 slider_pos
     cdef Synced_Value sync_val
@@ -264,10 +258,7 @@ cdef class TextInput:
 
 
 
-cdef class Button:
-    cdef readonly bytes label
-    cdef readonly long  uid
-    cdef public FitBox outline
+cdef class Button(UI_element):
     cdef FitBox button
     cdef bint selected
     cdef object function
@@ -283,8 +274,6 @@ cdef class Button:
     def __init__(self,label, setter):
         pass
 
-    cpdef sync(self):
-        pass
 
     cpdef draw(self,FitBox parent,bint nested=True):
         #update appearance:

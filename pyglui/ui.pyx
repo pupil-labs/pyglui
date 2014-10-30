@@ -139,6 +139,29 @@ include 'ui_elements.pxi'
 
 #below are classes used by menu and ui_elements.
 
+cdef class UI_element:
+    '''
+    The base class for all UI elements.
+    '''
+    cdef readonly bytes label
+    cdef readonly long  uid
+    cdef public FitBox outline
+
+    cpdef sync(self):
+        global should_redraw
+        pass
+
+    cpdef draw(self,FitBox context, bint nested=True):
+        pass
+
+    cpdef handle_input(self,Input new_input,bint visible):
+        global should_redraw
+        pass
+
+    property height:
+        def __get__(self):
+            raise Exception("Please implement in derived class.")
+
 cdef class Synced_Value:
     '''
     an element that has a synced value
