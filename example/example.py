@@ -114,12 +114,13 @@ def demo():
 
     foo = t()
     foo.bar = 34
-    foo.bur = 60.
+    foo.bur = 4
     foo.mytext = 'change me!'
     foo.myswitch = 10
+    foo.select = 'Tiger'
 
     def print_hello():
-        gui.scale += 0.1
+        foo.select = 'Cougar'
         print 'hello'
 
     def printer(val):
@@ -154,7 +155,8 @@ def demo():
 
     m = ui.Scrolling_Menu("MyMenu",pos=(20,0),size=(300,500),header_pos='top')
     for x in range(1):
-        m.elements.append(ui.Slider("bur",foo,setter=printer))
+        m.elements.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
+        m.elements.append(ui.Slider("bur",foo,setter=printer,step=2,min=1,max=11))
         m.elements.append(ui.Button("Say Hi!",print_hello))
         m.elements.append(ui.Button("Say Hi!",print_hello))
         m.elements.append(ui.Switch("myswitch",foo,on_val=1000,off_val=10,setter=printer,label="Switch Me"))

@@ -1,3 +1,7 @@
+
+DEF text_height = 20
+
+
 cdef class UI_element:
     '''
     The base class for all UI elements.
@@ -180,6 +184,115 @@ cdef class Switch(UI_element):
                     self.sync_val.value = self.on_val
                     self.selected = False
                     should_redraw = True
+
+
+
+cdef class Selector(UI_element):
+    cdef public FitBox field, select_field
+    cdef object selection, selection_labels
+    cdef Synced_Value sync_val
+    cdef int selection_idx
+    cdef bint selected
+
+    def __cinit__(self,bytes attribute_name, object attribute_context, selection, selection_labels=None, label=None, setter=None, getter=None):
+        self.uid = id(self)
+        self.label = label or attribute_name
+
+        self.selection = list(selection)
+        self.selection_labels = selection_labels or [str(s) for s in selection]
+        self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter,self._on_change)
+
+        self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
+        self.field = FitBox(Vec2(10,10),Vec2(-10,-10))
+        self.select_field = FitBox(Vec2(50,0),Vec2(0,0))
+
+    def __init__(self,bytes attribute_name, object attribute_context, selection, selection_labels=None, label=None, setter=None, getter=None):
+        pass
+
+
+    cpdef sync(self):
+        self.sync_val.sync()
+
+    def _on_change(self,new_value):
+        try:
+            self.selection_idx = self.selection.index(new_value)
+        except ValueError:
+            #we could throw and error here or ignore
+            #but for now we just add the new object to the selection
+            self.selection.append(new_value)
+            self.selection_labels.append(str(new_value))
+            self.selection_idx = len(self.selection_labels)-1
+
+
+    cpdef draw(self,FitBox parent,bint nested=True):
+
+        #update appearance
+        self.outline.compute(parent)
+        self.field.compute(self.outline)
+        self.select_field.compute(self.field)
+
+        # self.outline.sketch()
+        # self.field.sketch()
+        self.select_field.sketch()
+
+        gl.glPushMatrix()
+        gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
+        glfont.push_state()
+        glfont.draw_text(10,0,self.label)
+        glfont.pop_state()
+        gl.glPopMatrix()
+
+        gl.glPushMatrix()
+        gl.glTranslatef(int(self.select_field.org.x),int(self.select_field.org.y),0)
+        glfont.push_state()
+        if self.selected:
+            for y in range(len(self.selection)):
+                glfont.draw_text(10,y*text_height*ui_scale,self.selection_labels[y])
+        else:
+            glfont.draw_text(10,0,self.selection_labels[self.selection_idx])
+        glfont.pop_state()
+        gl.glPopMatrix()
+
+    cpdef handle_input(self,Input new_input,bint visible):
+        if not self.read_only:
+            global should_redraw
+
+            for b in new_input.buttons:
+                if visible and self.select_field.mouse_over(new_input.m):
+                    new_input.buttons.remove(b)
+                    if b[1] == 0:
+                        should_redraw = True
+                        if not self.selected:
+                            self.init_selection()
+                        else:
+                            self.finish_selection(mouse_y = new_input.m.y-self.select_field.org.y)
+
+    cdef init_selection(self):
+        self.selected = True
+        #blow up the menu to fit the open selector field
+        cdef h = text_height * len(self.selection_labels)
+        h+= self.field.design_org.y - self.field.design_size.y #double neg
+        h+= self.select_field.design_org.y - self.select_field.design_size.y #double neg
+        self.outline.design_size.y = h
+
+
+    cdef finish_selection(self,float mouse_y):
+        self.selection_idx = int(mouse_y/(self.select_field.size.y/len(self.selection)) )
+        #just for sanity
+        self.selection_idx = int(clamp(self.selection_idx,0,len(self.selection)-1))
+
+        self.sync_val.value = self.selection[self.selection_idx]
+
+        #make the outline small again
+        cdef h = text_height
+        h+= self.field.design_org.y - self.field.design_size.y #double neg
+        h+= self.select_field.design_org.y - self.select_field.design_size.y #double neg
+        self.outline.design_size.y = h
+
+        self.selected = False
+
+
+
 
 
 cdef class TextInput(UI_element):

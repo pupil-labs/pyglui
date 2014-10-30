@@ -120,7 +120,7 @@ cdef class UI:
             adjust_view(self.window.size)
 
             glfont.clear_state()
-            glfont.set_size(18)
+            glfont.set_size(18*ui_scale)
             glfont.set_color_float(1,1,1,1)
             glfont.set_align(fs.FONS_ALIGN_TOP)
 
@@ -156,29 +156,35 @@ cdef class Synced_Value:
     cdef object _value
     cdef object getter
     cdef object setter
+    cdef object on_change
 
-    def __cinit__(self,bytes attribute_name, object attribute_context,getter=None,setter=None):
+    def __cinit__(self,bytes attribute_name, object attribute_context,getter=None,setter=None,on_change=None):
         self.attribute_context = attribute_context
         self.attribute_name = attribute_name
         self.getter = getter
         self.setter = setter
+        self.on_change = on_change
 
-    def __init__(self,bytes attribute_name, object attribute_context,getter=None,setter=None):
+    def __init__(self,bytes attribute_name, object attribute_context,getter=None,setter=None,on_change=None):
         self.sync()
 
 
     cdef sync(self):
-        if self.getter:
+        if self.getter is not None:
             val = self.getter()
             if val != self._value:
                 self._value = val
                 global should_redraw
                 should_redraw = True
+                if self.on_change is not None:
+                    self.on_change(self.value)
 
         elif self._value != self.attribute_context.__dict__[self.attribute_name]:
             self._value = self.attribute_context.__dict__[self.attribute_name]
             global should_redraw
             should_redraw = True
+            if self.on_change is not None:
+                self.on_change(self.value)
 
 
     property value:
@@ -189,7 +195,7 @@ cdef class Synced_Value:
             t = type(self._value)
             self._value = t(val)
 
-            if self.setter:
+            if self.setter is not None:
                 self.setter(self._value)
 
             self.attribute_context.__dict__[self.attribute_name] = self._value
@@ -234,7 +240,7 @@ cdef class Draggable:
     '''
     A rectangle that can be dragged.
     Does not move itself but the drag vector is added to 'value'
-    Units are scaled by 1/ui_scale
+    Mouse postions units are scaled by 1/ui_scale
     '''
     cdef FitBox outline
     cdef Vec2 touch_point,drag_accumulator
