@@ -1,3 +1,27 @@
+cdef class UI_element:
+    '''
+    The base class for all UI elements.
+    '''
+    cdef readonly bytes label
+    cdef readonly long  uid
+    cdef public FitBox outline
+    cdef public bint read_only
+
+    cpdef sync(self):
+        global should_redraw
+        pass
+
+    cpdef draw(self,FitBox context, bint nested=True):
+        pass
+
+    cpdef handle_input(self,Input new_input,bint visible):
+        if not self.read_only:
+            global should_redraw
+            pass
+
+    property height:
+        def __get__(self):
+            return self.outline.size.y
 
 cdef class Slider(UI_element):
     cdef float minimum,maximum,step
@@ -17,6 +41,7 @@ cdef class Slider(UI_element):
         self.field = FitBox(Vec2(10,10),Vec2(-10,-10))
         self.slider_pos = Vec2(0,20)
         self.selected = False
+        self.read_only = False
 
     def __init__(self,bytes attribute_name, object attribute_context,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
         pass
@@ -60,27 +85,22 @@ cdef class Slider(UI_element):
 
 
     cpdef handle_input(self,Input new_input,bint visible):
-        global should_redraw
+        if not self.read_only:
+            global should_redraw
 
-        if self.selected and new_input.dm:
-            self.sync_val.value = clampmap(new_input.m.x-self.field.org.x,0,self.field.size.x,self.minimum,self.maximum)
-            should_redraw = True
-
-        for b in new_input.buttons:
-            if b[1] == 1 and visible:
-                if mouse_over_center(self.slider_pos+self.field.org,self.height,self.height,new_input.m):
-                    new_input.buttons.remove(b)
-                    self.selected = True
-                    should_redraw = True
-            if self.selected and b[1] == 0:
-                self.selected = False
+            if self.selected and new_input.dm:
+                self.sync_val.value = clampmap(new_input.m.x-self.field.org.x,0,self.field.size.x,self.minimum,self.maximum)
                 should_redraw = True
 
-
-
-    property height:
-        def __get__(self):
-            return self.outline.size.y
+            for b in new_input.buttons:
+                if b[1] == 1 and visible:
+                    if mouse_over_center(self.slider_pos+self.field.org,self.height,self.height,new_input.m):
+                        new_input.buttons.remove(b)
+                        self.selected = True
+                        should_redraw = True
+                if self.selected and b[1] == 0:
+                    self.selected = False
+                    should_redraw = True
 
 
 cdef class Switch(UI_element):
@@ -138,30 +158,25 @@ cdef class Switch(UI_element):
         gl.glPopMatrix()
 
     cpdef handle_input(self,Input new_input,bint visible):
-        global should_redraw
+        if not self.read_only:
+            global should_redraw
 
-        for b in new_input.buttons:
-            if visible and self.button.mouse_over(new_input.m):
-                if b[1] == 1:
+            for b in new_input.buttons:
+                if visible and self.button.mouse_over(new_input.m):
+                    if b[1] == 1:
+                        new_input.buttons.remove(b)
+                        self.selected = True
+                        should_redraw = True
+                if self.selected and b[1] == 0 and (self.sync_val.value == self.on_val):
                     new_input.buttons.remove(b)
-                    self.selected = True
+                    self.sync_val.value = self.off_val
+                    self.selected = False
                     should_redraw = True
-            if self.selected and b[1] == 0 and (self.sync_val.value == self.on_val):
-                new_input.buttons.remove(b)
-                self.sync_val.value = self.off_val
-                self.selected = False
-                should_redraw = True
-            if self.selected and b[1] == 0 and (self.sync_val.value == self.off_val):
-                new_input.buttons.remove(b)
-                self.sync_val.value = self.on_val
-                self.selected = False
-                should_redraw = True
-
-
-    property height:
-        def __get__(self):
-            return self.outline.size.y
-
+                if self.selected and b[1] == 0 and (self.sync_val.value == self.off_val):
+                    new_input.buttons.remove(b)
+                    self.sync_val.value = self.on_val
+                    self.selected = False
+                    should_redraw = True
 
 
 cdef class TextInput(UI_element):
@@ -210,40 +225,41 @@ cdef class TextInput(UI_element):
         gl.glPopMatrix()
 
     cpdef handle_input(self,Input new_input,bint visible):
-        global should_redraw
+        if not self.read_only:
+            global should_redraw
 
-        if self.selected:
-            for c in new_input.chars:
-                self.preview = self.preview[:self.caret+1] + c + self.preview[self.caret+1:]
-                self.caret +=1
-                should_redraw = True
-
-            for k in new_input.keys:
-                if k == (257,36,0,0): #Enter and key up:
-                    self.finish_input()
-                elif k == (259,51,0,0) or k ==(259,51,2,0): #Delete and key up:
-                    self.preview = self.preview[:self.caret] + self.preview[self.caret+1:]
-                    self.caret -=1
-                    self.caret = max(0,self.caret)
-                elif k == (263,123,0,0): #Delete and key up:
-                    self.caret -=1
-                    self.caret = max(0,self.caret)
-                elif k == (262,124,0,0): #Delete and key up:
+            if self.selected:
+                for c in new_input.chars:
+                    self.preview = self.preview[:self.caret+1] + c + self.preview[self.caret+1:]
                     self.caret +=1
-                    self.caret = min(len(self.preview)-1,self.caret)
+                    should_redraw = True
+
+                for k in new_input.keys:
+                    if k == (257,36,0,0): #Enter and key up:
+                        self.finish_input()
+                    elif k == (259,51,0,0) or k ==(259,51,2,0): #Delete and key up:
+                        self.preview = self.preview[:self.caret] + self.preview[self.caret+1:]
+                        self.caret -=1
+                        self.caret = max(0,self.caret)
+                    elif k == (263,123,0,0): #Delete and key up:
+                        self.caret -=1
+                        self.caret = max(0,self.caret)
+                    elif k == (262,124,0,0): #Delete and key up:
+                        self.caret +=1
+                        self.caret = min(len(self.preview)-1,self.caret)
 
 
-            for b in new_input.buttons:
-                if b[1] == 1:
-                    self.finish_input()
+                for b in new_input.buttons:
+                    if b[1] == 1:
+                        self.finish_input()
 
-        else:
-            for b in new_input.buttons:
-                if b[1] == 1 and visible:
-                    if self.textfield.mouse_over(new_input.m):
-                        new_input.buttons.remove(b)
-                        self.selected = True
-                        should_redraw = True
+            else:
+                for b in new_input.buttons:
+                    if b[1] == 1 and visible:
+                        if self.textfield.mouse_over(new_input.m):
+                            new_input.buttons.remove(b)
+                            self.selected = True
+                            should_redraw = True
 
     cdef finish_input(self):
         global should_redraw
@@ -251,11 +267,6 @@ cdef class TextInput(UI_element):
         self.selected = False
         self.caret = len(self.preview)-1
         self.sync_val.value = self.preview
-
-    property height:
-        def __get__(self):
-            return self.outline.size.y
-
 
 
 cdef class Button(UI_element):
@@ -293,20 +304,17 @@ cdef class Button(UI_element):
 
 
     cpdef handle_input(self,Input new_input,bint visible):
-        global should_redraw
+        if not self.read_only:
+            global should_redraw
 
-        for b in new_input.buttons:
-            if  visible and self.button.mouse_over(new_input.m):
-                if b[1] == 1:
+            for b in new_input.buttons:
+                if  visible and self.button.mouse_over(new_input.m):
+                    if b[1] == 1:
+                        new_input.buttons.remove(b)
+                        self.selected = True
+                        should_redraw = True
+                if self.selected and b[1] == 0:
                     new_input.buttons.remove(b)
-                    self.selected = True
+                    self.selected = False
                     should_redraw = True
-            if self.selected and b[1] == 0:
-                new_input.buttons.remove(b)
-                self.selected = False
-                should_redraw = True
-                self.function()
-
-    property height:
-        def __get__(self):
-            return self.outline.size.y
+                    self.function()

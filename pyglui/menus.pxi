@@ -171,17 +171,18 @@ cdef class Growing_Menu(Base_Menu):
 
 
     cpdef handle_input(self, Input new_input,bint visible):
-        global should_redraw
+        if not self.read_only:
+            global should_redraw
 
-        if self.resize_corner:
-            self.resize_corner.handle_input(new_input,visible)
-        if self.handlebar:
-            self.handlebar.handle_input(new_input,visible)
+            if self.resize_corner:
+                self.resize_corner.handle_input(new_input,visible)
+            if self.handlebar:
+                self.handlebar.handle_input(new_input,visible)
 
-        #if elements are not visible, no need to interact with them.
-        if self.element_space.size.x and self.element_space.size.y:
-            for e in self.elements:
-                e.handle_input(new_input, visible)
+            #if elements are not visible, no need to interact with them.
+            if self.element_space.size.x and self.element_space.size.y:
+                for e in self.elements:
+                    e.handle_input(new_input, visible)
 
 
     property height:
@@ -388,36 +389,34 @@ cdef class Scrolling_Menu(Base_Menu):
 
 
     cpdef handle_input(self, Input new_input,bint visible):
-        global should_redraw
         cdef bint mouse_over_menu = 0
+        if not self.read_only:
+            global should_redraw
 
-        if self.resize_corner:
-            self.resize_corner.handle_input(new_input,visible)
-        if self.handlebar:
-            self.handlebar.handle_input(new_input,visible)
+            if self.resize_corner:
+                self.resize_corner.handle_input(new_input,visible)
+            if self.handlebar:
+                self.handlebar.handle_input(new_input,visible)
 
-        #if elements are not visible, no need to interact with them.
-        if self.element_space.size.x and self.element_space.size.y:
-            # let the elements know that the mouse should be ignored
-            # if outside of the visible scroll section
-            mouse_over_menu =  self.element_space.org.y <= new_input.m.y <= self.element_space.org.y+self.element_space.size.y
-            mouse_over_menu = mouse_over_menu and visible
-            for e in self.elements:
-                e.handle_input(new_input, mouse_over_menu)
+            #if elements are not visible, no need to interact with them.
+            if self.element_space.size.x and self.element_space.size.y:
+                # let the elements know that the mouse should be ignored
+                # if outside of the visible scroll section
+                mouse_over_menu =  self.element_space.org.y <= new_input.m.y <= self.element_space.org.y+self.element_space.size.y
+                mouse_over_menu = mouse_over_menu and visible
+                for e in self.elements:
+                    e.handle_input(new_input, mouse_over_menu)
 
-        # handle scrollbar interaction after menu items
-        # so grabbing a slider does not trigger scrolling
-        #mouse:
-        self.scrollbar.handle_input(new_input,visible)
-        #scrollwheel:
-        if new_input.s.y and visible and self.element_space.mouse_over(new_input.m):
-            self.scrollstate.y += new_input.s.y * 3
-            new_input.s.y = 0
-            should_redraw = True
+            # handle scrollbar interaction after menu items
+            # so grabbing a slider does not trigger scrolling
+            #mouse:
+            self.scrollbar.handle_input(new_input,visible)
+            #scrollwheel:
+            if new_input.s.y and visible and self.element_space.mouse_over(new_input.m):
+                self.scrollstate.y += new_input.s.y * 3
+                new_input.s.y = 0
+                should_redraw = True
 
-    property height:
-        def __get__(self):
-            return self.outline.size.y
 
     def toggle_iconified(self):
         global should_redraw
