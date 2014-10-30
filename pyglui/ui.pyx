@@ -17,10 +17,10 @@ UI features
 [ ] implement selector box
 [x] implement toggle / switch
 [x] make menu move resize and minimize fn selectable and lockalbe in x or y
-[ ] design the UI and implement using gl calls above
-[ ] Optional: Add global UI ui_scale option
+[x] Optional: Add global UI ui_scale option
 [x] Implement Perf graph in cython
 [x] Implement scrolling
+[ ] design the UI and implement using gl calls above
 
 Done:
 UI interaction
