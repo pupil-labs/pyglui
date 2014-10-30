@@ -331,6 +331,11 @@ cdef class FitBox:
             fitted and translated by its parent context
 
     Vec2 min_size is optional.
+
+
+    Vec2 size and org will be computed when calling .compute(context,[nested])
+        the globl UI scale factor will be applied to these vectors.
+
     '''
     cdef Vec2 design_org,org,design_size,size,min_size
 
@@ -432,12 +437,12 @@ cdef class FitBox:
         if self.design_org.x >=0:
             self.org.x = self.design_org.x * ui_scale
         else:
-            self.org.x = context.size.x+(self.design_org.x* ui_scale) #design org is negative - double subtraction
+            self.org.x = context.size.x+self.design_org.x * ui_scale #design org is negative - double subtraction
         if self.design_size.x > 0:
             # size is direcly specified
             self.size.x = self.design_size.x * ui_scale
         else:
-            self.size.x = context.size.x - self.org.x + self.design_size.x* ui_scale #design size is negative - double subtraction
+            self.size.x = context.size.x - self.org.x + self.design_size.x * ui_scale #design size is negative - double subtraction
 
         self.size.x = max(self.min_size.x * ui_scale,self.size.x)
         # finally translate into scene by parent org
@@ -447,7 +452,7 @@ cdef class FitBox:
         if self.design_org.y >=0:
             self.org.y = self.design_org.y * ui_scale
         else:
-            self.org.y = context.size.y+(self.design_org.y* ui_scale) #design size is negative - double subtraction
+            self.org.y = context.size.y+self.design_org.y * ui_scale #design size is negative - double subtraction
         if self.design_size.y > 0:
             # size is direcly specified
             self.size.y = self.design_size.y * ui_scale
