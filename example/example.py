@@ -1,3 +1,4 @@
+
 import logging
 from glfw import *
 import OpenGL
@@ -197,7 +198,7 @@ def demo():
         cpu_g.draw()
         fps_g.add(1./dt)
         fps_g.draw()
-        foo.bar += .5
+        # foo.bar += .5
         if foo.bar >= 100:
             foo.bar = 0
         gui.update()
@@ -211,5 +212,11 @@ def demo():
     logger.debug("Process done")
 
 if __name__ == '__main__':
-    demo()
-
+    if 1:
+        demo()
+    else:
+        import cProfile,subprocess,os
+        cProfile.runctx("demo()",{},locals(),"example.pstats")
+        gprof2dot_loc = 'gprof2dot.py'
+        subprocess.call("python "+gprof2dot_loc+" -f pstats example.pstats | dot -Tpng -o example_profile.png", shell=True)
+        print "created cpu time graph for example. Please check out the png next to this."

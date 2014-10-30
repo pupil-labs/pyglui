@@ -1,3 +1,5 @@
+# cython: profile=False
+
 '''
 TODO:
 
@@ -27,11 +29,9 @@ UI value syncing
 
 '''
 
-
 from cygl cimport cgl as gl
 from cygl cimport utils
 from pyfontstash cimport pyfontstash as fs
-
 include 'gldraw.pxi'
 include 'helpers.pxi'
 

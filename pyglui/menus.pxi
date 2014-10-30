@@ -29,7 +29,7 @@ cdef class Base_Menu(UI_element):
                 e.sync()
 
     cdef draw_menu(self,bint nested):
-        if self.handlebar:
+        if self.handlebar is not None:
             self.handlebar.outline.compute(self.outline)
             if 2<= self.header_pos_id <= 3:
                 tripple_v(self.handlebar.outline.org,Vec2(25,25))
@@ -56,7 +56,7 @@ cdef class Base_Menu(UI_element):
             else:
                 self.outline.sketch()
 
-        if self.resize_corner:
+        if self.resize_corner is not None:
             self.resize_corner.outline.compute(self.outline)
             self.resize_corner.draw(self.outline)
 
@@ -174,9 +174,9 @@ cdef class Growing_Menu(Base_Menu):
         if not self.read_only:
             global should_redraw
 
-            if self.resize_corner:
+            if self.resize_corner is not None:
                 self.resize_corner.handle_input(new_input,visible)
-            if self.handlebar:
+            if self.handlebar is not None:
                 self.handlebar.handle_input(new_input,visible)
 
             #if elements are not visible, no need to interact with them.
@@ -196,7 +196,7 @@ cdef class Growing_Menu(Base_Menu):
                 #elemnt space is 0
                 pass
             else:
-                height += sum([e.height for e in self.elements])
+                height += sum([<float>e.height for e in self.elements])
             return height
 
 
@@ -338,27 +338,13 @@ cdef class Scrolling_Menu(Base_Menu):
 
     cdef draw_scroll_window_elements(self):
 
-        # compute and set gl scissor
-        gl.glPushAttrib(gl.GL_SCISSOR_BIT)
-        gl.glEnable(gl.GL_SCISSOR_TEST)
-        cdef int sb[4]
-        global window_size
-        gl.glGetIntegerv(gl.GL_SCISSOR_BOX,sb)
-        sb[1] = window_size.y-sb[1]-sb[3] # y-flipped coord system
-        #deal with nested scissors
-        cdef float org_x = max(sb[0],self.element_space.org.x)
-        cdef float size_x = min(sb[0]+sb[2],self.element_space.org.x+self.element_space.size.x)
-        size_x = max(0,size_x-org_x)
-        cdef float org_y = max(sb[1],self.element_space.org.y)
-        cdef float size_y = min(sb[1]+sb[3],self.element_space.org.y+self.element_space.size.y)
-        size_y = max(0,size_y-org_y)
-        gl.glScissor(int(org_x),window_size.y-int(org_y)-int(size_y),int(size_x),int(size_y))
 
-
+        self.push_scissor()
         self.scrollbar.outline.compute(self.element_space)
 
+        e_heights = [e.height for e in self.elements]
         #compute scroll stack height.
-        h = sum([e.height for e in self.elements])
+        cdef float h = sum(e_heights)
 
         if h:
             self.scroll_factor = float(self.element_space.size.y)/h
@@ -377,15 +363,37 @@ cdef class Scrolling_Menu(Base_Menu):
 
         #render elements
         self.element_space.org.y += self.scrollstate.y
-        for e in self.elements:
+
+        cdef float e_h
+        for e,e_h in zip(self.elements,e_heights):
             e.draw(self.element_space)
-            self.element_space.org.y+= e.height
+            self.element_space.org.y+= e_h
         self.element_space.org.y -= self.scrollstate.y
         self.element_space.org.y -= h
 
+
+        self.pop_scissor()
+
+    cdef push_scissor(self):
+        # compute and set gl scissor
+        gl.glPushAttrib(gl.GL_SCISSOR_BIT)
+        gl.glEnable(gl.GL_SCISSOR_TEST)
+        cdef int sb[4]
+        global window_size
+        gl.glGetIntegerv(gl.GL_SCISSOR_BOX,sb)
+        sb[1] = window_size.y-sb[1]-sb[3] # y-flipped coord system
+        #deal with nested scissors
+        cdef float org_x = max(sb[0],self.element_space.org.x)
+        cdef float size_x = min(sb[0]+sb[2],self.element_space.org.x+self.element_space.size.x)
+        size_x = max(0,size_x-org_x)
+        cdef float org_y = max(sb[1],self.element_space.org.y)
+        cdef float size_y = min(sb[1]+sb[3],self.element_space.org.y+self.element_space.size.y)
+        size_y = max(0,size_y-org_y)
+        gl.glScissor(int(org_x),window_size.y-int(org_y)-int(size_y),int(size_x),int(size_y))
+
+    cdef pop_scissor(self):
         #restore scissor state
         gl.glPopAttrib()
-
 
 
     cpdef handle_input(self, Input new_input,bint visible):
@@ -393,9 +401,9 @@ cdef class Scrolling_Menu(Base_Menu):
         if not self.read_only:
             global should_redraw
 
-            if self.resize_corner:
+            if self.resize_corner is not None:
                 self.resize_corner.handle_input(new_input,visible)
-            if self.handlebar:
+            if self.handlebar is not None:
                 self.handlebar.handle_input(new_input,visible)
 
             #if elements are not visible, no need to interact with them.
