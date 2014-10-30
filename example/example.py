@@ -19,10 +19,10 @@ def basic_gl_setup():
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     glEnable(GL_BLEND)
     glClearColor(.8,.8,.8,1.)
-    # glEnable(GL_LINE_SMOOTH)
-    # glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
-    # glEnable(GL_LINE_SMOOTH)
-    # glEnable(GL_POLYGON_SMOOTH)
+    glEnable(GL_LINE_SMOOTH)
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
+    glEnable(GL_LINE_SMOOTH)
+    glEnable(GL_POLYGON_SMOOTH)
 
 def adjust_gl_view(w,h,window):
     """
@@ -119,6 +119,7 @@ def demo():
     foo.myswitch = 10
 
     def print_hello():
+        gui.scale += 0.1
         print 'hello'
 
     def printer(val):
@@ -128,6 +129,7 @@ def demo():
     from pyglui import ui
     gui = ui.UI()
     gui.update_window(width,height)
+    gui.scale = 1.
     m = ui.Scrolling_Menu("MySideBar",pos=(-200,0),size=(0,0),header_pos='left')
 
     for x in range(10):
@@ -150,7 +152,7 @@ def demo():
     gui.elements.append(m)
 
 
-    m = ui.Scrolling_Menu("MyMenu",pos=(20,300),size=(300,500),header_pos='bottom')
+    m = ui.Scrolling_Menu("MyMenu",pos=(20,0),size=(300,500),header_pos='top')
     for x in range(1):
         m.elements.append(ui.Slider("bur",foo,setter=printer))
         m.elements.append(ui.Button("Say Hi!",print_hello))
@@ -193,12 +195,12 @@ def demo():
 
         clear_gl_screen()
 
-
+        gui.scale += .0001
         cpu_g.update()
         cpu_g.draw()
         fps_g.add(1./dt)
         fps_g.draw()
-        # foo.bar += .5
+        foo.bar += .5
         if foo.bar >= 100:
             foo.bar = 0
         gui.update()

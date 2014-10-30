@@ -18,7 +18,7 @@ UI features
 [x] implement toggle / switch
 [x] make menu move resize and minimize fn selectable and lockalbe in x or y
 [ ] design the UI and implement using gl calls above
-[ ] Optional: Add global UI scale option
+[ ] Optional: Add global UI ui_scale option
 [x] Implement Perf graph in cython
 [x] Implement scrolling
 
@@ -40,8 +40,6 @@ cdef fs.Context glfont = fs.Context()
 glfont.add_font('roboto', 'Roboto-Regular.ttf')
 
 
-
-
 cdef class UI:
     '''
     The UI context for a glfw window.
@@ -50,14 +48,21 @@ cdef class UI:
     cdef bint should_redraw
     cdef public list elements
     cdef FitBox window
-
+    cdef public float scale
     cdef fbo_tex_id ui_layer
 
     def __cinit__(self):
         self.elements = []
         self.new_input = Input()
+
+        #set up global UI scale
+        self.scale = 1.0
+        global ui_scale
+        ui_scale = self.scale
+
         self.window = FitBox(Vec2(0,0),Vec2(0,0))
         self.ui_layer = create_ui_texture(Vec2(200,200))
+
 
     def __init__(self):
         self.should_redraw = True
@@ -104,6 +109,9 @@ cdef class UI:
     cdef draw(self):
         global should_redraw
         global window_size
+        global ui_scale
+        ui_scale = self.scale
+
         window_size = self.window.size
 
         if should_redraw:
@@ -257,7 +265,9 @@ cdef class Draggable:
         global should_redraw
         if self.selected and new_input.dm:
             self.value -= self.drag_accumulator
-            self.drag_accumulator = new_input.m-self.touch_point
+            self.drag_accumulator = (new_input.m-self.touch_point)
+            self.drag_accumulator *= 1/ui_scale
+
             if self.drag_accumulator.x < 2 or self.drag_accumulator.y  < 2:
                 self.dragged  = True
 
@@ -327,11 +337,13 @@ cdef class FitBox:
     def __cinit__(self,Vec2 position,Vec2 size, Vec2 min_size = Vec2(0,0)):
         self.design_org = Vec2(position.x,position.y)
         self.design_size = Vec2(size.x,size.y)
+        self.min_size = Vec2(min_size.x,min_size.y)
         # The values below are just temporay
         # and will be overwritten by compute.
         self.org = Vec2(position.x,position.y)
+        self.org *=ui_scale
         self.size = Vec2(size.x,size.y)
-        self.min_size = Vec2(min_size.x,min_size.y)
+        self.size *=ui_scale
 
 
     def __init__(self,Vec2 position,Vec2 size, Vec2 min_size = Vec2(0,0)):
@@ -418,32 +430,32 @@ cdef class FitBox:
 
         # all x
         if self.design_org.x >=0:
-            self.org.x = self.design_org.x
+            self.org.x = self.design_org.x * ui_scale
         else:
-            self.org.x = context.size.x+self.design_org.x #design org is negative - double subtraction
+            self.org.x = context.size.x+(self.design_org.x* ui_scale) #design org is negative - double subtraction
         if self.design_size.x > 0:
             # size is direcly specified
-            self.size.x = self.design_size.x
+            self.size.x = self.design_size.x * ui_scale
         else:
-            self.size.x = context.size.x - self.org.x + self.design_size.x #design size is negative - double subtraction
+            self.size.x = context.size.x - self.org.x + self.design_size.x* ui_scale #design size is negative - double subtraction
 
-        self.size.x = max(self.min_size.x,self.size.x)
+        self.size.x = max(self.min_size.x * ui_scale,self.size.x)
         # finally translate into scene by parent org
         self.org.x +=context.org.x
 
 
         if self.design_org.y >=0:
-            self.org.y = self.design_org.y
+            self.org.y = self.design_org.y * ui_scale
         else:
-            self.org.y = context.size.y+self.design_org.y #design size is negative - double subtraction
+            self.org.y = context.size.y+(self.design_org.y* ui_scale) #design size is negative - double subtraction
         if self.design_size.y > 0:
             # size is direcly specified
-            self.size.y = self.design_size.y
+            self.size.y = self.design_size.y * ui_scale
         else:
-            self.size.y = context.size.y - self.org.y + self.design_size.y #design size is negative - double subtraction
+            self.size.y = context.size.y - self.org.y + self.design_size.y * ui_scale #design size is negative - double subtraction
 
 
-        self.size.y = max(self.min_size.y,self.size.y)
+        self.size.y = max(self.min_size.y * ui_scale,self.size.y)
         # finally translate into scene by parent org
         self.org.y +=context.org.y
 
@@ -483,6 +495,9 @@ cdef class FitBox:
     cdef copy(self):
         return FitBox( Vec2(*self.design_org), Vec2(*self.design_size), Vec2(*self.min_size) )
 
+    cdef has_area(self):
+        return 1 < self.size.x*self.size.y
+
 
 cdef class Vec2:
     #cdef public float x,y declared in pyglui.pxd
@@ -499,6 +514,11 @@ cdef class Vec2:
 
     def __add__(self,Vec2 other):
         return Vec2(self.x+other.x,self.y+other.y)
+
+    def __imul__(self,float factor):
+        self.x *=factor
+        self.y *=factor
+        return self
 
     def __iadd__(self,Vec2 other):
         self.x +=other.x

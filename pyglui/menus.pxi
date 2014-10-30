@@ -24,41 +24,41 @@ cdef class Base_Menu(UI_element):
     cdef Draggable handlebar, resize_corner
 
     cpdef sync(self):
-        if self.element_space.size.x and self.element_space.size.y:
+        if self.element_space.has_area():
             for e in self.elements:
                 e.sync()
 
     cdef draw_menu(self,bint nested):
-        if self.handlebar is not None:
-            self.handlebar.outline.compute(self.outline)
-            if 2<= self.header_pos_id <= 3:
-                tripple_v(self.handlebar.outline.org,Vec2(25,25))
-            else:
-                tripple_h(self.handlebar.outline.org,Vec2(25,25))
-                glfont.draw_text(self.handlebar.outline.org.x+30,
-                                 self.handlebar.outline.org.y+4,self.label)
-
         #draw translucent background
         if nested:
             pass
         else:
             if self.header_pos_id == 2: #left
-                self.outline.org.x += menu_sidebar_pad
-                self.outline.size.x -= menu_sidebar_pad
+                self.outline.org.x += menu_sidebar_pad*ui_scale
+                self.outline.size.x -= menu_sidebar_pad*ui_scale
                 self.outline.sketch()
-                self.outline.org.x -= menu_sidebar_pad
-                self.outline.size.x += menu_sidebar_pad
+                self.outline.org.x -= menu_sidebar_pad*ui_scale
+                self.outline.size.x += menu_sidebar_pad*ui_scale
 
             elif self.header_pos_id == 3: #right
-                self.outline.size.x -= menu_sidebar_pad
+                self.outline.size.x -= menu_sidebar_pad*ui_scale
                 self.outline.sketch()
-                self.outline.size.x += menu_sidebar_pad
+                self.outline.size.x += menu_sidebar_pad*ui_scale
             else:
                 self.outline.sketch()
 
         if self.resize_corner is not None:
             self.resize_corner.outline.compute(self.outline)
             self.resize_corner.draw(self.outline)
+
+        if self.handlebar is not None:
+            self.handlebar.outline.compute(self.outline)
+            if 2<= self.header_pos_id <= 3:
+                tripple_v(self.handlebar.outline.org,Vec2(25*ui_scale,25*ui_scale))
+            else:
+                tripple_h(self.handlebar.outline.org,Vec2(25*ui_scale,25*ui_scale))
+                glfont.draw_text(self.handlebar.outline.org.x+30*ui_scale,
+                                 self.handlebar.outline.org.y+4*ui_scale,self.label)
 
 
 cdef class Growing_Menu(Base_Menu):
@@ -155,7 +155,7 @@ cdef class Growing_Menu(Base_Menu):
 
     cpdef draw(self,FitBox parent,bint nested=True):
         #here we compute the requred design height of this menu.
-        self.outline.design_size.y  = self.height
+        self.outline.design_size.y  = self.height/ui_scale
         self.outline.compute(parent)
         self.element_space.compute(self.outline)
 
@@ -163,7 +163,7 @@ cdef class Growing_Menu(Base_Menu):
 
         cdef float org_y = self.element_space.org.y
         #if elements are not visible, no need to draw them.
-        if self.element_space.size.x and self.element_space.size.y:
+        if self.element_space.has_area():
             for e in self.elements:
                 e.draw(self.element_space)
                 self.element_space.org.y+= e.height
@@ -180,7 +180,7 @@ cdef class Growing_Menu(Base_Menu):
                 self.handlebar.handle_input(new_input,visible)
 
             #if elements are not visible, no need to interact with them.
-            if self.element_space.size.x and self.element_space.size.y:
+            if self.element_space.has_area():
                 for e in self.elements:
                     e.handle_input(new_input, visible)
 
@@ -189,9 +189,9 @@ cdef class Growing_Menu(Base_Menu):
         def __get__(self):
             cdef float height = 0
             #space from outline to element space at top
-            height += self.element_space.design_org.y
+            height += self.element_space.design_org.y*ui_scale
             #space from elementspace to outline at bottom
-            height -= self.element_space.design_size.y #double neg
+            height -= self.element_space.design_size.y*ui_scale #double neg
             if self.is_collapsed:
                 #elemnt space is 0
                 pass
@@ -333,12 +333,10 @@ cdef class Scrolling_Menu(Base_Menu):
         self.draw_menu(nested)
 
         #if elements are not visible, no need to draw them.
-        if self.element_space.size.x and self.element_space.size.y:
+        if self.element_space.has_area():
             self.draw_scroll_window_elements()
 
     cdef draw_scroll_window_elements(self):
-
-
         self.push_scissor()
         self.scrollbar.outline.compute(self.element_space)
 
@@ -346,10 +344,6 @@ cdef class Scrolling_Menu(Base_Menu):
         #compute scroll stack height.
         cdef float h = sum(e_heights)
 
-        if h:
-            self.scroll_factor = float(self.element_space.size.y)/h
-        else:
-            self.scroll_factor = 1
 
         #display that we have scrollable content
         #if self.scroll_factor < 1:
@@ -359,16 +353,16 @@ cdef class Scrolling_Menu(Base_Menu):
         #If the scollbar is not active, make sure the content is not scrolled away:
         if not self.scrollbar.selected:
             #self.scrollstate.y = clamp(self.scrollstate.y,min(-h,self.element_space.size.y-h),0)
-            self.scrollstate.y = clamp(self.scrollstate.y,-h+35,0)
+            self.scrollstate.y = clamp(self.scrollstate.y,(-h/ui_scale)+35,0)
 
         #render elements
-        self.element_space.org.y += self.scrollstate.y
+        self.element_space.org.y += self.scrollstate.y*ui_scale
 
         cdef float e_h
         for e,e_h in zip(self.elements,e_heights):
             e.draw(self.element_space)
             self.element_space.org.y+= e_h
-        self.element_space.org.y -= self.scrollstate.y
+        self.element_space.org.y -= self.scrollstate.y*ui_scale
         self.element_space.org.y -= h
 
 
@@ -407,7 +401,7 @@ cdef class Scrolling_Menu(Base_Menu):
                 self.handlebar.handle_input(new_input,visible)
 
             #if elements are not visible, no need to interact with them.
-            if self.element_space.size.x and self.element_space.size.y:
+            if self.element_space.has_area():
                 # let the elements know that the mouse should be ignored
                 # if outside of the visible scroll section
                 mouse_over_menu =  self.element_space.org.y <= new_input.m.y <= self.element_space.org.y+self.element_space.size.y

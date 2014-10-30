@@ -62,7 +62,7 @@ cdef class Slider(UI_element):
 
 
         gl.glPushMatrix()
-        gl.glTranslatef(self.field.org.x,self.field.org.y,0)
+        gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
 
         glfont.push_state()
         glfont.draw_text(10,0,self.label)
@@ -108,9 +108,8 @@ cdef class Switch(UI_element):
     cdef bint selected
     cdef int on_val,off_val
     cdef Synced_Value sync_val
-    cdef obj
 
-    def __cinit__(self,bytes attribute_name, object attribute_context, on_val=1, off_val=0, label=None, setter=None, getter=None):
+    def __cinit__(self,bytes attribute_name, object attribute_context, on_val=True, off_val=False, label=None, setter=None, getter=None):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
@@ -121,7 +120,7 @@ cdef class Switch(UI_element):
         self.button = FitBox(Vec2(-20,0),Vec2(20,20))
         self.selected = False
 
-    def __init__(self,bytes attribute_name, object attribute_context,label = None, on_val = 1, off_val = 0,setter= None,getter= None):
+    def __init__(self,bytes attribute_name, object attribute_context,label = None, on_val = True, off_val = False ,setter= None,getter= None):
         pass
 
 
@@ -146,7 +145,7 @@ cdef class Switch(UI_element):
             utils.draw_points(((self.button.center),),size=20, color=(.5,.5,.5,.9))
 
         gl.glPushMatrix()
-        gl.glTranslatef(self.field.org.x,self.field.org.y,0)
+        gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
 
         glfont.push_state()
         glfont.draw_text(10,0,self.label)
@@ -210,7 +209,7 @@ cdef class TextInput(UI_element):
         self.outline.compute(parent)
 
         gl.glPushMatrix()
-        gl.glTranslatef(self.outline.org.x,self.outline.org.y,0)
+        gl.glTranslatef(int(self.outline.org.x),int(self.outline.org.y),0)
         dx = glfont.draw_text(10,10,self.label)
         dx += 10
         self.textfield.design_org.x = dx
@@ -220,7 +219,7 @@ cdef class TextInput(UI_element):
         gl.glPushMatrix()
         #then transform locally and render the UI element
         #self.textfield.sketch()
-        gl.glTranslatef(self.textfield.org.x,self.textfield.org.y,0)
+        gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
         glfont.draw_text(10,0,self.preview)
         gl.glPopMatrix()
 
@@ -298,7 +297,7 @@ cdef class Button(UI_element):
             self.button.sketch()
 
         gl.glPushMatrix()
-        gl.glTranslatef(self.button.org.x,self.button.org.y,0)
+        gl.glTranslatef(int(self.button.org.x),int(self.button.org.y),0)
         glfont.draw_text(10,0,self.label)
         gl.glPopMatrix()
 
