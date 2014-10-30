@@ -43,6 +43,7 @@ cdef class Slider(UI_element):
         self.selected = False
         self.read_only = False
 
+
     def __init__(self,bytes attribute_name, object attribute_context,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
         pass
 
@@ -59,6 +60,8 @@ cdef class Slider(UI_element):
         self.slider_pos.x = clampmap(self.sync_val.value,self.minimum,self.maximum,0,self.field.size.x)
         #self.outline.sketch()
         #self.field.sketch()
+
+        #todo: draw step lines if they make sense
 
 
         gl.glPushMatrix()
@@ -89,7 +92,8 @@ cdef class Slider(UI_element):
             global should_redraw
 
             if self.selected and new_input.dm:
-                self.sync_val.value = clampmap(new_input.m.x-self.field.org.x,0,self.field.size.x,self.minimum,self.maximum)
+                val = clampmap(new_input.m.x-self.field.org.x,0,self.field.size.x,self.minimum,self.maximum)
+                self.sync_val.value = step(val,self.minimum,self.maximum,self.step)
                 should_redraw = True
 
             for b in new_input.buttons:

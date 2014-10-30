@@ -234,6 +234,7 @@ cdef class Draggable:
     '''
     A rectangle that can be dragged.
     Does not move itself but the drag vector is added to 'value'
+    Units are scaled by 1/ui_scale
     '''
     cdef FitBox outline
     cdef Vec2 touch_point,drag_accumulator

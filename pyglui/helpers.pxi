@@ -13,3 +13,17 @@ cdef inline float clampmap(float value, float istart, float istop, float ostart,
 
 cdef inline bint mouse_over_center(Vec2 center, int w, int h, Vec2 m):
     return center.x-w/2 <= m.x <=center.x+w/2 and center.y-h/2 <= m.y <=center.y+h/2
+
+cdef inline float step(float value, float start, float stop, float step):
+    cdef float rest
+    if step:
+        value -=start
+        rest = value%step
+        #round down
+        if rest < step/2.:
+            value -=rest
+        #round up
+        else:
+            value += step-rest
+        value +=start
+    return value
