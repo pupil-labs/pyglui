@@ -66,7 +66,8 @@ cdef class Slider(UI_element):
         #self.field.sketch()
 
         #todo: draw step lines if they make sense
-
+        step_pixels = clampmap(2,self.minimum,self.maximum,0,self.field.size.x)
+        steps = frange(0,self.field.size.x,step_pixels*2)
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
@@ -81,6 +82,10 @@ cdef class Slider(UI_element):
         glfont.pop_state()
 
         slider_line(Vec2(0,40),Vec2(self.field.size.x, 40))
+        
+        if self.step > 1 and step_pixels > 10.0: 
+            for s in steps:
+                utils.draw_points(((s,40),),size=8, color=(0.8,0.8,0.8,0.6))
 
         if self.selected:
             utils.draw_points(((self.slider_pos.x,40),),size=40, color=(.0,.0,.0,.8),sharpness=.3)
