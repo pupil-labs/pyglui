@@ -131,49 +131,49 @@ def demo():
     from pyglui import ui
     gui = ui.UI()
     gui.update_window(width,height)
-    gui.scale = 1.
+    gui.scale = 1.5
     m = ui.Scrolling_Menu("MySideBar",pos=(-200,0),size=(0,0),header_pos='left')
 
     for x in range(10):
-        # m.elements.append(ui.Slider("bar",foo,label="bar %s"%x))
-        # m.elements.append(ui.Slider("bur",foo,label="bur %s"%x))
+        # m.append(ui.Slider("bar",foo,label="bar %s"%x))
+        # m.append(ui.Slider("bur",foo,label="bur %s"%x))
         sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
-        sm.elements.append(ui.Slider("bar",foo))
-        sm.elements.append(ui.TextInput('mytext',foo,setter=printer))
+        sm.append(ui.Slider("bar",foo))
+        sm.append(ui.TextInput('mytext',foo,setter=printer))
 
         ssm = ui.Growing_Menu("SubSubMenu",pos=(0,0),size=(0,100))
-        ssm.elements.append(ui.Slider("bar",foo))
-        ssm.elements.append(ui.TextInput('mytext',foo,setter=printer))
-        sm.elements.append(ssm)
+        ssm.append(ui.Slider("bar",foo))
+        ssm.append(ui.TextInput('mytext',foo,setter=printer))
+        sm.append(ssm)
 
 
-        m.elements.append(sm)
-        m.elements.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
+        m.append(sm)
+        m.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
 
-        m.elements.append(ui.Button("Say Hi!",print_hello))
-        m.elements.append(ui.Button("Say Hi!",print_hello))
-        m.elements.append(ui.Button("Say Hi!",print_hello))
-    gui.elements.append(m)
+        m.append(ui.Button("Say Hi!",print_hello))
+        m.append(ui.Button("Say Hi!",print_hello))
+        m.append(ui.Button("Say Hi!",print_hello))
+    gui.append(m)
 
 
-    m = ui.Scrolling_Menu("MyMenu",pos=(20,0),size=(300,500),header_pos='top')
+    m = ui.Scrolling_Menu("MyMenu",pos=(200,30),size=(300,500),header_pos='top')
     for x in range(1):
-        m.elements.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
-        m.elements.append(ui.Slider("bur",foo,setter=printer,step=2,min=1,max=11))
-        m.elements.append(ui.Button("Say Hi!",print_hello))
-        m.elements.append(ui.Button("Say Hi!",print_hello))
-        m.elements.append(ui.Switch("myswitch",foo,on_val=1000,off_val=10,setter=printer,label="Switch Me"))
+        m.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
+        m.append(ui.Slider("bur",foo,setter=printer,step=5,min=1,max=105))
+        m.append(ui.Button("Say Hi!",print_hello))
+        m.append(ui.Button("Say Hi!",print_hello))
+        m.append(ui.Switch("myswitch",foo,on_val=1000,off_val=10,setter=printer,label="Switch Me"))
 
-        m.elements.append(ui.Button("Say Hi!",print_hello))
+        m.append(ui.Button("Say Hi!",print_hello))
         sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
-        sm.elements.append(ui.Slider("bar",foo))
-        sm.elements.append(ui.Slider("bar",foo))
+        sm.append(ui.Slider("bar",foo))
+        sm.append(ui.Slider("bar",foo))
 
-        sm.elements.append(ui.TextInput('mytext',foo,setter=printer))
-        m.elements.append(sm)
-        m.elements.append(ui.Button("Say Hi!",print_hello))
+        sm.append(ui.TextInput('mytext',foo,setter=printer))
+        m.append(sm)
+        m.append(ui.Button("Say Hi!",print_hello))
 
-    gui.elements.append(m)
+    gui.append(m)
 
 
 
@@ -194,7 +194,7 @@ def demo():
     fps_g.pos = (140,100)
     fps_g.update_rate = 5
     fps_g.label = "%0.0f FPS"
-    gui.scale = 1.0
+    gui.scale = 1.12
 
     while not quit:
         dt,ts = time.time()-ts,time.time()
@@ -206,9 +206,9 @@ def demo():
         cpu_g.draw()
         fps_g.add(1./dt)
         fps_g.draw()
-        foo.bar += .1
-        if foo.bar >= 100:
-            foo.bar = 0
+        # foo.bar += .1
+        # if foo.bar >= 100:
+            # foo.bar = 0
         gui.update()
 
         glfwSwapBuffers(window)

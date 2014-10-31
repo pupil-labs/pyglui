@@ -28,6 +28,41 @@ cdef class Base_Menu(UI_element):
             for e in self.elements:
                 e.sync()
 
+    def append(self, obj):
+        self.elements.append(obj)
+
+    def extend(self, objs):
+        self.elements.extend(objs)
+
+    def remove(self, obj):
+        del self.elements[self.elements.index(obj)]
+
+    def __len__ (self):
+        return len(self.elements)
+
+    def __getitem__ (self,x):
+        return self.elements[x]
+
+    def __setitem__ (self,x,obj):
+        self.elements[x] = obj
+
+    def __delitem__ (self,x):
+        del self.elements[x]
+
+    def __getslice__ (self, Py_ssize_t i, Py_ssize_t j):
+        return self.elements[i:j]
+
+    def __setslice__ (self, Py_ssize_t i, Py_ssize_t j,obj):
+        self.elements[i:j] = obj
+
+    def __delslice__ (self, Py_ssize_t i, Py_ssize_t j):
+        del self.elements[i:j]
+
+    def __contains__ (self,obj):
+        return obj in self.elements
+
+
+
     cdef draw_menu(self,bint nested):
         #draw translucent background
         if nested:
