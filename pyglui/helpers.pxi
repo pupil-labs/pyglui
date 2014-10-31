@@ -27,3 +27,11 @@ cdef inline float step(float value, float start, float stop, float step):
             value += step-rest
         value +=start
     return value
+
+def frange(start, stop, step):
+    '''
+    todo: translate to cython function
+    '''
+    while start < stop:
+        yield start
+        start += step
