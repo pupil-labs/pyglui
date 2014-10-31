@@ -121,6 +121,7 @@ def demo():
 
     def print_hello():
         foo.select = 'Cougar'
+        gui.scale += .1
         print 'hello'
 
     def printer(val):
@@ -147,6 +148,8 @@ def demo():
 
 
         m.elements.append(sm)
+        m.elements.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
+
         m.elements.append(ui.Button("Say Hi!",print_hello))
         m.elements.append(ui.Button("Say Hi!",print_hello))
         m.elements.append(ui.Button("Say Hi!",print_hello))
@@ -191,18 +194,19 @@ def demo():
     fps_g.pos = (140,100)
     fps_g.update_rate = 5
     fps_g.label = "%0.0f FPS"
+    gui.scale = 0.25
 
     while not quit:
         dt,ts = time.time()-ts,time.time()
 
         clear_gl_screen()
-
-        gui.scale += .0001
+        gui.scale +=.001
+        print gui.scale
         cpu_g.update()
         cpu_g.draw()
         fps_g.add(1./dt)
         fps_g.draw()
-        foo.bar += .5
+        foo.bar += .1
         if foo.bar >= 100:
             foo.bar = 0
         gui.update()

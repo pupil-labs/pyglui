@@ -48,7 +48,7 @@ cdef class UI:
     cdef bint should_redraw
     cdef public list elements
     cdef FitBox window
-    cdef public float scale
+    cdef public double scale
     cdef fbo_tex_id ui_layer
 
     def __cinit__(self):
@@ -120,7 +120,7 @@ cdef class UI:
             adjust_view(self.window.size)
 
             glfont.clear_state()
-            glfont.set_size(18*ui_scale)
+            glfont.set_size(int(ui_scale * 18.0))
             glfont.set_color_float(1,1,1,1)
             glfont.set_align(fs.FONS_ALIGN_TOP)
 
@@ -137,7 +137,6 @@ cdef class UI:
 
 
     def update(self):
-        global should_redraw
         self.handle_input()
         self.sync()
         self.draw()

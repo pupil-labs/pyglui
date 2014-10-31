@@ -340,9 +340,8 @@ cdef class Scrolling_Menu(Base_Menu):
         self.push_scissor()
         self.scrollbar.outline.compute(self.element_space)
 
-        e_heights = [e.height for e in self.elements]
         #compute scroll stack height.
-        cdef float h = sum(e_heights)
+        cdef float h = sum([e.height for e in self.elements])
 
 
         #display that we have scrollable content
@@ -358,10 +357,9 @@ cdef class Scrolling_Menu(Base_Menu):
         #render elements
         self.element_space.org.y += self.scrollstate.y*ui_scale
 
-        cdef float e_h
-        for e,e_h in zip(self.elements,e_heights):
+        for e in self.elements:
             e.draw(self.element_space)
-            self.element_space.org.y+= e_h
+            self.element_space.org.y+= e.height
         self.element_space.org.y -= self.scrollstate.y*ui_scale
         self.element_space.org.y -= h
 
