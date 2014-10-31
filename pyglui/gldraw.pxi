@@ -51,6 +51,14 @@ cdef inline tripple_v(Vec2 org, Vec2 size):
     gl.glEnd()
 
 
+cdef inline slider_line(Vec2 org, Vec2 end):
+    gl.glColor4f(1,1,1,.5)
+    gl.glLineWidth(1)
+    gl.glBegin(gl.GL_LINES)
+    gl.glVertex3f(org.x, org.y,0)
+    gl.glVertex3f(end.x, end.y,0)
+    gl.glEnd()
+
 ### OpenGL funtions for rendering to texture.
 ### Using this saves us considerable cpu/gpu time when the UI remains static.
 ctypedef struct fbo_tex_id:
