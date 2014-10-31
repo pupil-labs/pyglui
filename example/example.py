@@ -194,14 +194,14 @@ def demo():
     fps_g.pos = (140,100)
     fps_g.update_rate = 5
     fps_g.label = "%0.0f FPS"
-    gui.scale = 0.25
+    gui.scale = 1.0
 
     while not quit:
         dt,ts = time.time()-ts,time.time()
 
         clear_gl_screen()
-        gui.scale +=.001
-        print gui.scale
+        # gui.scale +=.001
+        # print gui.scale
         cpu_g.update()
         cpu_g.draw()
         fps_g.add(1./dt)
