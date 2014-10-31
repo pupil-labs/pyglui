@@ -275,6 +275,10 @@ cdef class Selector(UI_element):
         h+= self.select_field.design_org.y - self.select_field.design_size.y #double neg
         self.outline.design_size.y = h
 
+        #we need to bootstrap the computation of the item height.
+        #This is ok because we know the size will not be influcend by partent context.
+        #self.outline.size.y = h*ui_scale
+
 
     cdef finish_selection(self,float mouse_y):
         self.selection_idx = int(mouse_y/(self.select_field.size.y/len(self.selection)) )
@@ -288,6 +292,10 @@ cdef class Selector(UI_element):
         h+= self.field.design_org.y - self.field.design_size.y #double neg
         h+= self.select_field.design_org.y - self.select_field.design_size.y #double neg
         self.outline.design_size.y = h
+
+        #we need to bootstrap the computation of the item height.
+        #This is ok because we know the size will not be influcend by partent context.
+        #self.outline.size.y = h*ui_scale
 
         self.selected = False
 
