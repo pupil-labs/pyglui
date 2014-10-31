@@ -350,7 +350,7 @@ cdef class Scrolling_Menu(Base_Menu):
 
 
         #If the scollbar is not active, make sure the content is not scrolled away:
-        if not self.scrollbar.selected:
+        if not self.scrollbar.selected or 1:
             #self.scrollstate.y = clamp(self.scrollstate.y,min(-h,self.element_space.size.y-h),0)
             self.scrollstate.y = clamp(self.scrollstate.y,(-h/ui_scale)+35,0)
 

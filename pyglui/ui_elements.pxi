@@ -33,19 +33,27 @@ cdef class Slider(UI_element):
     cdef bint selected
     cdef Vec2 slider_pos
     cdef Synced_Value sync_val
+    cdef int steps
 
-    def __cinit__(self,bytes attribute_name, object attribute_context,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
+    def __cinit__(self,bytes attribute_name, object attribute_context,label = None, min = 0, max = 100, step = 0,setter= None,getter= None):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
+        self.step = abs(step)
         self.minimum = min
-        self.maximum = max
-        self.step = step
+        if self.step:
+            self.maximum = ((max-min)//self.step)*self.step+min
+        else:
+            self.maximum = max
         self.outline = FitBox(Vec2(0,0),Vec2(0,80)) # we only fix the height
         self.field = FitBox(Vec2(10,10),Vec2(-10,-10))
-        self.slider_pos = Vec2(0,20)
+        self.slider_pos = Vec2(20,20)
         self.selected = False
         self.read_only = False
+        if self.step:
+            self.steps = int((self.maximum-self.minimum)/float(step))
+        else:
+            self.steps = 0
 
 
     def __init__(self,bytes attribute_name, object attribute_context,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
@@ -65,9 +73,6 @@ cdef class Slider(UI_element):
         #self.outline.sketch()
         #self.field.sketch()
 
-        #todo: draw step lines if they make sense
-        step_pixels = clampmap(2,self.minimum,self.maximum,0,self.field.size.x)
-        steps = frange(0,self.field.size.x,step_pixels*2)
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
@@ -82,10 +87,13 @@ cdef class Slider(UI_element):
         glfont.pop_state()
 
         slider_line(Vec2(0,40),Vec2(self.field.size.x, 40))
-        
-        if self.step > 1 and step_pixels > 10.0: 
-            for s in steps:
-                utils.draw_points(((s,40),),size=8, color=(0.8,0.8,0.8,0.6))
+
+        cdef float step_pixel_size,x
+        if self.steps>1:
+            step_pixel_size = lmap(self.minimum+self.step,self.minimum,self.maximum,0,self.field.size.x)
+            if step_pixel_size >= 20*ui_scale:
+                step_marks = [(x*step_pixel_size,40) for x in range(self.steps+1)]
+                utils.draw_points(step_marks,size=8, color=(0.8,0.8,0.8,0.6))
 
         if self.selected:
             utils.draw_points(((self.slider_pos.x,40),),size=40, color=(.0,.0,.0,.8),sharpness=.3)
@@ -109,7 +117,7 @@ cdef class Slider(UI_element):
 
             for b in new_input.buttons:
                 if b[1] == 1 and visible:
-                    if mouse_over_center(self.slider_pos+self.field.org,self.height,self.height,new_input.m):
+                    if mouse_over_center(self.slider_pos+self.field.org,self.field.size.y,self.field.size.y,new_input.m):
                         new_input.buttons.remove(b)
                         self.selected = True
                         should_redraw = True
@@ -313,7 +321,6 @@ cdef class Selector(UI_element):
 cdef class TextInput(UI_element):
     cdef FitBox textfield
     cdef bint selected
-    cdef Vec2 slider_pos
     cdef Synced_Value sync_val
     cdef bytes preview
     cdef int caret
@@ -378,7 +385,6 @@ cdef class TextInput(UI_element):
                     elif k == (262,124,0,0): #Delete and key up:
                         self.caret +=1
                         self.caret = min(len(self.preview)-1,self.caret)
-
 
                 for b in new_input.buttons:
                     if b[1] == 1:
