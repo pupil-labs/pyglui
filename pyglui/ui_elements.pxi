@@ -41,7 +41,7 @@ cdef class Slider(UI_element):
         self.minimum = min
         self.maximum = max
         self.step = step
-        self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
+        self.outline = FitBox(Vec2(0,0),Vec2(0,80)) # we only fix the height
         self.field = FitBox(Vec2(10,10),Vec2(-10,-10))
         self.slider_pos = Vec2(0,20)
         self.selected = False
@@ -80,12 +80,14 @@ cdef class Slider(UI_element):
             glfont.draw_text(self.field.size.x-10,0,bytes(self.sync_val.value ))
         glfont.pop_state()
 
+        slider_line(Vec2(0,40),Vec2(self.field.size.x, 40))
+
         if self.selected:
-            utils.draw_points(((self.slider_pos.x,10),),size=40, color=(.0,.0,.0,.8),sharpness=.3)
-            utils.draw_points(((self.slider_pos.x,10),),size=30, color=(.5,.5,.9,.9))
+            utils.draw_points(((self.slider_pos.x,40),),size=40, color=(.0,.0,.0,.8),sharpness=.3)
+            utils.draw_points(((self.slider_pos.x,40),),size=30, color=(.5,.5,.9,.9))
         else:
-            utils.draw_points(((self.slider_pos.x,10),),size=30, color=(.0,.0,.0,.8),sharpness=.3)
-            utils.draw_points(((self.slider_pos.x,10),),size=20, color=(.5,.5,.5,.9))
+            utils.draw_points(((self.slider_pos.x,40),),size=30, color=(.0,.0,.0,.8),sharpness=.3)
+            utils.draw_points(((self.slider_pos.x,40),),size=20, color=(.5,.5,.5,.9))
 
         gl.glPopMatrix()
 
