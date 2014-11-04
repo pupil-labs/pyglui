@@ -28,11 +28,7 @@ def adjust_gl_view(w,h,window):
     """
     adjust view onto our scene.
     """
-    h = max(h,1)
-    w = max(w,1)
 
-    hdpi_factor = glfwGetFramebufferSize(window)[0]/glfwGetWindowSize(window)[0]
-    w,h = w*hdpi_factor,h*hdpi_factor
     glViewport(0, 0, w, h)
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
@@ -53,6 +49,11 @@ def demo():
 
     # Callback functions
     def on_resize(window,w, h):
+        h = max(h,1)
+        w = max(w,1)
+        hdpi_factor = glfwGetFramebufferSize(window)[0]/glfwGetWindowSize(window)[0]
+        w,h = w*hdpi_factor,h*hdpi_factor
+        print w,h
         gui.update_window(w,h)
         active_window = glfwGetCurrentContext()
         glfwMakeContextCurrent(window)
@@ -60,9 +61,7 @@ def demo():
         # fb_size = denormalize(norm_size,glfwGetFramebufferSize(window))
         adjust_gl_view(w,h,window)
         glfwMakeContextCurrent(active_window)
-        global width
-        global height
-        width,height = w,h
+
 
     def on_iconify(window,iconfied):
         pass
@@ -83,6 +82,8 @@ def demo():
         # pos = denormalize(pos,(frame.img.shape[1],frame.img.shape[0]) ) # Position in img pixels
 
     def on_pos(window,x, y):
+        hdpi_factor = float(glfwGetFramebufferSize(window)[0]/glfwGetWindowSize(window)[0])
+        x,y = x*hdpi_factor,y*hdpi_factor
         gui.update_mouse(x,y)
 
     def on_scroll(window,x,y):
@@ -153,7 +154,6 @@ def demo():
         ssm.append(ui.TextInput('mytext',foo,setter=printer))
         sm.append(ssm)
 
-
         sidebar.append(sm)
         sidebar.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
 
@@ -206,9 +206,9 @@ def demo():
     fps_g.pos = (140,100)
     fps_g.update_rate = 5
     fps_g.label = "%0.0f FPS"
-    gui.scale = 1.12
+    gui.scale = 1.0
 
-    on_resize(window,width,height)
+    on_resize(window,*glfwGetWindowSize(window))
 
     while not quit:
         dt,ts = time.time()-ts,time.time()
