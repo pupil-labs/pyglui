@@ -14,13 +14,14 @@ GL Fonts:
 [x] use in this lib
 
 UI features
-[ ] implement selector box
+[x] implement selector box
 [x] implement toggle / switch
 [x] make menu move resize and minimize fn selectable and lockalbe in x or y
 [x] Optional: Add global UI ui_scale option
 [x] Implement Perf graph in cython
 [x] Implement scrolling
 [ ] design the UI and implement using gl calls above
+[ ] implement text input box
 
 Done:
 UI interaction
