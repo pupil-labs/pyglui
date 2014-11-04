@@ -34,6 +34,11 @@ def adjust_gl_view(w,h,window):
     hdpi_factor = glfwGetFramebufferSize(window)[0]/glfwGetWindowSize(window)[0]
     w,h = w*hdpi_factor,h*hdpi_factor
     glViewport(0, 0, w, h)
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    glOrtho(0, w, h, 0, -1, 1)
+    glMatrixMode(GL_MODELVIEW)
+    glLoadIdentity()
 
 
 
@@ -124,6 +129,8 @@ def demo():
         gui.scale += .1
         print 'hello'
 
+        # m.configuration = sidebar.configuration
+
     def printer(val):
         print 'setting to :',val
 
@@ -132,11 +139,11 @@ def demo():
     gui = ui.UI()
     gui.update_window(width,height)
     gui.scale = 1.5
-    m = ui.Scrolling_Menu("MySideBar",pos=(-200,0),size=(0,0),header_pos='left')
+    sidebar = ui.Scrolling_Menu("MySideBar",pos=(-200,0),size=(0,0),header_pos='left')
 
     for x in range(10):
-        # m.append(ui.Slider("bar",foo,label="bar %s"%x))
-        # m.append(ui.Slider("bur",foo,label="bur %s"%x))
+        sidebar.append(ui.Slider("bar",foo,label="bar %s"%x))
+        sidebar.append(ui.Slider("bur",foo,label="bur %s"%x))
         sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
         sm.append(ui.Slider("bar",foo))
         sm.append(ui.TextInput('mytext',foo,setter=printer))
@@ -147,13 +154,13 @@ def demo():
         sm.append(ssm)
 
 
-        m.append(sm)
-        m.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
+        sidebar.append(sm)
+        sidebar.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
 
-        m.append(ui.Button("Say Hi!",print_hello))
-        m.append(ui.Button("Say Hi!",print_hello))
-        m.append(ui.Button("Say Hi!",print_hello))
-    gui.append(m)
+        sidebar.append(ui.Button("Say Hi!",print_hello))
+        sidebar.append(ui.Button("Say Hi!",print_hello))
+        sidebar.append(ui.Button("Say Hi!",print_hello))
+    gui.append(sidebar)
 
 
     m = ui.Scrolling_Menu("MyMenu",pos=(200,30),size=(300,500),header_pos='top')
@@ -175,6 +182,11 @@ def demo():
 
     gui.append(m)
 
+    m.color.a = 0
+
+
+
+
 
 
     import os
@@ -195,6 +207,8 @@ def demo():
     fps_g.update_rate = 5
     fps_g.label = "%0.0f FPS"
     gui.scale = 1.12
+
+    on_resize(window,width,height)
 
     while not quit:
         dt,ts = time.time()-ts,time.time()

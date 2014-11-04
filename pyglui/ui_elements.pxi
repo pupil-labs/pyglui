@@ -209,24 +209,21 @@ cdef class Selector(UI_element):
     cdef int selection_idx
     cdef bint selected
 
-    def __cinit__(self,bytes attribute_name, object attribute_context, selection, selection_labels=None, label=None, setter=None, getter=None):
+    def __cinit__(self,bytes attribute_name, object attribute_context, selection, labels=None, label=None, setter=None, getter=None):
         self.uid = id(self)
         self.label = label or attribute_name
 
         self.selection = list(selection)
-        self.selection_labels = selection_labels or [str(s) for s in selection]
+        self.selection_labels = labels or [str(s) for s in selection]
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter,self._on_change)
 
         self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
         self.field = FitBox(Vec2(10,10),Vec2(-10,-10))
         self.select_field = FitBox(Vec2(50,0),Vec2(0,0))
 
-    def __init__(self,bytes attribute_name, object attribute_context, selection, selection_labels=None, label=None, setter=None, getter=None):
+    def __init__(self,bytes attribute_name, object attribute_context, selection, labels=None, label=None, setter=None, getter=None):
         pass
 
-
-    cpdef sync(self):
-        self.sync_val.sync()
 
     def _on_change(self,new_value):
         try:

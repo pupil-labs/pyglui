@@ -39,7 +39,8 @@ include 'helpers.pxi'
 cdef fs.Context glfont = fs.Context()
 glfont.add_font('roboto', 'Roboto-Regular.ttf')
 
-
+cdef double ui_scale = 1.0
+cdef bint should_redraw = True
 cdef class UI:
     '''
     The UI context for a glfw window.
@@ -48,25 +49,18 @@ cdef class UI:
     cdef bint should_redraw
     cdef public list elements
     cdef FitBox window
-    cdef public double scale
     cdef fbo_tex_id ui_layer
 
     def __cinit__(self):
         self.elements = []
         self.new_input = Input()
 
-        #set up global UI scale
-        self.scale = 1.0
-        global ui_scale
-        ui_scale = self.scale
-
         self.window = FitBox(Vec2(0,0),Vec2(0,0))
         self.ui_layer = create_ui_texture(Vec2(200,200))
 
 
     def __init__(self):
-        self.should_redraw = True
-
+        pass
 
     def update_mouse(self,mx,my):
         if self.window.mouse_over(Vec2(mx,my)):
@@ -109,16 +103,11 @@ cdef class UI:
     cdef draw(self):
         global should_redraw
         global window_size
-        global ui_scale
-        ui_scale = self.scale
-
         window_size = self.window.size
 
         if should_redraw:
+            push_view(self.window.size)
             render_to_ui_texture(self.ui_layer)
-            gl.glPushMatrix()
-            adjust_view(self.window.size)
-
             glfont.clear_state()
             glfont.set_size(int(ui_scale * 18.0))
             glfont.set_color_float(1,1,1,1)
@@ -127,9 +116,8 @@ cdef class UI:
             for e in self.elements:
                 e.draw(self.window,nested=False)
 
-
-            gl.glPopMatrix()
             render_to_screen()
+            pop_view()
 
             should_redraw = False
 
@@ -163,17 +151,17 @@ cdef class UI:
     def __delitem__ (self,x):
         del self.elements[x]
 
-    def __getslice__ (self, Py_ssize_t i, Py_ssize_t j):
-        return self.elements[i:j]
-
-    def __setslice__ (self, Py_ssize_t i, Py_ssize_t j,obj):
-        self.elements[i:j] = obj
-
-    def __delslice__ (self, Py_ssize_t i, Py_ssize_t j):
-        del self.elements[i:j]
 
     def __contains__ (self,obj):
         return obj in self.elements
+
+    property scale:
+        def __get__(self):
+            return ui_scale
+
+        def __set__(self,val):
+            global ui_scale
+            ui_scale = <float>val
 
 include 'ui_elements.pxi'
 include 'menus.pxi'
@@ -386,7 +374,7 @@ cdef class FitBox:
         # The values below are just temporay
         # and will be overwritten by compute.
         self.org = Vec2(position.x,position.y)
-        self.org *=ui_scale
+        self.org *= ui_scale
         self.size = Vec2(size.x,size.y)
         self.size *=ui_scale
 
@@ -545,7 +533,7 @@ cdef class FitBox:
 
 
 cdef class Vec2:
-    #cdef public float x,y declared in pyglui.pxd
+    cdef public float x,y
 
     def __cinit__(self,float x, float y):
         self.x = x
@@ -595,16 +583,33 @@ cdef class Vec2:
         else:
             return NotImplemented
 
-
     def __getitem__(self,idx):
-        if idx==0:
-            return self.x
-        if idx==1:
-            return self.y
-        raise IndexError()
+        if isinstance(idx,slice):
+            return (self.x,self.y)[idx]
+        else:
+            if idx==0:
+                return self.x
+            elif idx==1:
+                return self.y
+            raise IndexError()
 
-    def as_tuple(self):
-       return self.x,self.y
+    def __setitem__(self,idx,obj):
+        if isinstance(idx,slice):
+            self.x,self.y = obj[0], obj[1] #we should be more specific about the kind of slice
+        else:
+            if idx ==0:
+                self.x = obj
+            elif idx == 1:
+                self.y == obj
+            else:
+                raise IndexError()
 
-    def from_tuple(self,val):
-        self.x,self.y = val
+cdef class RGBA:
+    cdef public float r,g,b,a
+    def __cinit__(self,r=1,g=1,b=1,a=1):
+        self.r = r
+        self.g = g
+        self.b = b
+        self.a = a
+    def __init__(self,r=1,g=1,b=1,a=1):
+        pass

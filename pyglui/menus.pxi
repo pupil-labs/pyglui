@@ -22,6 +22,8 @@ cdef class Base_Menu(UI_element):
     cdef FitBox element_space
     cdef int header_pos_id
     cdef Draggable handlebar, resize_corner
+    cdef public RGBA color
+
 
     cpdef sync(self):
         if self.element_space.has_area():
@@ -49,15 +51,6 @@ cdef class Base_Menu(UI_element):
     def __delitem__ (self,x):
         del self.elements[x]
 
-    def __getslice__ (self, Py_ssize_t i, Py_ssize_t j):
-        return self.elements[i:j]
-
-    def __setslice__ (self, Py_ssize_t i, Py_ssize_t j,obj):
-        self.elements[i:j] = obj
-
-    def __delslice__ (self, Py_ssize_t i, Py_ssize_t j):
-        del self.elements[i:j]
-
     def __contains__ (self,obj):
         return obj in self.elements
 
@@ -68,6 +61,8 @@ cdef class Base_Menu(UI_element):
         if nested:
             pass
         else:
+            gl.glColor4f(self.color.r,self.color.g,self.color.b,self.color.a)
+
             if self.header_pos_id == 2: #left
                 self.outline.org.x += menu_sidebar_pad*ui_scale
                 self.outline.size.x -= menu_sidebar_pad*ui_scale
@@ -125,8 +120,9 @@ cdef class Growing_Menu(Base_Menu):
 
         self.elements = []
         self.header_pos = header_pos
+        self.color = RGBA(0,0,0,.3)
 
-    def __init__(self,label,pos=(0,0),size=(200,100),header_pos = 'top'):
+    def __init__(self,label, pos=(0,0),size=(200,100),header_pos = 'top'):
         pass
     property header_pos:
         def __get__(self):
@@ -242,12 +238,13 @@ cdef class Growing_Menu(Base_Menu):
 
     property configuration:
         def __get__(self):
-            return {'pos':self.outline.design_org.as_tuple(),'size':self.outline.design_size.as_tuple(),'is_collapsed':self.is_collapsed}
+            return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'is_collapsed':self.is_collapsed}
 
         def __set__(self,new_conf):
-            self.outline.design_org = new_conf['pos']
-            self.outline.design_size= new_conf['size']
-            self.is_collapsed= new_conf['is_collapsed']
+            self.outline.design_org[:] = new_conf['pos']
+            self.outline.design_size[:] = new_conf['size']
+            self.is_collapsed = new_conf['is_collapsed']
+            self.header_pos = self.header_pos #update layout
 
 
 cdef class Scrolling_Menu(Base_Menu):
@@ -285,6 +282,7 @@ cdef class Scrolling_Menu(Base_Menu):
         self.scrollbar = Draggable(Vec2(0,0),Vec2(0,0),self.scrollstate,arrest_axis=1,zero_crossing=True)
         self.scroll_factor = 1.
         self.header_pos = header_pos
+        self.color = RGBA(0,0,0,.3)
 
     def __init__(self,label,pos=(0,0),size=(200,100),header_pos = 'top'):
         pass
@@ -466,13 +464,14 @@ cdef class Scrolling_Menu(Base_Menu):
     property configuration:
         def __get__(self):
             if self.outline.is_collapsed():
-                return {'pos':self.uncollapsed_outline.design_org.as_tuple(),'size':self.uncollapsed_outline.design_size.as_tuple(),'is_collapsed':True}
+                return {'pos':self.uncollapsed_outline[:],'size':self.uncollapsed_outline[:],'is_collapsed':True}
             else:
-                return {'pos':self.outline.design_org.as_tuple(),'size':self.outline.design_size.as_tuple(),'is_collapsed':False}
+                return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'is_collapsed':False}
 
         def __set__(self,new_conf):
-            self.outline.design_org = new_conf['pos']
-            self.outline.design_size= new_conf['size']
-            if new_conf['is_collapsed']:
+            self.outline.design_org[:] = new_conf['pos']
+            self.outline.design_size[:] = new_conf['size']
+            self.header_pos = self.header_pos #update layout
+            if new_conf['is_collapsed'] and not self.outline.is_collapsed():
                 self.toggle_iconified()
 

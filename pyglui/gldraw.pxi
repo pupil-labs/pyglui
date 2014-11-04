@@ -1,14 +1,22 @@
 
-cdef inline adjust_view(Vec2 size):
+cdef inline push_view(Vec2 size):
     gl.glMatrixMode(gl.GL_PROJECTION)
+    gl.glPushMatrix()
     gl.glLoadIdentity()
     gl.glOrtho(0, size.x, size.y, 0, -1, 1)
     gl.glMatrixMode(gl.GL_MODELVIEW)
+    gl.glPushMatrix()
     gl.glLoadIdentity()
+
+cdef inline pop_view():
+    gl.glMatrixMode(gl.GL_PROJECTION)
+    gl.glPopMatrix()
+    gl.glMatrixMode(gl.GL_MODELVIEW)
+    gl.glPopMatrix()
 
 
 cdef inline rect(Vec2 org, Vec2 size):
-    gl.glColor4f(.0,.0,.0,.1)
+    #gl.glColor4f(.0,.0,.0,.1)
     gl.glBegin(gl.GL_POLYGON)
     gl.glVertex3f(org.x,org.y,0.0)
     gl.glVertex3f(org.x,org.y+size.y,0.0)
@@ -58,6 +66,7 @@ cdef inline slider_line(Vec2 org, Vec2 end):
     gl.glVertex3f(org.x, org.y,0)
     gl.glVertex3f(end.x, end.y,0)
     gl.glEnd()
+
 
 ### OpenGL funtions for rendering to texture.
 ### Using this saves us considerable cpu/gpu time when the UI remains static.

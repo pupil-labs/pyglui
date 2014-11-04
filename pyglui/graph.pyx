@@ -9,6 +9,16 @@ cdef fs.Context glfont = fs.Context()
 glfont.add_font('opensans', 'Roboto-Regular.ttf')
 glfont.set_size(18)
 
+def adjust_view(win_size):
+    '''
+    Sets up pixel based gl coord system.
+    Use this to prepare rendering of graphs.
+    '''
+    gl.glMatrixMode(gl.GL_PROJECTION)
+    gl.glLoadIdentity()
+    gl.glOrtho(0, win_size[0], win_size[1], 0, -1, 1)
+    gl.glMatrixMode(gl.GL_MODELVIEW)
+    gl.glLoadIdentity()
 
 cdef class Graph:
     cdef float[::1] data
