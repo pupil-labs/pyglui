@@ -5,9 +5,7 @@ from pyfontstash cimport pyfontstash as fs
 
 
 #global init of gl fonts
-cdef fs.Context glfont = fs.Context()
-glfont.add_font('opensans', 'Roboto-Regular.ttf')
-glfont.set_size(18)
+cdef fs.Context glfont
 
 def adjust_view(win_size):
     '''
@@ -34,6 +32,11 @@ cdef class Graph:
         self.d_len = data_points
         self.label = 'Tile %0.2f units'
         self.bar_width = 4
+
+        global glfont
+        glfont = fs.Context()
+        glfont.add_font('opensans', 'Roboto-Regular.ttf')
+        glfont.set_size(18)
 
     def __init__(self,int data_points = 25):
         cdef int x

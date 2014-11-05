@@ -171,7 +171,9 @@ cdef class Switch(UI_element):
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
 
         glfont.push_state()
-        glfont.draw_text(10,0,self.label)
+        #glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_CENTER)
+
+        glfont.draw_breaking_text(10,0,"This is a long piece of breakig text. Yeah lets see where it breaks. Or hey it does not see to break. Lorem i[pos sdfin sdcn", self.field.size.x-100,100)
         # turn on text for debugging and rebuild if you want to check the value
         # glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)
         # glfont.draw_text(self.field.size.x-5,0,bytes(self.sync_val.value))

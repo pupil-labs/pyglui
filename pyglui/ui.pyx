@@ -36,12 +36,11 @@ from pyfontstash cimport pyfontstash as fs
 include 'gldraw.pxi'
 include 'helpers.pxi'
 
-#global init of gl fonts
-cdef fs.Context glfont = fs.Context()
-glfont.add_font('roboto', 'Roboto-Regular.ttf')
-
+#global cdefs
+cdef fs.Context glfont
 cdef double ui_scale = 1.0
 cdef bint should_redraw = True
+
 cdef class UI:
     '''
     The UI context for a glfw window.
@@ -55,9 +54,14 @@ cdef class UI:
     def __cinit__(self):
         self.elements = []
         self.new_input = Input()
-
         self.window = FitBox(Vec2(0,0),Vec2(0,0))
         self.ui_layer = create_ui_texture(Vec2(200,200))
+
+        #global init of gl fonts
+        global glfont
+        glfont = fs.Context()
+        glfont.add_font('roboto', 'Roboto-Regular.ttf')
+
 
 
     def __init__(self):
@@ -254,7 +258,7 @@ cdef class Input:
         self.s.x = 0
         self.s.y = 0
 
-    def __repr__(self):
+    def __str__(self):
         return 'Current Input: \n   Mouse pos  : %s\n   Mouse delta: %s\n   Scroll: %s\n   Buttons: %s\n   Keys: %s\n   Chars: %s' %(self.m,self.dm,self.s,self.buttons,self.keys,self.chars)
 
 
@@ -509,7 +513,7 @@ cdef class FitBox:
     cdef bint mouse_over(self,Vec2 m):
         return self.org.x <= m.x <= self.org.x+self.size.x and self.org.y <= m.y <=self.org.y+self.size.y
 
-    def __repr__(self):
+    def __str__(self):
         return "FitBox:\n   design org: %s size: %s\n   comptd org: %s size: %s"%(self.design_org,self.design_size,self.org,self.size)
 
     cdef same_design(self,FitBox other):
@@ -567,7 +571,7 @@ cdef class Vec2:
         self.y -= other.y
         return self
 
-    def __repr__(self):
+    def __str__(self):
         return 'x: %s y: %s'%(self.x,self.y)
 
     def __richcmp__(self,Vec2 other,int op):

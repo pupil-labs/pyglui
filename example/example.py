@@ -9,6 +9,7 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 import time
+from pyglui import ui
 
 width, height = (1280,720)
 
@@ -53,7 +54,6 @@ def demo():
         w = max(w,1)
         hdpi_factor = glfwGetFramebufferSize(window)[0]/glfwGetWindowSize(window)[0]
         w,h = w*hdpi_factor,h*hdpi_factor
-        print w,h
         gui.update_window(w,h)
         active_window = glfwGetCurrentContext()
         glfwMakeContextCurrent(window)
@@ -136,9 +136,7 @@ def demo():
         print 'setting to :',val
 
 
-    from pyglui import ui
     gui = ui.UI()
-    gui.update_window(width,height)
     gui.scale = 1.5
     sidebar = ui.Scrolling_Menu("MySideBar",pos=(-200,0),size=(0,0),header_pos='left')
 
@@ -169,7 +167,7 @@ def demo():
         m.append(ui.Slider("bur",foo,setter=printer,step=5,min=1,max=105))
         m.append(ui.Button("Say Hi!",print_hello))
         m.append(ui.Button("Say Hi!",print_hello))
-        m.append(ui.Switch("myswitch",foo,on_val=1000,off_val=10,setter=printer,label="Switch Me"))
+        m.append(ui.Switch("myswitch",foo,on_val=1000,off_val=10,setter=printer,label="Switch Me selfknwqef qwerf qwef qwf "))
 
         m.append(ui.Button("Say Hi!",print_hello))
         sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
