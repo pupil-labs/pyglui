@@ -40,7 +40,7 @@ def adjust_gl_view(w,h,window):
 
 
 def clear_gl_screen():
-    glClearColor(.8,.8,0.8,1.)
+    glClearColor(.9,.9,0.9,1.)
     glClear(GL_COLOR_BUFFER_BIT)
 
 
@@ -124,6 +124,10 @@ def demo():
     foo.mytext = 'change me!'
     foo.myswitch = 10
     foo.select = 'Tiger'
+    foo.record = False
+    foo.calibrate = False
+    foo.stream = True
+    foo.test = False
 
     def print_hello():
         foo.select = 'Cougar'
@@ -137,27 +141,29 @@ def demo():
 
 
     gui = ui.UI()
-    gui.scale = 1.5
+    gui.scale = 1.0
     sidebar = ui.Scrolling_Menu("MySideBar",pos=(-200,0),size=(0,0),header_pos='left')
 
     for x in range(10):
         sidebar.append(ui.Slider("bar",foo,label="bar %s"%x))
         sidebar.append(ui.Slider("bur",foo,label="bur %s"%x))
         sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
+        sm.toggle_iconified()
         sm.append(ui.Slider("bar",foo))
         sm.append(ui.TextInput('mytext',foo,setter=printer))
-
         ssm = ui.Growing_Menu("SubSubMenu",pos=(0,0),size=(0,100))
         ssm.append(ui.Slider("bar",foo))
         ssm.append(ui.TextInput('mytext',foo,setter=printer))
+        ssm.toggle_iconified()
+
         sm.append(ssm)
 
         sidebar.append(sm)
-        sidebar.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
+        sm.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
 
-        sidebar.append(ui.Button("Say Hi!",print_hello))
-        sidebar.append(ui.Button("Say Hi!",print_hello))
-        sidebar.append(ui.Button("Say Hi!",print_hello))
+        sm.append(ui.Button("Say Hi!",print_hello))
+        sm.append(ui.Button("Say Hi!",print_hello))
+        sm.append(ui.Button("Say Hi!",print_hello))
     gui.append(sidebar)
 
 
@@ -173,11 +179,24 @@ def demo():
         sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
         sm.append(ui.Slider("bar",foo))
         sm.append(ui.Slider("bar",foo))
+        sm.append(ui.Slider("bar",foo))
+        sm.append(ui.Slider("bar",foo))
+        sm.append(ui.Slider("bar",foo))
+        sm.append(ui.Slider("bar",foo))
+        sm.append(ui.Slider("bar",foo))
+        sm.append(ui.Slider("bar",foo))
 
         sm.append(ui.TextInput('mytext',foo,setter=printer))
         m.append(sm)
         m.append(ui.Button("Say Hi!",print_hello))
 
+
+    rightbar = ui.Stretching_Menu('Right Bar',(0,100),(120,-100))
+    rightbar.append(ui.Thumb("record",foo,setter=printer,label="Record") )
+    rightbar.append(ui.Thumb("calibrate",foo,setter=printer,label="Calibrate") )
+    rightbar.append(ui.Thumb("stream",foo,setter=printer,label="Stream") )
+    rightbar.append(ui.Thumb("test",foo,setter=printer,label="Test") )
+    gui.append(rightbar)
     gui.append(m)
 
     m.color.a = 0
@@ -204,9 +223,10 @@ def demo():
     fps_g.pos = (140,100)
     fps_g.update_rate = 5
     fps_g.label = "%0.0f FPS"
-    gui.scale = 1.0
 
     on_resize(window,*glfwGetWindowSize(window))
+    # gui.update()
+    # on_resize(window,*glfwGetWindowSize(window))
 
     while not quit:
         dt,ts = time.time()-ts,time.time()

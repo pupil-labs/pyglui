@@ -24,11 +24,11 @@ cdef class Base_Menu(UI_element):
     cdef Draggable handlebar, resize_corner
     cdef public RGBA color
 
-
     cpdef sync(self):
         if self.element_space.has_area():
             for e in self.elements:
                 e.sync()
+
 
     def append(self, obj):
         self.elements.append(obj)
@@ -89,6 +89,65 @@ cdef class Base_Menu(UI_element):
                 tripple_h(self.handlebar.outline.org,Vec2(25*ui_scale,25*ui_scale))
                 glfont.draw_text(self.handlebar.outline.org.x+30*ui_scale,
                                  self.handlebar.outline.org.y+4*ui_scale,self.label)
+
+
+cdef class Stretching_Menu(Base_Menu):
+    '''
+    A simple menu
+    Not movable and fixed in height.
+    It will space its content evenenly in y.
+    '''
+    cdef bint is_collapsed
+
+    def __cinit__(self,label,pos=(0,0),size=(200,100)):
+        self.uid = id(self)
+        self.label = label
+        self.outline = FitBox(position=Vec2(*pos),size=Vec2(*size),min_size=Vec2(0,0))
+        self.element_space = FitBox(position=Vec2(menu_pad,menu_pad),size=Vec2(-menu_pad,-menu_pad))
+        self.elements = []
+        self.color = RGBA(0,0,0,0)
+        self.is_collapsed = False
+
+    def __init__(self,label,pos=(0,0),size=(200,100)):
+        pass
+
+    cpdef draw(self,FitBox parent,bint nested=True):
+        cdef float h = 0,y_spacing=0,org_y=0
+        if not self.is_collapsed:
+            self.outline.compute(parent)
+            self.element_space.compute(self.outline)
+
+            for e in self.elements:
+                e.precompute(self.element_space)
+                h += e.height
+
+            y_spacing  = (self.element_space.size.y-h)/max( 1, (len(self.elements)-1) )
+            org_y = self.element_space.org.y
+            #if elements are not visible, no need to draw them.
+            if self.element_space.has_area():
+                for e in self.elements:
+                    e.draw(self.element_space,nested= False)
+                    self.element_space.org.y+= e.height + y_spacing
+                self.outline.org.y = org_y
+
+
+    cpdef handle_input(self, Input new_input,bint visible):
+        if not self.read_only and not self.is_collapsed:
+            global should_redraw
+            #if elements are not visible, no need to interact with them.
+            if self.element_space.has_area():
+                for e in self.elements:
+                    e.handle_input(new_input, visible)
+
+
+    property configuration:
+        def __get__(self):
+            return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'is_collapsed':self.is_collapsed}
+
+        def __set__(self,new_conf):
+            self.outline.design_org[:] = new_conf['pos']
+            self.outline.design_size[:] = new_conf['size']
+            self.is_collapsed = new_conf['is_collapsed']
 
 
 cdef class Growing_Menu(Base_Menu):
@@ -215,6 +274,10 @@ cdef class Growing_Menu(Base_Menu):
                 for e in self.elements:
                     e.handle_input(new_input, visible)
 
+    cpdef precompute(self,FitBox parent):
+        #here we compute the requred design height of this menu.
+        self.outline.design_size.y  = self.height/ui_scale
+        self.outline.compute(parent)
 
     property height:
         def __get__(self):

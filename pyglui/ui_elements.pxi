@@ -15,6 +15,7 @@ cdef class UI_element:
         global should_redraw
         pass
 
+
     cpdef draw(self,FitBox context, bint nested=True):
         pass
 
@@ -22,6 +23,9 @@ cdef class UI_element:
         if not self.read_only:
             global should_redraw
             pass
+
+    cpdef precompute(self,FitBox parent):
+        self.outline.compute(parent)
 
     property height:
         def __get__(self):
@@ -125,7 +129,6 @@ cdef class Slider(UI_element):
                     self.selected = False
                     should_redraw = True
 
-
 cdef class Switch(UI_element):
     cdef public FitBox field,button
     cdef bint selected
@@ -173,13 +176,79 @@ cdef class Switch(UI_element):
         glfont.push_state()
         #glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_CENTER)
 
-        glfont.draw_breaking_text(10,0,"This is a long piece of breakig text. Yeah lets see where it breaks. Or hey it does not see to break. Lorem i[pos sdfin sdcn", self.field.size.x-100,100)
         # turn on text for debugging and rebuild if you want to check the value
         # glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)
         # glfont.draw_text(self.field.size.x-5,0,bytes(self.sync_val.value))
         glfont.pop_state()
 
         gl.glPopMatrix()
+
+    cpdef handle_input(self,Input new_input,bint visible):
+        if not self.read_only:
+            global should_redraw
+
+            for b in new_input.buttons:
+                if visible and self.button.mouse_over(new_input.m):
+                    if b[1] == 1:
+                        new_input.buttons.remove(b)
+                        self.selected = True
+                        should_redraw = True
+                if self.selected and b[1] == 0 and (self.sync_val.value == self.on_val):
+                    new_input.buttons.remove(b)
+                    self.sync_val.value = self.off_val
+                    self.selected = False
+                    should_redraw = True
+                if self.selected and b[1] == 0 and (self.sync_val.value == self.off_val):
+                    new_input.buttons.remove(b)
+                    self.sync_val.value = self.on_val
+                    self.selected = False
+                    should_redraw = True
+
+
+cdef class Thumb(UI_element):
+    '''
+    Not a classical UI element. Use button instead.
+    '''
+    cdef public FitBox button
+    cdef bint selected
+    cdef int on_val,off_val
+    cdef Synced_Value sync_val
+
+    def __cinit__(self,bytes attribute_name, object attribute_context, on_val=True, off_val=False, label=None, setter=None, getter=None):
+        self.uid = id(self)
+        self.label = label or attribute_name
+        self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
+        self.on_val = on_val
+        self.off_val = off_val
+        self.outline = FitBox(Vec2(0,0),Vec2(120,120))
+        self.button = FitBox(Vec2(10,10),Vec2(-10,-10))
+        self.selected = False
+
+    def __init__(self,bytes attribute_name, object attribute_context,label = None, on_val = True, off_val = False ,setter= None,getter= None):
+        pass
+
+
+    cpdef sync(self):
+        self.sync_val.sync()
+
+
+    cpdef draw(self,FitBox parent,bint nested=True):
+        #update appearance
+        self.outline.compute(parent)
+        self.button.compute(self.outline)
+        if self.sync_val.value == self.on_val:
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=(.0,.0,.0,.8),sharpness=.3)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-20, color=(.5,.5,.9,.9),sharpness=.98)
+        else:
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=(.0,.0,.0,.8),sharpness=.3)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-20, color=(.5,.5,.5,.9),sharpness=.98)
+
+        glfont.push_state()
+        glfont.set_size(max(1,int(min(self.button.size))-30))
+        glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_CENTER)
+        glfont.draw_text(self.button.center[0],self.button.center[1],self.label[0])
+        glfont.pop_state()
+
 
     cpdef handle_input(self,Input new_input,bint visible):
         if not self.read_only:
