@@ -121,10 +121,11 @@ cdef class Stretching_Menu(Base_Menu):
                 e.precompute(self.element_space)
                 h += e.height
 
-            y_spacing  = (self.element_space.size.y-h)/max( 1, (len(self.elements)-1) )
+            y_spacing  = (self.element_space.size.y-h)/(len(self.elements)+1)
             org_y = self.element_space.org.y
             #if elements are not visible, no need to draw them.
             if self.element_space.has_area():
+                self.element_space.org.y+= y_spacing
                 for e in self.elements:
                     e.draw(self.element_space,nested= False)
                     self.element_space.org.y+= e.height + y_spacing

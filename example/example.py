@@ -191,7 +191,7 @@ def demo():
         m.append(ui.Button("Say Hi!",print_hello))
 
 
-    rightbar = ui.Stretching_Menu('Right Bar',(0,100),(120,-100))
+    rightbar = ui.Stretching_Menu('Right Bar',(0,100),(150,-100))
     rightbar.append(ui.Thumb("record",foo,setter=printer,label="Record") )
     rightbar.append(ui.Thumb("calibrate",foo,setter=printer,label="Calibrate") )
     rightbar.append(ui.Thumb("stream",foo,setter=printer,label="Stream") )
