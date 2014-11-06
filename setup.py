@@ -1,4 +1,4 @@
-import os, platform
+import platform
 
 from distutils.core import setup
 from distutils.extension import Extension
@@ -10,13 +10,19 @@ if platform.system() == 'Darwin':
     link_args = [f, 'OpenGL']
     libs = []
     gl_compile_args = []
-
-
+    fontstash_compile_args = ['-D FONTSTASH_IMPLEMENTATION','-D GLFONTSTASH_IMPLEMENTATION']
+elif platform.system() == 'Windows':
+    includes = ['pyglui/cygl/']
+    libs = ['OpenGL32']
+    link_args = []
+    gl_compile_args = [] #['/DGL_GLEXT_PROTOTYPES']
+    fontstash_compile_args = ['/DFONTSTASH_IMPLEMENTATION','/DGLFONTSTASH_IMPLEMENTATION'] 
 else:
     includes = ['/usr/include/GL',]
     libs = ['GL']
     link_args = []
     gl_compile_args = ['-D GL_GLEXT_PROTOTYPES']
+    fontstash_compile_args = ['-D FONTSTASH_IMPLEMENTATION','-D GLFONTSTASH_IMPLEMENTATION']
 
 
 
@@ -54,7 +60,7 @@ extensions = [
 				include_dirs = includes+['pyglui/pyfontstash/fontstash/src'],
 				libraries = libs,
 				extra_link_args=link_args,
-				extra_compile_args=['-D FONTSTASH_IMPLEMENTATION','-D GLFONTSTASH_IMPLEMENTATION'])
+				extra_compile_args=fontstash_compile_args)
 ]
 
 setup( 	name="pyglui",
