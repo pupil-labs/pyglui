@@ -618,3 +618,30 @@ cdef class RGBA:
         self.a = a
     def __init__(self,r=1,g=1,b=1,a=1):
         pass
+
+    def __getitem__(self,idx):
+        if isinstance(idx,slice):
+            return (self.r,self.g,self.b,self.a)[idx]
+        else:
+            if idx==0:
+                return self.r
+            elif idx==1:
+                return self.g
+            elif idx==2:
+                return self.b
+            elif idx==3:
+                return self.a
+
+            raise IndexError()
+
+    def __setitem__(self,idx,obj):
+        if isinstance(idx,slice):
+            t = self[:]
+            self.x,self.y = obj[0], obj[1] #we should be more specific about the kind of slice
+        else:
+            if idx ==0:
+                self.x = obj
+            elif idx == 1:
+                self.y == obj
+            else:
+                raise IndexError()

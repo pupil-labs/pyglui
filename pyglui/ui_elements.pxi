@@ -214,6 +214,7 @@ cdef class Thumb(UI_element):
     cdef bint selected
     cdef int on_val,off_val
     cdef Synced_Value sync_val
+    cdef public RGBA on_color
 
     def __cinit__(self,bytes attribute_name, object attribute_context, on_val=True, off_val=False, label=None, setter=None, getter=None):
         self.uid = id(self)
@@ -224,6 +225,7 @@ cdef class Thumb(UI_element):
         self.outline = FitBox(Vec2(0,0),Vec2(120,120))
         self.button = FitBox(Vec2(10,10),Vec2(-10,-10))
         self.selected = False
+        self.on_color = RGBA(5.,.5,.9,.9)
 
     def __init__(self,bytes attribute_name, object attribute_context,label = None, on_val = True, off_val = False ,setter= None,getter= None):
         pass
@@ -239,10 +241,13 @@ cdef class Thumb(UI_element):
         self.button.compute(self.outline)
         if self.sync_val.value == self.on_val:
             utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=(.0,.0,.0,.8),sharpness=.3)
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-20, color=(.5,.5,.9,.9),sharpness=.98)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-25, color=self.on_color[:],sharpness=.9)
+        elif self.selected:
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=(.0,.0,.0,.8),sharpness=.3)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-15, color=(.9,.9,.5,.9),sharpness=.9)
         else:
             utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=(.0,.0,.0,.8),sharpness=.3)
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-20, color=(.5,.5,.5,.9),sharpness=.98)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-25, color=(.5,.5,.5,.9),sharpness=.9)
 
         glfont.push_state()
         glfont.set_size(max(1,int(min(self.button.size))-30))
@@ -385,9 +390,10 @@ cdef class Selector(UI_element):
 
 
 
-
-
 cdef class TextInput(UI_element):
+    '''
+    Text input field.
+    '''
     cdef FitBox textfield
     cdef bint selected
     cdef Synced_Value sync_val
