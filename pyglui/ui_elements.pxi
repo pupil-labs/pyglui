@@ -240,14 +240,14 @@ cdef class Thumb(UI_element):
         self.outline.compute(parent)
         self.button.compute(self.outline)
         if self.sync_val.value == self.on_val:
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=(.0,.0,.0,.8),sharpness=.3)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=(.0,.0,.0,.5),sharpness=.3)
             utils.draw_points(((self.button.center),),size=int(min(self.button.size))-25, color=self.on_color[:],sharpness=.9)
         elif self.selected:
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=(.0,.0,.0,.8),sharpness=.3)
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-15, color=(.9,.9,.5,.9),sharpness=.9)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=(.0,.0,.0,.5),sharpness=.3)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-20, color=(.9,.9,.5,.6),sharpness=.9)
         else:
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=(.0,.0,.0,.8),sharpness=.3)
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-25, color=(.5,.5,.5,.9),sharpness=.9)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=(.0,.0,.0,.5),sharpness=.3)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-25, color=(.5,.5,.5,.6),sharpness=.9)
 
         glfont.push_state()
         glfont.set_size(max(1,int(min(self.button.size))-30))

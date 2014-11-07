@@ -637,7 +637,8 @@ cdef class RGBA:
     def __setitem__(self,idx,obj):
         if isinstance(idx,slice):
             t = self[:]
-            self.x,self.y = obj[0], obj[1] #we should be more specific about the kind of slice
+            t[slice] = obj
+            self.r,self.g,self.b,self.a = t
         else:
             if idx ==0:
                 self.x = obj
