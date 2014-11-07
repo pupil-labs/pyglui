@@ -15,7 +15,13 @@ Cython powered OpenGL gui.
 
 
 
-##Install
+## Install
 * clone with `--recursive` flag
 * `python setup.py install`
 
+## Demo
+* `cd /example`
+* `python example.py` 
+
+![](https://raw.github.com/wiki/pupil-labs/pyglui/media/demo_screenshot_20141107.png)
+**Demo screenshot as of 2014-11-07**
