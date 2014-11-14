@@ -59,7 +59,7 @@ cdef inline tripple_v(Vec2 org, Vec2 size):
     gl.glEnd()
 
 
-cdef inline slider_line(Vec2 org, Vec2 end):
+cdef inline line(Vec2 org, Vec2 end):
     gl.glColor4f(1,1,1,.5)
     gl.glLineWidth(1)
     gl.glBegin(gl.GL_LINES)

@@ -90,7 +90,7 @@ cdef class Slider(UI_element):
             glfont.draw_text(self.field.size.x-10,0,bytes(self.sync_val.value ))
         glfont.pop_state()
 
-        slider_line(Vec2(0,40),Vec2(self.field.size.x, 40))
+        line(Vec2(0,40),Vec2(self.field.size.x, 40))
 
         cdef float step_pixel_size,x
         if self.steps>1:
@@ -398,22 +398,26 @@ cdef class TextInput(UI_element):
     cdef bint selected
     cdef Synced_Value sync_val
     cdef bytes preview
-    cdef int caret
+    cdef int caret,text_offset
 
 
     def __cinit__(self,bytes attribute_name, object attribute_context,label = None,setter= None,getter= None):
         self.uid = id(self)
         self.label = label or attribute_name
-        self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
+        self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter,self.on_change)
         self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
         self.textfield = FitBox(Vec2(10,10),Vec2(-10,-10))
         self.selected = False
         self.preview = str(self.sync_val.value)
-        self.caret = len(self.preview)-1
+        self.caret = len(self.preview)
+        self.text_offset = 0
 
     def __init__(self,bytes attribute_name, object attribute_context,label = None,setter= None,getter= None):
         pass
 
+    cpdef on_change(self,new_value):
+        if not self.selected:
+            self.preview = new_value
 
     cpdef sync(self):
         self.sync_val.sync()
@@ -430,12 +434,9 @@ cdef class TextInput(UI_element):
         self.textfield.compute(self.outline)
         gl.glPopMatrix()
 
-        gl.glPushMatrix()
-        #then transform locally and render the UI element
-        #self.textfield.sketch()
-        gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
-        glfont.draw_text(10,0,self.preview)
-        gl.glPopMatrix()
+        self.draw_text_field()
+
+
 
     cpdef handle_input(self,Input new_input,bint visible):
         if not self.read_only:
@@ -443,7 +444,7 @@ cdef class TextInput(UI_element):
 
             if self.selected:
                 for c in new_input.chars:
-                    self.preview = self.preview[:self.caret+1] + c + self.preview[self.caret+1:]
+                    self.preview = self.preview[:self.caret] + c + self.preview[self.caret:]
                     self.caret +=1
                     should_redraw = True
 
@@ -451,15 +452,21 @@ cdef class TextInput(UI_element):
                     if k == (257,36,0,0): #Enter and key up:
                         self.finish_input()
                     elif k == (259,51,0,0) or k ==(259,51,2,0): #Delete and key up:
-                        self.preview = self.preview[:self.caret] + self.preview[self.caret+1:]
+                        self.preview = self.preview[:self.caret-1] + self.preview[self.caret:]
                         self.caret -=1
                         self.caret = max(0,self.caret)
-                    elif k == (263,123,0,0): #Delete and key up:
+                        should_redraw = True
+
+                    elif k == (263,123,0,0): #key left:
                         self.caret -=1
                         self.caret = max(0,self.caret)
-                    elif k == (262,124,0,0): #Delete and key up:
+                        should_redraw = True
+
+                    elif k == (262,124,0,0): #key right
                         self.caret +=1
-                        self.caret = min(len(self.preview)-1,self.caret)
+                        self.caret = min(len(self.preview),self.caret)
+                        should_redraw = True
+
 
                 for b in new_input.buttons:
                     if b[1] == 1:
@@ -477,9 +484,31 @@ cdef class TextInput(UI_element):
         global should_redraw
         should_redraw = True
         self.selected = False
-        self.caret = len(self.preview)-1
+        self.caret = len(self.preview)
         self.sync_val.value = self.preview
 
+
+
+    cdef draw_text_field(self):
+        cdef bytes pre_caret, post_caret
+        pre_caret = self.preview[:self.caret]
+        post_caret = self.preview[self.caret:]
+        gl.glPushMatrix()
+        #then transform locally and render the UI element
+        #self.textfield.sketch()
+        gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
+        if self.selected:
+            glfont.set_color_float(.5,1,.5,1)
+        cdef float x = glfont.draw_text(10,0,pre_caret)
+        glfont.draw_text(x,0,post_caret)
+        if self.selected:
+            gl.glColor4f(1,1,1,.5)
+            gl.glLineWidth(1)
+            gl.glBegin(gl.GL_LINES)
+            gl.glVertex3f(x,0,0)
+            gl.glVertex3f(x,text_height,0)
+            gl.glEnd()
+        gl.glPopMatrix()
 
 cdef class Button(UI_element):
     cdef FitBox button

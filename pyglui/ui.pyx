@@ -89,7 +89,10 @@ cdef class UI:
         self.new_input.keys.append((key,scancode,action,mods))
 
     def update_char(self,c):
-        self.new_input.chars.append(chr(c))
+        try:
+            self.new_input.chars.append(chr(c))
+        except:
+            print c
 
     def update_button(self,button,action,mods):
         self.new_input.buttons.append((button,action,mods))
