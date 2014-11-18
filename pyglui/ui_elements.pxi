@@ -31,6 +31,7 @@ cdef class UI_element:
         def __get__(self):
             return self.outline.size.y
 
+
 cdef class Slider(UI_element):
     cdef float minimum,maximum,step
     cdef public FitBox field
@@ -91,6 +92,7 @@ cdef class Slider(UI_element):
         glfont.pop_state()
 
         line(Vec2(0,40),Vec2(self.field.size.x, 40))
+        line_highlight(Vec2(0,40),Vec2(self.slider_pos.x,40))
 
         cdef float step_pixel_size,x
         if self.steps>1:
@@ -128,6 +130,7 @@ cdef class Slider(UI_element):
                 if self.selected and b[1] == 0:
                     self.selected = False
                     should_redraw = True
+
 
 cdef class Switch(UI_element):
     cdef public FitBox field,button
@@ -389,7 +392,6 @@ cdef class Selector(UI_element):
         self.selected = False
 
 
-
 cdef class TextInput(UI_element):
     '''
     Text input field.
@@ -452,8 +454,9 @@ cdef class TextInput(UI_element):
                     if k == (257,36,0,0): #Enter and key up:
                         self.finish_input()
                     elif k == (259,51,0,0) or k ==(259,51,2,0): #Delete and key up:
-                        self.preview = self.preview[:self.caret-1] + self.preview[self.caret:]
-                        self.caret -=1
+                        if self.caret > 0:
+                            self.preview = self.preview[:self.caret-1] + self.preview[self.caret:]
+                            self.caret -=1
                         self.caret = max(0,self.caret)
                         should_redraw = True
 
@@ -498,9 +501,11 @@ cdef class TextInput(UI_element):
         #self.textfield.sketch()
         gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
         if self.selected:
-            glfont.set_color_float(.5,1,.5,1)
+            line_highlight(Vec2(0,text_height), self.textfield.size)
+            # glfont.set_color_float(.5,1,.5,1)
         cdef float x = glfont.draw_text(10,0,pre_caret)
         glfont.draw_text(x,0,post_caret)
+        # glfont.set_color_float(1.0,1.0,1.0,1)
         if self.selected:
             gl.glColor4f(1,1,1,.5)
             gl.glLineWidth(1)
@@ -509,6 +514,7 @@ cdef class TextInput(UI_element):
             gl.glVertex3f(x,text_height,0)
             gl.glEnd()
         gl.glPopMatrix()
+
 
 cdef class Button(UI_element):
     cdef FitBox button
