@@ -92,7 +92,7 @@ cdef class UI:
         try:
             self.new_input.chars.append(chr(c))
         except:
-            print c
+            pass
 
     def update_button(self,button,action,mods):
         self.new_input.buttons.append((button,action,mods))
@@ -179,6 +179,7 @@ include 'menus.pxi'
 cdef class Synced_Value:
     '''
     an element that has a synced value
+    attributes will be accecd through the attribute context unless you supply a getter.
     '''
     cdef object attribute_context
     cdef bytes attribute_name
@@ -187,14 +188,15 @@ cdef class Synced_Value:
     cdef object setter
     cdef object on_change
 
-    def __cinit__(self,bytes attribute_name, object attribute_context,getter=None,setter=None,on_change=None):
+    def __cinit__(self,bytes attribute_name, object attribute_context = None,getter=None,setter=None,on_change=None):
+        assert attribute_context is not None or getter is not None
         self.attribute_context = attribute_context
         self.attribute_name = attribute_name
         self.getter = getter
         self.setter = setter
         self.on_change = on_change
 
-    def __init__(self,bytes attribute_name, object attribute_context,getter=None,setter=None,on_change=None):
+    def __init__(self,bytes attribute_name, object attribute_context = None,getter=None,setter=None,on_change=None):
         self.sync()
 
 
@@ -226,8 +228,8 @@ cdef class Synced_Value:
 
             if self.setter is not None:
                 self.setter(self._value)
-
-            self.attribute_context.__dict__[self.attribute_name] = self._value
+            if self.attribute_context is not None:
+                self.attribute_context.__dict__[self.attribute_name] = self._value
 
 
 cdef class Input:

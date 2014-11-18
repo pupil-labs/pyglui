@@ -39,7 +39,7 @@ cdef class Slider(UI_element):
     cdef Synced_Value sync_val
     cdef int steps
 
-    def __cinit__(self,bytes attribute_name, object attribute_context,label = None, min = 0, max = 100, step = 0,setter= None,getter= None):
+    def __cinit__(self,bytes attribute_name, object attribute_context = None,label = None, min = 0, max = 100, step = 0,setter= None,getter= None):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
@@ -60,7 +60,7 @@ cdef class Slider(UI_element):
             self.steps = 0
 
 
-    def __init__(self,bytes attribute_name, object attribute_context,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
+    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
         pass
 
 
@@ -135,7 +135,7 @@ cdef class Switch(UI_element):
     cdef int on_val,off_val
     cdef Synced_Value sync_val
 
-    def __cinit__(self,bytes attribute_name, object attribute_context, on_val=True, off_val=False, label=None, setter=None, getter=None):
+    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
@@ -146,7 +146,7 @@ cdef class Switch(UI_element):
         self.button = FitBox(Vec2(-20,0),Vec2(20,20))
         self.selected = False
 
-    def __init__(self,bytes attribute_name, object attribute_context,label = None, on_val = True, off_val = False ,setter= None,getter= None):
+    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None):
         pass
 
 
@@ -216,7 +216,7 @@ cdef class Thumb(UI_element):
     cdef Synced_Value sync_val
     cdef public RGBA on_color
 
-    def __cinit__(self,bytes attribute_name, object attribute_context, on_val=True, off_val=False, label=None, setter=None, getter=None):
+    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
@@ -227,7 +227,7 @@ cdef class Thumb(UI_element):
         self.selected = False
         self.on_color = RGBA(5.,.5,.9,.9)
 
-    def __init__(self,bytes attribute_name, object attribute_context,label = None, on_val = True, off_val = False ,setter= None,getter= None):
+    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None):
         pass
 
 
@@ -286,7 +286,7 @@ cdef class Selector(UI_element):
     cdef int selection_idx
     cdef bint selected
 
-    def __cinit__(self,bytes attribute_name, object attribute_context, selection, labels=None, label=None, setter=None, getter=None):
+    def __cinit__(self,bytes attribute_name, object attribute_context = None, selection = [], labels=None, label=None, setter=None, getter=None):
         self.uid = id(self)
         self.label = label or attribute_name
 
@@ -298,7 +298,7 @@ cdef class Selector(UI_element):
         self.field = FitBox(Vec2(10,10),Vec2(-10,-10))
         self.select_field = FitBox(Vec2(50,0),Vec2(0,0))
 
-    def __init__(self,bytes attribute_name, object attribute_context, selection, labels=None, label=None, setter=None, getter=None):
+    def __init__(self,bytes attribute_name, object attribute_context = None, selection = [], labels=None, label=None, setter=None, getter=None):
         pass
 
 
@@ -401,7 +401,7 @@ cdef class TextInput(UI_element):
     cdef int caret,text_offset
 
 
-    def __cinit__(self,bytes attribute_name, object attribute_context,label = None,setter= None,getter= None):
+    def __cinit__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter,self.on_change)
@@ -412,7 +412,7 @@ cdef class TextInput(UI_element):
         self.caret = len(self.preview)
         self.text_offset = 0
 
-    def __init__(self,bytes attribute_name, object attribute_context,label = None,setter= None,getter= None):
+    def __init__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
         pass
 
     cpdef on_change(self,new_value):

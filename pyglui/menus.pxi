@@ -97,7 +97,7 @@ cdef class Stretching_Menu(Base_Menu):
     Not movable and fixed in height.
     It will space its content evenenly in y.
     '''
-    cdef bint is_collapsed
+    cdef public bint collapsed
 
     def __cinit__(self,label,pos=(0,0),size=(200,100)):
         self.uid = id(self)
@@ -106,14 +106,14 @@ cdef class Stretching_Menu(Base_Menu):
         self.element_space = FitBox(position=Vec2(menu_pad,menu_pad),size=Vec2(-menu_pad,-menu_pad))
         self.elements = []
         self.color = RGBA(0,0,0,0)
-        self.is_collapsed = False
+        self.collapsed = False
 
     def __init__(self,label,pos=(0,0),size=(200,100)):
         pass
 
     cpdef draw(self,FitBox parent,bint nested=True):
         cdef float h = 0,y_spacing=0,org_y=0
-        if not self.is_collapsed:
+        if not self.collapsed:
             self.outline.compute(parent)
             self.element_space.compute(self.outline)
 
@@ -133,7 +133,7 @@ cdef class Stretching_Menu(Base_Menu):
 
 
     cpdef handle_input(self, Input new_input,bint visible):
-        if not self.read_only and not self.is_collapsed:
+        if not self.read_only and not self.collapsed:
             global should_redraw
             #if elements are not visible, no need to interact with them.
             if self.element_space.has_area():
@@ -143,12 +143,12 @@ cdef class Stretching_Menu(Base_Menu):
 
     property configuration:
         def __get__(self):
-            return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'is_collapsed':self.is_collapsed}
+            return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':self.collapsed}
 
         def __set__(self,new_conf):
             self.outline.design_org[:] = new_conf['pos']
             self.outline.design_size[:] = new_conf['size']
-            self.is_collapsed = new_conf['is_collapsed']
+            self.collapsed = new_conf['collapsed']
 
 
 cdef class Growing_Menu(Base_Menu):
@@ -163,7 +163,7 @@ cdef class Growing_Menu(Base_Menu):
 
 
     '''
-    cdef bint is_collapsed
+    cdef public bint collapsed
 
 
     def __cinit__(self,label,pos=(0,0),size=(200,100),header_pos = 'top'):
@@ -287,7 +287,7 @@ cdef class Growing_Menu(Base_Menu):
             height += self.element_space.design_org.y*ui_scale
             #space from elementspace to outline at bottom
             height -= self.element_space.design_size.y*ui_scale #double neg
-            if self.is_collapsed:
+            if self.collapsed:
                 #elemnt space is 0
                 pass
             else:
@@ -298,16 +298,16 @@ cdef class Growing_Menu(Base_Menu):
     def toggle_iconified(self):
         global should_redraw
         should_redraw = True
-        self.is_collapsed = not self.is_collapsed
+        self.collapsed = not self.collapsed
 
     property configuration:
         def __get__(self):
-            return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'is_collapsed':self.is_collapsed}
+            return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':self.collapsed}
 
         def __set__(self,new_conf):
             self.outline.design_org[:] = new_conf['pos']
             self.outline.design_size[:] = new_conf['size']
-            self.is_collapsed = new_conf['is_collapsed']
+            self.collapsed = new_conf['collapsed']
             self.header_pos = self.header_pos #update layout
 
 
@@ -525,17 +525,26 @@ cdef class Scrolling_Menu(Base_Menu):
             self.uncollapsed_outline = self.outline.copy()
             self.outline.collapse()
 
+
+    property collapsed:
+        def __get__(self):
+            return self.outline.is_collapsed()
+
+        def __set__(self,new_state):
+            if bool(new_state) == bool(self.outline.is_collapsed()):
+                self.toggle_iconified()
+
     property configuration:
         def __get__(self):
             if self.outline.is_collapsed():
-                return {'pos':self.uncollapsed_outline[:],'size':self.uncollapsed_outline[:],'is_collapsed':True}
+                return {'pos':self.uncollapsed_outline[:],'size':self.uncollapsed_outline[:],'collapsed':True}
             else:
-                return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'is_collapsed':False}
+                return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':False}
 
         def __set__(self,new_conf):
             self.outline.design_org[:] = new_conf['pos']
             self.outline.design_size[:] = new_conf['size']
             self.header_pos = self.header_pos #update layout
-            if new_conf['is_collapsed'] and not self.outline.is_collapsed():
+            if new_conf['collapsed'] and not self.outline.is_collapsed():
                 self.toggle_iconified()
 
