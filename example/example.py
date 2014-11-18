@@ -173,7 +173,7 @@ def demo():
         m.append(ui.Slider("bur",foo,setter=printer,step=5,min=1,max=105))
         m.append(ui.Button("Say Hi!",print_hello))
         m.append(ui.Button("Say Hi!",print_hello))
-        m.append(ui.Switch("myswitch",foo,on_val=1000,off_val=10,setter=printer,label="Switch Me selfknwqef qwerf qwef qwf "))
+        m.append(ui.Switch("myswitch",foo,on_val=1000,off_val=10,setter=printer,label="Switch Me"))
 
         m.append(ui.Button("Say Hi!",print_hello))
         sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
