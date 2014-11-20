@@ -295,6 +295,10 @@ cdef class Selector(UI_element):
 
         self.selection = list(selection)
         self.selection_labels = labels or [str(s) for s in selection]
+
+        for s in self.selection_labels:
+            assert isinstance(s,str)
+
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter,self._on_change)
 
         self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height

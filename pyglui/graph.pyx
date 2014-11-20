@@ -7,38 +7,40 @@ from pyfontstash cimport pyfontstash as fs
 #global init of gl fonts
 cdef fs.Context glfont
 
-def adjust_view(win_size):
+cdef double win_width, win_height
+
+def adjust_view(w,h):
     '''
     Sets up pixel based gl coord system.
     Use this to prepare rendering of graphs.
     '''
-    gl.glMatrixMode(gl.GL_PROJECTION)
-    gl.glLoadIdentity()
-    gl.glOrtho(0, win_size[0], win_size[1], 0, -1, 1)
-    gl.glMatrixMode(gl.GL_MODELVIEW)
-    gl.glLoadIdentity()
+    global win_height
+    global win_width
+    win_width,win_height = w,h
 
 cdef class Graph:
-    cdef float[::1] data
-    cdef public float avg,bar_width
+    cdef double[::1] data
+    cdef public float avg,bar_width,min_val, max_val
     cdef int idx,d_len
     cdef int x,y
     cdef basestring label
     cdef int s_idx,s_size
     cdef object data_source
 
-    def __cinit__(self,int data_points = 25):
-        self.data = view.array(shape=(data_points,), itemsize=sizeof(float), format="f")
+    def __cinit__(self,int data_points = 25,float min_val = 0, float max_val = 100):
+        self.data = view.array(shape=(data_points,), itemsize=sizeof(double), format="d")
         self.d_len = data_points
         self.label = 'Tile %0.2f units'
         self.bar_width = 4
+        self.min_val = min_val
+        self.max_val = max_val
 
         global glfont
         glfont = fs.Context()
         glfont.add_font('opensans', 'Roboto-Regular.ttf')
         glfont.set_size(18)
 
-    def __init__(self,int data_points = 25):
+    def __init__(self,int data_points = 25,float min_val = 0, float max_val = 100):
         cdef int x
         for x in range(data_points):
             self.data[x] = 0
@@ -72,7 +74,7 @@ cdef class Graph:
             self.data_source = fn
 
 
-    def add(self,int val):
+    def add(self,double val):
         self.s_idx = (self.s_idx +1) %self.s_size
         if self.s_idx == 0:
             self.data[self.idx] = val
@@ -94,9 +96,20 @@ cdef class Graph:
     def draw(self):
         cdef int i
         cdef float x=0
+
+        gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glPushMatrix()
+        gl.glLoadIdentity()
+        gl.glOrtho(0, win_width, win_height, 0, -1, 1)
+        gl.glMatrixMode(gl.GL_MODELVIEW)
+        gl.glPushMatrix()
+        gl.glLoadIdentity()
         gl.glTranslatef(self.x,self.y,0)
         gl.glRotatef(180,0,0,0)
+        #scale such that a bar at max val is 100px high
+        gl.glPushMatrix()
+        gl.glScalef(1,100./self.max_val,1)
+        gl.glTranslatef(0,self.min_val,0)
         gl.glLineWidth(self.bar_width)
         gl.glColor4f(.0,0.0,.5,.3)
         gl.glBegin(gl.GL_LINES)
@@ -115,7 +128,12 @@ cdef class Graph:
             x +=self.bar_width
 
         gl.glEnd()
+        gl.glPopMatrix()
+
+
         gl.glRotatef(180,0,0,0)
         glfont.draw_text(0,0,bytes(self.label%self.avg))
+        gl.glPopMatrix()
+        gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glPopMatrix()
 

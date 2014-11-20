@@ -167,9 +167,9 @@ cdef class UI:
         def __get__(self):
             return ui_scale
 
-        def __set__(self,val):
+        def __set__(self, float val):
             global ui_scale
-            ui_scale = <float>val
+            ui_scale = val
 
 include 'ui_elements.pxi'
 include 'menus.pxi'
@@ -197,22 +197,27 @@ cdef class Synced_Value:
         self.on_change = on_change
 
     def __init__(self,bytes attribute_name, object attribute_context = None,getter=None,setter=None,on_change=None):
+        if attribute_context is not None:
+            try:
+                self.attribute_context.__dict__[self.attribute_name]
+            except KeyError:
+                raise Exception("%s has no attribute %s"%(self.attribute_context,self.attribute_name))
         self.sync()
 
 
+
     cdef sync(self):
+        global should_redraw
         if self.getter is not None:
             val = self.getter()
             if val != self._value:
                 self._value = val
-                global should_redraw
                 should_redraw = True
                 if self.on_change is not None:
                     self.on_change(self.value)
 
         elif self._value != self.attribute_context.__dict__[self.attribute_name]:
             self._value = self.attribute_context.__dict__[self.attribute_name]
-            global should_redraw
             should_redraw = True
             if self.on_change is not None:
                 self.on_change(self.value)
@@ -221,15 +226,12 @@ cdef class Synced_Value:
     property value:
         def __get__(self):
             return self._value
-        def __set__(self,val):
-            #conserve the type
-            t = type(self._value)
-            self._value = t(val)
-
+        def __set__(self,new_val):
             if self.setter is not None:
-                self.setter(self._value)
-            if self.attribute_context is not None:
-                self.attribute_context.__dict__[self.attribute_name] = self._value
+                self.setter(new_val)
+            else:
+                self.attribute_context.__dict__[self.attribute_name] = new_val
+            self.sync()
 
 
 cdef class Input:

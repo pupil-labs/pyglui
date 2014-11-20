@@ -166,7 +166,7 @@ cdef class Growing_Menu(Base_Menu):
     cdef public bint collapsed
 
 
-    def __cinit__(self,label,pos=(0,0),size=(200,100),header_pos = 'top'):
+    def __cinit__(self,label,pos=(0,0),size=(0,0),header_pos = 'top'):
         self.uid = id(self)
         self.label = label
         #design height will be overwritten in draw.
