@@ -1,5 +1,7 @@
 
 DEF text_height = 20
+DEF outline_padding = 10
+DEF h_spacer = 5
 
 
 cdef class UI_element:
@@ -131,6 +133,13 @@ cdef class Slider(UI_element):
                     self.selected = False
                     should_redraw = True
 
+# Switch - design parameters 
+DEF switch_outline_height = 40
+DEF switch_field_height = 20
+DEF switch_button_size = 20
+DEF switch_button_size_selected = 30
+DEF switch_button_shadow = 10
+
 
 cdef class Switch(UI_element):
     cdef public FitBox field,button
@@ -144,9 +153,9 @@ cdef class Switch(UI_element):
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
         self.on_val = on_val
         self.off_val = off_val
-        self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
-        self.field = FitBox(Vec2(10,10),Vec2(-10,-10))
-        self.button = FitBox(Vec2(-20,0),Vec2(20,20))
+        self.outline = FitBox(Vec2(0,0),Vec2(0,switch_outline_height)) # we only fix the height
+        self.field = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
+        self.button = FitBox(Vec2(-switch_button_size-h_spacer,0),Vec2(switch_button_size-h_spacer,switch_button_size-h_spacer))
         self.selected = False
 
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None):
@@ -167,15 +176,15 @@ cdef class Switch(UI_element):
         # self.field.sketch()
         # self.button.sketch()
         if self.sync_val.value == self.on_val:
-            utils.draw_points(((self.button.center),),size=40, color=(.0,.0,.0,.8),sharpness=.3)
-            utils.draw_points(((self.button.center),),size=30, color=(.5,.5,.9,.9))
+            utils.draw_points(((self.button.center),),size=switch_button_size_selected+switch_button_shadow, color=(.0,.0,.0,.8),sharpness=.3)
+            utils.draw_points(((self.button.center),),size=switch_button_size_selected, color=(.5,.5,.9,.9))
         else:
-            utils.draw_points(((self.button.center),),size=30, color=(.0,.0,.0,.8),sharpness=.3)
-            utils.draw_points(((self.button.center),),size=20, color=(.5,.5,.5,.9))
+            utils.draw_points(((self.button.center),),size=switch_button_size+switch_button_shadow, color=(.0,.0,.0,.8),sharpness=.3)
+            utils.draw_points(((self.button.center),),size=switch_button_size, color=(.5,.5,.5,.9))
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
-        glfont.draw_text(10,0,self.label)
+        glfont.draw_text(h_spacer,0,self.label)
         glfont.push_state()
 
         #glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_CENTER)
