@@ -7,16 +7,27 @@ from pyfontstash cimport pyfontstash as fs
 #global init of gl fonts
 cdef fs.Context glfont
 
-cdef double win_width, win_height
+cdef int win_height, win_width
 
-def adjust_view(w,h):
+def adjust_size(w,h):
+    global win_width
+    global win_height
+    win_width,win_height = w,h
+
+def push_view(w=0,h=0):
     '''
     Sets up pixel based gl coord system.
     Use this to prepare rendering of graphs.
     '''
-    global win_height
-    global win_width
-    win_width,win_height = w,h
+    gl.glMatrixMode(gl.GL_PROJECTION)
+    gl.glPushMatrix()
+    gl.glLoadIdentity()
+    gl.glOrtho(0, w or win_width, h or win_height, 0, -1, 1)
+
+def pop_view():
+    gl.glMatrixMode(gl.GL_PROJECTION)
+    gl.glPopMatrix()
+    gl.glMatrixMode(gl.GL_MODELVIEW)
 
 cdef class Graph:
     cdef double[::1] data
@@ -97,10 +108,6 @@ cdef class Graph:
         cdef int i
         cdef float x=0
 
-        gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glPushMatrix()
-        gl.glLoadIdentity()
-        gl.glOrtho(0, win_width, win_height, 0, -1, 1)
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glPushMatrix()
         gl.glLoadIdentity()
@@ -134,6 +141,5 @@ cdef class Graph:
         gl.glRotatef(180,0,0,0)
         glfont.draw_text(0,0,bytes(self.label%self.avg))
         gl.glPopMatrix()
-        gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glPopMatrix()
+
 
