@@ -1,8 +1,20 @@
 
+########## Global Design Parameters ##########
 DEF text_height = 20
 DEF outline_padding = 10
-DEF h_spacer = 5
+DEF x_spacer = 5
 
+DEF circle_button_size = 20
+DEF circle_button_size_selected = 30
+DEF circle_button_shadow = 10
+
+DEF color_selected = (.5,.5,.9,.9)
+DEF color_default = (.5,.5,.5,.9)
+DEF color_shadow = (.0,.0,.0,.8)
+DEF shadow_sharpness = 0.3
+
+
+########## UI_element ##########
 
 cdef class UI_element:
     '''
@@ -34,6 +46,17 @@ cdef class UI_element:
             return self.outline.size.y
 
 
+########## Slider ##########
+# Slider - design parameters
+DEF slider_outline_size_y = 80
+DEF slider_label_org_y = 20
+DEF slider_handle_org_y = 40
+DEF slider_button_size = circle_button_size
+DEF slider_button_size_selected = circle_button_size_selected
+DEF slider_button_shadow = circle_button_shadow
+DEF slider_step_mark_size = 8
+DEF slider_color_step = (.8,.8,.8,.6)
+
 cdef class Slider(UI_element):
     cdef float minimum,maximum,step
     cdef public FitBox field
@@ -52,9 +75,9 @@ cdef class Slider(UI_element):
             self.maximum = ((max-min)//self.step)*self.step+min
         else:
             self.maximum = max
-        self.outline = FitBox(Vec2(0,0),Vec2(0,80)) # we only fix the height
-        self.field = FitBox(Vec2(10,10),Vec2(-10,-10))
-        self.slider_pos = Vec2(20,20)
+        self.outline = FitBox(Vec2(0,0),Vec2(0,slider_outline_size_y)) # we only fix the height
+        self.field = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
+        self.slider_pos = Vec2(0,slider_label_org_y)
         self.selected = False
         self.read_only = False
         if self.step:
@@ -85,30 +108,30 @@ cdef class Slider(UI_element):
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
 
         glfont.push_state()
-        glfont.draw_text(10,0,self.label)
+        glfont.draw_text(x_spacer,0,self.label)
         glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)
         if type(self.sync_val.value) == float:
-            glfont.draw_text(self.field.size.x-10,0,bytes('%0.2f'%self.sync_val.value) )
+            glfont.draw_text(self.field.size.x-x_spacer,0,bytes('%0.2f'%self.sync_val.value) )
         else:
-            glfont.draw_text(self.field.size.x-10,0,bytes(self.sync_val.value ))
+            glfont.draw_text(self.field.size.x-x_spacer,0,bytes(self.sync_val.value ))
         glfont.pop_state()
 
-        line(Vec2(0,40),Vec2(self.field.size.x, 40))
-        line_highlight(Vec2(0,40),Vec2(self.slider_pos.x,40))
+        line(Vec2(0,slider_handle_org_y),Vec2(self.field.size.x, slider_handle_org_y))
+        line_highlight(Vec2(0,slider_handle_org_y),Vec2(self.slider_pos.x,slider_handle_org_y))
 
         cdef float step_pixel_size,x
         if self.steps>1:
             step_pixel_size = lmap(self.minimum+self.step,self.minimum,self.maximum,0,self.field.size.x)
-            if step_pixel_size >= 20*ui_scale:
-                step_marks = [(x*step_pixel_size,40) for x in range(self.steps+1)]
-                utils.draw_points(step_marks,size=8, color=(0.8,0.8,0.8,0.6))
+            if step_pixel_size >= slider_button_size*ui_scale:
+                step_marks = [(x*step_pixel_size,slider_handle_org_y) for x in range(self.steps+1)]
+                utils.draw_points(step_marks,size=slider_step_mark_size, color=slider_color_step)
 
         if self.selected:
-            utils.draw_points(((self.slider_pos.x,40),),size=40, color=(.0,.0,.0,.8),sharpness=.3)
-            utils.draw_points(((self.slider_pos.x,40),),size=30, color=(.5,.5,.9,.9))
+            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size_selected+slider_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
+            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size_selected, color=color_selected)
         else:
-            utils.draw_points(((self.slider_pos.x,40),),size=30, color=(.0,.0,.0,.8),sharpness=.3)
-            utils.draw_points(((self.slider_pos.x,40),),size=20, color=(.5,.5,.5,.9))
+            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size+slider_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
+            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size, color=color_default)
 
         gl.glPopMatrix()
 
@@ -133,13 +156,13 @@ cdef class Slider(UI_element):
                     self.selected = False
                     should_redraw = True
 
-# Switch - design parameters 
-DEF switch_outline_height = 40
-DEF switch_field_height = 20
-DEF switch_button_size = 20
-DEF switch_button_size_selected = 30
-DEF switch_button_shadow = 10
 
+########## Switch ##########
+# Switch - design parameters 
+DEF switch_outline_size_y = 40
+DEF switch_button_size = circle_button_size
+DEF switch_button_size_selected = circle_button_size_selected
+DEF switch_button_shadow = circle_button_shadow
 
 cdef class Switch(UI_element):
     cdef public FitBox field,button
@@ -153,9 +176,9 @@ cdef class Switch(UI_element):
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
         self.on_val = on_val
         self.off_val = off_val
-        self.outline = FitBox(Vec2(0,0),Vec2(0,switch_outline_height)) # we only fix the height
+        self.outline = FitBox(Vec2(0,0),Vec2(0,switch_outline_size_y)) # we only fix the height
         self.field = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
-        self.button = FitBox(Vec2(-switch_button_size-h_spacer,0),Vec2(switch_button_size-h_spacer,switch_button_size-h_spacer))
+        self.button = FitBox(Vec2(-switch_button_size-x_spacer,0),Vec2(switch_button_size-x_spacer,switch_button_size-x_spacer))
         self.selected = False
 
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None):
@@ -176,15 +199,15 @@ cdef class Switch(UI_element):
         # self.field.sketch()
         # self.button.sketch()
         if self.sync_val.value == self.on_val:
-            utils.draw_points(((self.button.center),),size=switch_button_size_selected+switch_button_shadow, color=(.0,.0,.0,.8),sharpness=.3)
-            utils.draw_points(((self.button.center),),size=switch_button_size_selected, color=(.5,.5,.9,.9))
+            utils.draw_points(((self.button.center),),size=switch_button_size_selected+switch_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=switch_button_size_selected, color=color_selected)
         else:
-            utils.draw_points(((self.button.center),),size=switch_button_size+switch_button_shadow, color=(.0,.0,.0,.8),sharpness=.3)
-            utils.draw_points(((self.button.center),),size=switch_button_size, color=(.5,.5,.5,.9))
+            utils.draw_points(((self.button.center),),size=switch_button_size+switch_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=switch_button_size, color=color_default)
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
-        glfont.draw_text(h_spacer,0,self.label)
+        glfont.draw_text(x_spacer,0,self.label)
         glfont.push_state()
 
         #glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_CENTER)
@@ -218,6 +241,19 @@ cdef class Switch(UI_element):
                     should_redraw = True
 
 
+########## Thumb ##########
+# Thumb - design parameters 
+DEF thumb_outline_size = 120
+DEF thumb_on_color = (.5,.5,.9,.9)
+DEF thumb_button_size_offset_on = 25
+DEF thumb_button_size_offset_selected = 20
+DEF thumb_button_size_offset_off = thumb_button_size_offset_on
+DEF thumb_color_on = (.9,.9,.5,.6)
+DEF thumb_color_off = (.5,.5,.5,.6)
+DEF thumb_color_shadow = (.0,.0,.0,.5)
+DEF thumb_button_sharpness = 0.9
+DEF thumb_font_padding = 30
+
 cdef class Thumb(UI_element):
     '''
     Not a classical UI element. Use button instead.
@@ -234,10 +270,10 @@ cdef class Thumb(UI_element):
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
         self.on_val = on_val
         self.off_val = off_val
-        self.outline = FitBox(Vec2(0,0),Vec2(120,120))
-        self.button = FitBox(Vec2(10,10),Vec2(-10,-10))
+        self.outline = FitBox(Vec2(0,0),Vec2(thumb_outline_size,thumb_outline_size))
+        self.button = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
         self.selected = False
-        self.on_color = RGBA(5.,.5,.9,.9)
+        self.on_color = RGBA(thumb_on_color[0],thumb_on_color[1],thumb_on_color[2],thumb_on_color[3])
 
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None):
         pass
@@ -252,17 +288,17 @@ cdef class Thumb(UI_element):
         self.outline.compute(parent)
         self.button.compute(self.outline)
         if self.sync_val.value == self.on_val:
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=(.0,.0,.0,.5),sharpness=.3)
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-25, color=self.on_color[:],sharpness=.9)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=thumb_color_shadow,sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_on, color=self.on_color[:],sharpness=thumb_button_sharpness)
         elif self.selected:
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=(.0,.0,.0,.5),sharpness=.3)
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-20, color=(.9,.9,.5,.6),sharpness=.9)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=thumb_color_shadow,sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_selected, color=thumb_color_on,sharpness=thumb_button_sharpness)
         else:
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=(.0,.0,.0,.5),sharpness=.3)
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-25, color=(.5,.5,.5,.6),sharpness=.9)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=thumb_color_shadow,sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_off, color=thumb_color_off,sharpness=thumb_button_sharpness)
 
         glfont.push_state()
-        glfont.set_size(max(1,int(min(self.button.size))-30))
+        glfont.set_size(max(1,int(min(self.button.size))-thumb_font_padding))
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_CENTER)
         glfont.draw_text(self.button.center[0],self.button.center[1],self.label[0])
         glfont.pop_state()
@@ -290,6 +326,10 @@ cdef class Thumb(UI_element):
                     should_redraw = True
 
 
+########## Selector ##########
+# Selector - design parameters 
+DEF selector_outline_size_y = 40
+DEF selector_field_org_x = 50
 
 cdef class Selector(UI_element):
     cdef public FitBox field, select_field
@@ -310,9 +350,10 @@ cdef class Selector(UI_element):
 
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter,self._on_change)
 
-        self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
-        self.field = FitBox(Vec2(10,10),Vec2(-10,-10))
-        self.select_field = FitBox(Vec2(50,0),Vec2(0,0))
+        self.outline = FitBox(Vec2(0,0),Vec2(0,selector_outline_size_y)) # we only fix the height
+        # shouldn't the field org be calculated relative to the label length - and then specify max label length before scissoring
+        self.field = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
+        self.select_field = FitBox(Vec2(selector_field_org_x,0),Vec2(0,0))
 
     def __init__(self,bytes attribute_name, object attribute_context = None, selection = [], labels=None, label=None, setter=None, getter=None):
         pass
@@ -343,7 +384,7 @@ cdef class Selector(UI_element):
         gl.glPushMatrix()
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
         glfont.push_state()
-        glfont.draw_text(10,0,self.label)
+        glfont.draw_text(x_spacer,0,self.label)
         glfont.pop_state()
         gl.glPopMatrix()
 
@@ -352,9 +393,9 @@ cdef class Selector(UI_element):
         glfont.push_state()
         if self.selected:
             for y in range(len(self.selection)):
-                glfont.draw_text(10,y*text_height*ui_scale,self.selection_labels[y])
+                glfont.draw_text(x_spacer,y*text_height*ui_scale,self.selection_labels[y])
         else:
-            glfont.draw_text(10,0,self.selection_labels[self.selection_idx])
+            glfont.draw_text(x_spacer,0,self.selection_labels[self.selection_idx])
         glfont.pop_state()
         gl.glPopMatrix()
 
@@ -404,6 +445,10 @@ cdef class Selector(UI_element):
 
         self.selected = False
 
+########## TextInput ##########
+# TextInput - design parameters 
+DEF text_input_outline_size_y = 40
+DEF text_input_field_org_y = 10
 
 cdef class TextInput(UI_element):
     '''
@@ -420,8 +465,8 @@ cdef class TextInput(UI_element):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter,self.on_change)
-        self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
-        self.textfield = FitBox(Vec2(10,10),Vec2(-10,-10))
+        self.outline = FitBox(Vec2(0,0),Vec2(0,text_input_outline_size_y)) # we only fix the height
+        self.textfield = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
         self.selected = False
         self.preview = str(self.sync_val.value)
         self.caret = len(self.preview)
@@ -443,8 +488,8 @@ cdef class TextInput(UI_element):
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.outline.org.x),int(self.outline.org.y),0)
-        dx = glfont.draw_text(10,10,self.label)
-        dx += 10
+        dx = glfont.draw_text(x_spacer,text_input_field_org_y,self.label)
+        dx += x_spacer
         self.textfield.design_org.x = dx
         self.textfield.compute(self.outline)
         gl.glPopMatrix()
@@ -516,7 +561,7 @@ cdef class TextInput(UI_element):
         if self.selected:
             line_highlight(Vec2(0,text_height), self.textfield.size)
             # glfont.set_color_float(.5,1,.5,1)
-        cdef float x = glfont.draw_text(10,0,pre_caret)
+        cdef float x = glfont.draw_text(x_spacer,0,pre_caret)
         glfont.draw_text(x,0,post_caret)
         # glfont.set_color_float(1.0,1.0,1.0,1)
         if self.selected:
@@ -529,6 +574,12 @@ cdef class TextInput(UI_element):
         gl.glPopMatrix()
 
 
+########## Button ##########
+# Button - design parameters 
+DEF button_outline_size_y = 40
+DEF button_field_org_y = 10
+
+
 cdef class Button(UI_element):
     cdef FitBox button
     cdef bint selected
@@ -537,8 +588,8 @@ cdef class Button(UI_element):
     def __cinit__(self,label, setter):
         self.uid = id(self)
         self.label = label
-        self.outline = FitBox(Vec2(0,0),Vec2(0,40)) # we only fix the height
-        self.button = FitBox(Vec2(10,10),Vec2(-10,-10))
+        self.outline = FitBox(Vec2(0,0),Vec2(0,button_outline_size_y)) # we only fix the height
+        self.button = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
         self.selected = False
         self.function = setter
 
@@ -551,7 +602,7 @@ cdef class Button(UI_element):
         self.outline.compute(parent)
         self.button.compute(self.outline)
 
-        self.outline.sketch()
+        # self.outline.sketch()
         if self.selected:
             pass
         else:
@@ -559,7 +610,7 @@ cdef class Button(UI_element):
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.button.org.x),int(self.button.org.y),0)
-        glfont.draw_text(10,0,self.label)
+        glfont.draw_text(button_field_org_y,0,self.label)
         gl.glPopMatrix()
 
 
