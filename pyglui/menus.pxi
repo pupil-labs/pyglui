@@ -54,6 +54,9 @@ cdef class Base_Menu(UI_element):
     def __contains__ (self,obj):
         return obj in self.elements
 
+    def __bool__(self):
+        return True
+
 
 
     cdef draw_menu(self,bint nested):
