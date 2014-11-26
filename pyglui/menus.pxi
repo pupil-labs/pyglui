@@ -540,7 +540,7 @@ cdef class Scrolling_Menu(Base_Menu):
     property configuration:
         def __get__(self):
             if self.outline.is_collapsed():
-                return {'pos':self.uncollapsed_outline[:],'size':self.uncollapsed_outline[:],'collapsed':True}
+                return {'pos':self.uncollapsed_outline.design_org[:],'size':self.uncollapsed_outline.design_size[:],'collapsed':True}
             else:
                 return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':False}
 
