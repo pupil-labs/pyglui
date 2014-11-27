@@ -29,7 +29,6 @@ cdef class UI_element:
         global should_redraw
         pass
 
-
     cpdef draw(self,FitBox context, bint nested=True):
         pass
 
@@ -244,7 +243,7 @@ cdef class Switch(UI_element):
 ########## Thumb ##########
 # Thumb - design parameters
 DEF thumb_outline_size = 120
-DEF thumb_on_color = (.5,.5,.9,.9)
+DEF thumb_default_on_color = (.5,.5,.9,.9)
 DEF thumb_button_size_offset_on = 25
 DEF thumb_button_size_offset_selected = 20
 DEF thumb_button_size_offset_off = thumb_button_size_offset_on
@@ -264,7 +263,7 @@ cdef class Thumb(UI_element):
     cdef Synced_Value sync_val
     cdef public RGBA on_color
 
-    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None):
+    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None,RGBA on_color=RGBA(*thumb_default_on_color)):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
@@ -273,9 +272,9 @@ cdef class Thumb(UI_element):
         self.outline = FitBox(Vec2(0,0),Vec2(thumb_outline_size,thumb_outline_size))
         self.button = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
         self.selected = False
-        self.on_color = RGBA(thumb_on_color[0],thumb_on_color[1],thumb_on_color[2],thumb_on_color[3])
+        self.on_color = on_color
 
-    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None):
+    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None,RGBA on_color=RGBA(*thumb_default_on_color)):
         pass
 
 
@@ -423,9 +422,6 @@ cdef class Selector(UI_element):
         h+= self.select_field.design_org.y - self.select_field.design_size.y #double neg
         self.outline.design_size.y = h
 
-        #we need to bootstrap the computation of the item height.
-        #This is ok because we know the size will not be influcend by partent context.
-        #self.outline.size.y = h*ui_scale
 
 
     cdef finish_selection(self,float mouse_y):
@@ -450,13 +446,12 @@ cdef class Selector(UI_element):
 ########## TextInput ##########
 # TextInput - design parameters
 DEF text_input_outline_size_y = 40
-DEF text_input_field_org_y = 10
 
 cdef class TextInput(UI_element):
     '''
     Text input field.
     '''
-    cdef FitBox textfield
+    cdef FitBox field, textfield
     cdef bint selected
     cdef Synced_Value sync_val
     cdef bytes preview
@@ -466,9 +461,10 @@ cdef class TextInput(UI_element):
     def __cinit__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
         self.uid = id(self)
         self.label = label or attribute_name
-        self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter,self.on_change)
+        self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
         self.outline = FitBox(Vec2(0,0),Vec2(0,text_input_outline_size_y)) # we only fix the height
-        self.textfield = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
+        self.field = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
+        self.textfield = FitBox(Vec2(x_spacer,0),Vec2(0,0))
         self.selected = False
         self.preview = str(self.sync_val.value)
         self.caret = len(self.preview)
@@ -477,9 +473,6 @@ cdef class TextInput(UI_element):
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
         pass
 
-    cpdef on_change(self,new_value):
-        if not self.selected:
-            self.preview = new_value
 
     cpdef sync(self):
         self.sync_val.sync()
@@ -487,14 +480,16 @@ cdef class TextInput(UI_element):
     cpdef draw(self,FitBox parent,bint nested=True):
         #update appearance:
         self.outline.compute(parent)
+        self.field.compute(self.outline)
+        self.textfield.compute(self.field)
 
         gl.glPushMatrix()
-        gl.glTranslatef(int(self.outline.org.x),int(self.outline.org.y),0)
-        dx = glfont.draw_text(x_spacer,text_input_field_org_y,self.label)
-        dx += x_spacer
-        self.textfield.design_org.x = dx
-        self.textfield.compute(self.outline)
+        gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
+        dx = glfont.draw_text(x_spacer,0,self.label)
         gl.glPopMatrix()
+
+        self.textfield.org.x += dx
+        self.textfield.size.x -=dx
 
         self.draw_text_field()
 
@@ -541,6 +536,7 @@ cdef class TextInput(UI_element):
                         if self.textfield.mouse_over(new_input.m):
                             new_input.buttons.remove(b)
                             self.selected = True
+                            self.preview = self.sync_val.value
                             should_redraw = True
 
     cdef finish_input(self):
@@ -554,26 +550,32 @@ cdef class TextInput(UI_element):
 
     cdef draw_text_field(self):
         cdef bytes pre_caret, post_caret
-        pre_caret = self.preview[:self.caret]
-        post_caret = self.preview[self.caret:]
-        gl.glPushMatrix()
-        #then transform locally and render the UI element
-        #self.textfield.sketch()
-        gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
+        cdef float x
         if self.selected:
-            line_highlight(Vec2(0,text_height), self.textfield.size)
-            # glfont.set_color_float(.5,1,.5,1)
-        cdef float x = glfont.draw_text(x_spacer,0,pre_caret)
-        glfont.draw_text(x,0,post_caret)
-        # glfont.set_color_float(1.0,1.0,1.0,1)
-        if self.selected:
+            pre_caret = self.preview[:self.caret]
+            post_caret = self.preview[self.caret:]
+            gl.glPushMatrix()
+            #then transform locally and render the UI element
+            #self.textfield.sketch()
+            gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
+            line_highlight(Vec2(0,self.textfield.size.y), self.textfield.size)
+            x = glfont.draw_text(x_spacer,0,pre_caret)
+            glfont.draw_text(x,0,post_caret)
+            # glfont.set_color_float(1.0,1.0,1.0,1)
             gl.glColor4f(1,1,1,.5)
             gl.glLineWidth(1)
             gl.glBegin(gl.GL_LINES)
             gl.glVertex3f(x,0,0)
-            gl.glVertex3f(x,text_height,0)
+            gl.glVertex3f(x,self.textfield.size.y,0)
             gl.glEnd()
-        gl.glPopMatrix()
+            gl.glPopMatrix()
+        else:
+            gl.glPushMatrix()
+            #then transform locally and render the UI element
+            #self.textfield.sketch()
+            gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
+            glfont.draw_text(x_spacer,0,self.sync_val.value)
+            gl.glPopMatrix()
 
 
 ########## Button ##########

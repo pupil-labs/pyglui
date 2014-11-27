@@ -1,35 +1,5 @@
 # cython: profile=False
 
-'''
-TODO:
-
-GL Backend and functions
-[x] make gl.h pxd file
-[x] implement shader based lines and points in gl backend
-[x] add render to texture option if nessesay
-
-GL Fonts:
-[x] Select GL Font Lib : https://github.com/memononen/fontstash
-[x] Write cython binding
-[x] use in this lib
-
-UI features
-[x] implement selector box
-[x] implement toggle / switch
-[x] make menu move resize and minimize fn selectable and lockalbe in x or y
-[x] Optional: Add global UI ui_scale option
-[x] Implement Perf graph in cython
-[x] Implement scrolling
-[ ] design the UI and implement using gl calls above
-[ ] implement text input box
-
-Done:
-UI interaction
-UI layouting
-UI value syncing
-
-'''
-
 from cygl cimport cgl as gl
 from cygl cimport utils
 from pyfontstash cimport pyfontstash as fs
@@ -542,6 +512,7 @@ cdef class FitBox:
 
     cdef has_area(self):
         return 1 < self.size.x*self.size.y
+
 
 
 cdef class Vec2:
