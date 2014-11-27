@@ -158,7 +158,7 @@ cdef class Slider(UI_element):
 
 
 ########## Switch ##########
-# Switch - design parameters 
+# Switch - design parameters
 DEF switch_outline_size_y = 40
 DEF switch_button_size = circle_button_size
 DEF switch_button_size_selected = circle_button_size_selected
@@ -242,7 +242,7 @@ cdef class Switch(UI_element):
 
 
 ########## Thumb ##########
-# Thumb - design parameters 
+# Thumb - design parameters
 DEF thumb_outline_size = 120
 DEF thumb_on_color = (.5,.5,.9,.9)
 DEF thumb_button_size_offset_on = 25
@@ -327,12 +327,12 @@ cdef class Thumb(UI_element):
 
 
 ########## Selector ##########
-# Selector - design parameters 
+# Selector - design parameters
 DEF selector_outline_size_y = 40
-DEF selector_field_org_x = 50
 
 cdef class Selector(UI_element):
-    cdef public FitBox field, select_field
+    cdef public FitBox field
+    cdef FitBox select_field
     cdef object selection, selection_labels
     cdef Synced_Value sync_val
     cdef int selection_idx
@@ -351,9 +351,8 @@ cdef class Selector(UI_element):
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter,self._on_change)
 
         self.outline = FitBox(Vec2(0,0),Vec2(0,selector_outline_size_y)) # we only fix the height
-        # shouldn't the field org be calculated relative to the label length - and then specify max label length before scissoring
         self.field = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
-        self.select_field = FitBox(Vec2(selector_field_org_x,0),Vec2(0,0))
+        self.select_field = FitBox(Vec2(x_spacer,0),Vec2(0,0))
 
     def __init__(self,bytes attribute_name, object attribute_context = None, selection = [], labels=None, label=None, setter=None, getter=None):
         pass
@@ -379,24 +378,27 @@ cdef class Selector(UI_element):
 
         # self.outline.sketch()
         # self.field.sketch()
-        self.select_field.sketch()
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
-        glfont.push_state()
-        glfont.draw_text(x_spacer,0,self.label)
-        glfont.pop_state()
+        #glfont.push_state()
+        cdef float label_text_space = glfont.draw_text(x_spacer,0,self.label)
+        #glfont.pop_state()
         gl.glPopMatrix()
+
+        self.select_field.org.x += label_text_space
+        self.select_field.size.x  = max(0.0,self.select_field.size.x-label_text_space)
+        self.select_field.sketch()
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.select_field.org.x),int(self.select_field.org.y),0)
-        glfont.push_state()
+        #glfont.push_state()
         if self.selected:
             for y in range(len(self.selection)):
                 glfont.draw_text(x_spacer,y*text_height*ui_scale,self.selection_labels[y])
         else:
             glfont.draw_text(x_spacer,0,self.selection_labels[self.selection_idx])
-        glfont.pop_state()
+        #glfont.pop_state()
         gl.glPopMatrix()
 
     cpdef handle_input(self,Input new_input,bint visible):
@@ -446,7 +448,7 @@ cdef class Selector(UI_element):
         self.selected = False
 
 ########## TextInput ##########
-# TextInput - design parameters 
+# TextInput - design parameters
 DEF text_input_outline_size_y = 40
 DEF text_input_field_org_y = 10
 
@@ -575,7 +577,7 @@ cdef class TextInput(UI_element):
 
 
 ########## Button ##########
-# Button - design parameters 
+# Button - design parameters
 DEF button_outline_size_y = 40
 DEF button_field_org_y = 10
 
