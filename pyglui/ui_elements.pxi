@@ -503,8 +503,13 @@ cdef class TextInput(UI_element):
 
             if self.selected:
                 for c in new_input.chars:
-                    self.preview = self.preview[:self.caret] + c + self.preview[self.caret:]
-                    self.caret +=1
+                    if self.highlight is False:
+                        self.preview = self.preview[:self.caret] + c + self.preview[self.caret:]
+                        self.caret +=1
+                    else:
+                        self.preview = self.preview[:min(self.caret_highlight,self.caret)] + c + self.preview[max(self.caret_highlight,self.caret):]
+                        self.caret +=1
+                        self.highlight = False
                     should_redraw = True
 
                 for k in new_input.keys:
