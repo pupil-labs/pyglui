@@ -4,9 +4,6 @@ from cygl cimport utils
 from pyfontstash cimport pyfontstash as fs
 
 
-#global init of gl fonts
-cdef fs.Context glfont
-
 cdef int win_height, win_width
 
 def adjust_size(w,h):
@@ -14,7 +11,7 @@ def adjust_size(w,h):
     global win_height
     win_width,win_height = w,h
 
-def push_view(w=0,h=0):
+def push_view(int w=0,int h=0):
     '''
     Sets up pixel based gl coord system.
     Use this to prepare rendering of graphs.
@@ -30,6 +27,7 @@ def pop_view():
     gl.glMatrixMode(gl.GL_MODELVIEW)
 
 cdef class Graph:
+    cdef fs.Context glfont
     cdef double[::1] data
     cdef public float avg,bar_width,min_val, max_val
     cdef int idx,d_len
@@ -46,10 +44,9 @@ cdef class Graph:
         self.min_val = min_val
         self.max_val = max_val
 
-        global glfont
-        glfont = fs.Context()
-        glfont.add_font('opensans', 'Roboto-Regular.ttf')
-        glfont.set_size(18)
+        self.glfont = fs.Context()
+        self.glfont.add_font('opensans', 'Roboto-Regular.ttf')
+        self.glfont.set_size(18)
 
     def __init__(self,int data_points = 25,float min_val = 0, float max_val = 100):
         cdef int x
@@ -117,8 +114,18 @@ cdef class Graph:
         gl.glPushMatrix()
         gl.glScalef(1,100./self.max_val,1)
         gl.glTranslatef(0,self.min_val,0)
+
+        #draw background
+        gl.glColor4f(.0,.0,.0,.2)
+        gl.glBegin(gl.GL_POLYGON)
+        gl.glVertex3f(0,0,0.0)
+        gl.glVertex3f(100,0,0.0)
+        gl.glVertex3f(100,100,0.0)
+        gl.glVertex3f(0,100,0.0)
+        gl.glEnd()
+        #draw bars
         gl.glLineWidth(self.bar_width)
-        gl.glColor4f(.0,0.0,.5,.3)
+        gl.glColor4f(.1,0.1,.7,.6)
         gl.glBegin(gl.GL_LINES)
 
         #if self.s_size:
@@ -139,7 +146,7 @@ cdef class Graph:
 
 
         gl.glRotatef(180,0,0,0)
-        glfont.draw_text(0,0,bytes(self.label%self.avg))
+        self.glfont.draw_text(0,0,bytes(self.label%self.avg))
         gl.glPopMatrix()
 
 
