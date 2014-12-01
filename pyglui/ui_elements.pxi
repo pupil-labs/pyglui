@@ -455,7 +455,7 @@ cdef class TextInput(UI_element):
     cdef bint selected,highlight
     cdef Synced_Value sync_val
     cdef bytes preview
-    cdef int caret,text_offset,caret_select_start,caret_select_end
+    cdef int caret,text_offset,caret_highlight
 
 
     def __cinit__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
@@ -469,8 +469,7 @@ cdef class TextInput(UI_element):
         self.highlight = False
         self.preview = str(self.sync_val.value)
         self.caret = len(self.preview)
-        self.caret_select_start = 0
-        self.caret_select_end = 0
+        self.caret_highlight = 0
         self.text_offset = 0
 
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
@@ -516,7 +515,7 @@ cdef class TextInput(UI_element):
                             self.preview = self.preview[:self.caret-1] + self.preview[self.caret:]
                             self.caret -=1
                         if self.highlight:
-                            self.preview = self.preview[:min(self.caret_select_start,self.caret)] + self.preview[max(self.caret_select_start,self.caret):]
+                            self.preview = self.preview[:min(self.caret_highlight,self.caret)] + self.preview[max(self.caret_highlight,self.caret):]
                             self.highlight = False
                         
                         self.caret = max(0,self.caret)
@@ -535,7 +534,7 @@ cdef class TextInput(UI_element):
 
                     elif k == (263,123,0,1): #key left with shift:
                         if self.highlight is False:
-                            self.caret_select_start = max(0,self.caret)
+                            self.caret_highlight = max(0,self.caret)
                         self.caret -=1
                         self.caret = max(0,self.caret)
                         self.highlight = True
@@ -543,7 +542,7 @@ cdef class TextInput(UI_element):
 
                     elif k == (262,124,0,1): #key left with shift:
                         if self.highlight is False:
-                            self.caret_select_start = min(len(self.preview),self.caret)
+                            self.caret_highlight = min(len(self.preview),self.caret)
                         self.caret +=1
                         self.caret = min(len(self.preview),self.caret)
                         self.highlight = True
@@ -582,7 +581,7 @@ cdef class TextInput(UI_element):
         if self.selected:
             pre_caret = self.preview[:self.caret]
             post_caret = self.preview[self.caret:]
-            highlight_size = self.preview[:self.caret_select_start]
+            highlight_size = self.preview[:self.caret_highlight]
             
             gl.glPushMatrix()
 
