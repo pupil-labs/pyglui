@@ -539,14 +539,13 @@ cdef class TextInput(UI_element):
                         self.highlight = True
                         should_redraw = True
 
-                    # elif k == (340,56,2,0): #shift key or k == (344,60,1,0):
-                        # self.caret_select_start = self.caret
-                        # self.caret -=1
-                        # self.caret = max(0,self.caret)
-                        # self.caret_select_end = self.caret
-                        # print "caret, start, end: %s, %s, %s" %(self.caret,self.caret_select_start,self.caret_select_end)
-                        # should_redraw = True
-                        # print "shift key released"
+                    elif k == (262,124,0,1): #key left with shift:
+                        if self.highlight is False:
+                            self.caret_select_start = min(len(self.preview),self.caret)
+                        self.caret +=1
+                        self.caret = min(len(self.preview),self.caret)
+                        self.highlight = True
+                        should_redraw = True
 
 
                 for b in new_input.buttons:
