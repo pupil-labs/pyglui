@@ -142,7 +142,7 @@ def demo():
 
     gui = ui.UI()
     gui.scale = 1.0
-    sidebar = ui.Scrolling_Menu("MySideBar",pos=(-200,0),size=(0,0),header_pos='left')
+    sidebar = ui.Scrolling_Menu("MySideBar",pos=(-300,0),size=(0,0),header_pos='left')
 
     for x in range(10):
         sidebar.append(ui.Slider("bar",foo,label="bar %s"%x))
