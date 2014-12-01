@@ -44,7 +44,6 @@ cdef class UI_element:
         def __get__(self):
             return self.outline.size.y
 
-
 ########## Slider ##########
 # Slider - design parameters
 DEF slider_outline_size_y = 80
@@ -107,13 +106,14 @@ cdef class Slider(UI_element):
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
 
         glfont.push_state()
-        glfont.draw_text(x_spacer,0,self.label)
         glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)
         if type(self.sync_val.value) == float:
-            glfont.draw_text(self.field.size.x-x_spacer,0,bytes('%0.2f'%self.sync_val.value) )
+            used_x = glfont.draw_text(self.field.size.x-x_spacer,0,bytes('%0.2f'%self.sync_val.value) )
         else:
-            glfont.draw_text(self.field.size.x-x_spacer,0,bytes(self.sync_val.value ))
+            used_x = glfont.draw_text(self.field.size.x-x_spacer,0,bytes(self.sync_val.value ))
+        print used_x
         glfont.pop_state()
+        glfont.draw_limited_text(x_spacer,0,self.label,used_x)
 
         line(Vec2(0,slider_handle_org_y),Vec2(self.field.size.x, slider_handle_org_y))
         line_highlight(Vec2(0,slider_handle_org_y),Vec2(self.slider_pos.x,slider_handle_org_y))
@@ -142,7 +142,12 @@ cdef class Slider(UI_element):
 
             if self.selected and new_input.dm:
                 val = clampmap(new_input.m.x-self.field.org.x,0,self.field.size.x,self.minimum,self.maximum)
-                self.sync_val.value = step(val,self.minimum,self.maximum,self.step)
+                #conserve some spcial types.
+                if isinstance(self.sync_val.value,int):
+                    self.sync_val.value = int(step(val,self.minimum,self.maximum,self.step))
+                else:
+                    self.sync_val.value = step(val,self.minimum,self.maximum,self.step)
+
                 should_redraw = True
 
             for b in new_input.buttons:
@@ -394,9 +399,9 @@ cdef class Selector(UI_element):
         #glfont.push_state()
         if self.selected:
             for y in range(len(self.selection)):
-                glfont.draw_text(x_spacer,y*text_height*ui_scale,self.selection_labels[y])
+                glfont.draw_limited_text(x_spacer,y*text_height*ui_scale,self.selection_labels[y],self.select_field.size.x-x_spacer)
         else:
-            glfont.draw_text(x_spacer,0,self.selection_labels[self.selection_idx])
+            glfont.draw_limited_text(x_spacer,0,self.selection_labels[self.selection_idx],self.select_field.size.x-x_spacer)
         #glfont.pop_state()
         gl.glPopMatrix()
 
@@ -574,14 +579,13 @@ cdef class TextInput(UI_element):
             #then transform locally and render the UI element
             #self.textfield.sketch()
             gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
-            glfont.draw_text(x_spacer,0,self.sync_val.value)
+            glfont.draw_limited_text(x_spacer,0,self.sync_val.value,self.textfield.size.x-x_spacer)
             gl.glPopMatrix()
 
 
 ########## Button ##########
 # Button - design parameters
 DEF button_outline_size_y = 40
-DEF button_field_org_y = 10
 
 
 cdef class Button(UI_element):
@@ -614,7 +618,7 @@ cdef class Button(UI_element):
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.button.org.x),int(self.button.org.y),0)
-        glfont.draw_text(button_field_org_y,0,self.label)
+        glfont.draw_limited_text(0,0,self.label,self.button.size.x)
         gl.glPopMatrix()
 
 
