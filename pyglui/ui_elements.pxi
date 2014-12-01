@@ -512,18 +512,20 @@ cdef class TextInput(UI_element):
                     if k == (257,36,0,0): #Enter and key up:
                         self.finish_input()
                     elif k == (259,51,0,0) or k ==(259,51,2,0): #Delete and key up:
-                        if self.caret > 0:
+                        if self.caret > 0 and self.highlight is False:
                             self.preview = self.preview[:self.caret-1] + self.preview[self.caret:]
                             self.caret -=1
+                        if self.highlight:
+                            self.preview = self.preview[:min(self.caret_select_start,self.caret)] + self.preview[max(self.caret_select_start,self.caret):]
+                            self.highlight = False
+                        
                         self.caret = max(0,self.caret)
                         should_redraw = True
-                        self.highlight=False
 
                     elif k == (263,123,0,0): #key left:
                         self.caret -=1
                         self.caret = max(0,self.caret)
                         should_redraw = True
-                        self.highlight=False
 
                     elif k == (262,124,0,0): #key right
                         self.caret +=1
@@ -581,6 +583,7 @@ cdef class TextInput(UI_element):
             pre_caret = self.preview[:self.caret]
             post_caret = self.preview[self.caret:]
             highlight_size = self.preview[:self.caret_select_start]
+            
             gl.glPushMatrix()
 
             #then transform locally and render the UI element
