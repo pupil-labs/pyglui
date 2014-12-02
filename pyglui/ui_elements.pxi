@@ -5,7 +5,7 @@ DEF outline_padding = 10
 DEF x_spacer = 5
 
 DEF circle_button_size = 20
-DEF circle_button_size_selected = 30
+DEF circle_button_size_selected = 25
 DEF circle_button_shadow = 10
 
 DEF color_selected = (.5,.5,.9,.9)
