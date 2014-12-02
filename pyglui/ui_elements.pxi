@@ -111,7 +111,7 @@ cdef class Slider(UI_element):
             used_x = glfont.draw_text(self.field.size.x-x_spacer,0,bytes('%0.2f'%self.sync_val.value) )
         else:
             used_x = glfont.draw_text(self.field.size.x-x_spacer,0,bytes(self.sync_val.value ))
-        print used_x
+        # print used_x
         glfont.pop_state()
         glfont.draw_limited_text(x_spacer,0,self.label,used_x)
 
@@ -510,6 +510,7 @@ cdef class TextInput(UI_element):
                 for c in new_input.chars:
                     self.preview = self.preview[:self.caret] + c + self.preview[self.caret:]
                     self.caret +=1
+                    self.highlight = False
                     should_redraw = True
 
                 for k in new_input.keys:
