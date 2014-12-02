@@ -154,26 +154,39 @@ cdef class Synced_Value:
     attributes will be accecd through the attribute context unless you supply a getter.
     '''
     cdef object attribute_context
+    cdef bint use_dict
     cdef bytes attribute_name
     cdef object _value
     cdef object getter
     cdef object setter
     cdef object on_change
 
-    def __cinit__(self,bytes attribute_name, object attribute_context = None,getter=None,setter=None,on_change=None):
+    def __cinit__(self,bytes attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None):
         assert attribute_context is not None or getter is not None
         self.attribute_context = attribute_context
+
+        if isinstance(attribute_context,dict):
+            self.use_dict = True
+        else:
+            self.use_dict = False
+
         self.attribute_name = attribute_name
         self.getter = getter
         self.setter = setter
         self.on_change = on_change
 
-    def __init__(self,bytes attribute_name, object attribute_context = None,getter=None,setter=None,on_change=None):
-        if attribute_context is not None:
-            try:
-                self.attribute_context.__dict__[self.attribute_name]
-            except KeyError:
-                raise Exception("%s has no attribute %s"%(self.attribute_context,self.attribute_name))
+    def __init__(self,bytes attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None):
+        if self.getter is not None:
+            if self.use_dict:
+                try:
+                    _ = self.attribute_context[self.attribute_name]
+                except KeyError:
+                    raise Exception("Dict: '%s' has no entry '%s'"%(self.attribute_context,self.attribute_name))
+            else:
+                try:
+                    _ = self.attribute_context.__dict__[self.attribute_name]
+                except KeyError:
+                    raise Exception("'%s' has no attribute '%s'"%(self.attribute_context,self.attribute_name))
         self.sync()
 
 
@@ -188,11 +201,18 @@ cdef class Synced_Value:
                 if self.on_change is not None:
                     self.on_change(self.value)
 
+        elif self.use_dict:
+            if self._value != self.attribute_context[self.attribute_name]:
+                self._value = self.attribute_context[self.attribute_name]
+                should_redraw = True
+                if self.on_change is not None:
+                    self.on_change(self._value)
+
         elif self._value != self.attribute_context.__dict__[self.attribute_name]:
             self._value = self.attribute_context.__dict__[self.attribute_name]
             should_redraw = True
             if self.on_change is not None:
-                self.on_change(self.value)
+                self.on_change(self._value)
 
 
     property value:
@@ -201,6 +221,8 @@ cdef class Synced_Value:
         def __set__(self,new_val):
             if self.setter is not None:
                 self.setter(new_val)
+            elif self.use_dict:
+                self.attribute_context[self.attribute_name] = new_val
             else:
                 self.attribute_context.__dict__[self.attribute_name] = new_val
             self.sync()

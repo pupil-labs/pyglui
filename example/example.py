@@ -129,6 +129,10 @@ def demo():
     foo.stream = True
     foo.test = False
 
+
+    d = {}
+
+    d['one'] = 1
     def print_hello():
         foo.select = 'Cougar'
         gui.scale += .1
@@ -145,7 +149,7 @@ def demo():
     sidebar = ui.Scrolling_Menu("MySideBar",pos=(-300,0),size=(0,0),header_pos='left')
 
     for x in range(10):
-        sidebar.append(ui.Slider("bar",foo,label="bar %s"%x))
+        sidebar.append(ui.Slider("one",d,label="bar %s"%x))
         sidebar.append(ui.Slider("bur",foo,label="bur %s"%x))
         sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
         sm.toggle_iconified()
@@ -164,7 +168,7 @@ def demo():
         sm.append(ui.Button("Say Hi!",print_hello))
         sm.append(ui.Button("Say Hi!",print_hello))
         sm.append(ui.Button("Say Hi!",print_hello))
-    # gui.append(sidebar)
+    gui.append(sidebar)
 
 
     m = ui.Scrolling_Menu("MyMenu",pos=(200,30),size=(300,500),header_pos='top')
