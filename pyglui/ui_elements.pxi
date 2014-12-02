@@ -118,6 +118,8 @@ cdef class Slider(UI_element):
 
         glfont.draw_limited_text(x_spacer,0,self.label,self.field.size.x-3*x_spacer-used_x)
 
+
+
         line(Vec2(0,slider_handle_org_y),Vec2(self.field.size.x, slider_handle_org_y))
         line_highlight(Vec2(0,slider_handle_org_y),Vec2(self.slider_pos.x,slider_handle_org_y))
 
@@ -513,6 +515,7 @@ cdef class TextInput(UI_element):
                 for c in new_input.chars:
                     self.preview = self.preview[:self.caret] + c + self.preview[self.caret:]
                     self.caret +=1
+                    self.highlight = False
                     should_redraw = True
 
                 for k in new_input.keys:
@@ -567,7 +570,7 @@ cdef class TextInput(UI_element):
                         if self.textfield.mouse_over(new_input.m):
                             new_input.buttons.remove(b)
                             self.selected = True
-                            self.preview = self.sync_val.value
+                            # self.preview = self.sync_val.value
                             should_redraw = True
                             if self.selected and new_input.dm:
                                 pass
@@ -576,11 +579,10 @@ cdef class TextInput(UI_element):
 
     cdef finish_input(self):
         global should_redraw
-        should_redraw = True
         self.selected = False
         self.caret = len(self.preview)
         self.sync_val.value = self.preview
-
+        should_redraw = True
 
 
     cdef draw_text_field(self):
@@ -617,7 +619,8 @@ cdef class TextInput(UI_element):
             #then transform locally and render the UI element
             #self.textfield.sketch()
             gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
-            glfont.draw_limited_text(x_spacer,0,self.sync_val.value,self.textfield.size.x-x_spacer)
+            if len(self.preview) > 0:
+                glfont.draw_limited_text(x_spacer,0,self.preview,self.textfield.size.x-x_spacer)
             gl.glPopMatrix()
 
 
