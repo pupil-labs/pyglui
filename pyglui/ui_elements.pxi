@@ -601,6 +601,8 @@ cdef class TextInput(UI_element):
             line_highlight(Vec2(0,self.textfield.size.y), self.textfield.size)
             if len(pre_caret) > 0:
                 x = glfont.draw_limited_text(x_spacer,0,pre_caret,self.textfield.size.x-x_spacer)
+            else:
+                x = x_spacer
             
             if len(post_caret) > 0:
                 glfont.draw_limited_text(x,0,post_caret,self.textfield.size.x-x_spacer-x)
