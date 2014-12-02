@@ -109,6 +109,8 @@ cdef class UI:
 
     ###special methods to make UI behave like a list
     def append(self, obj):
+        if not issubclass(obj.__class__,UI_element):
+            raise Exception("Can only append UI elements, not: '%s'"%obj )
         self.elements.append(obj)
 
     def extend(self, objs):

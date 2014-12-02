@@ -31,6 +31,8 @@ cdef class Base_Menu(UI_element):
 
 
     def append(self, obj):
+        if not issubclass(obj.__class__,UI_element):
+            raise Exception("Can only append UI elements, not: '%s'"%obj )
         self.elements.append(obj)
 
     def extend(self, objs):
