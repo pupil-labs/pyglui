@@ -599,8 +599,11 @@ cdef class TextInput(UI_element):
             #self.textfield.sketch()
             gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
             line_highlight(Vec2(0,self.textfield.size.y), self.textfield.size)
-            x = glfont.draw_limited_text(x_spacer,0,pre_caret,self.textfield.size.x-x_spacer)
-            glfont.draw_limited_text(x,0,post_caret,self.textfield.size.x-x_spacer-x)
+            if len(pre_caret) > 0:
+                x = glfont.draw_limited_text(x_spacer,0,pre_caret,self.textfield.size.x-x_spacer)
+            
+            if len(post_caret) > 0:
+                glfont.draw_limited_text(x,0,post_caret,self.textfield.size.x-x_spacer-x)
 
             # draw highlighted text if any
             if self.highlight:
