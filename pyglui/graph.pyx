@@ -115,17 +115,17 @@ cdef class Graph:
         gl.glScalef(1,100./self.max_val,1)
         gl.glTranslatef(0,self.min_val,0)
 
-        #draw background
-        gl.glColor4f(.0,.0,.0,.2)
-        gl.glBegin(gl.GL_POLYGON)
-        gl.glVertex3f(0,0,0.0)
-        gl.glVertex3f(100,0,0.0)
-        gl.glVertex3f(100,100,0.0)
-        gl.glVertex3f(0,100,0.0)
-        gl.glEnd()
+        ##draw background
+        #gl.glColor4f(.0,.0,.0,.2)
+        #gl.glBegin(gl.GL_POLYGON)
+        #gl.glVertex3f(0,0,0.0)
+        #gl.glVertex3f(100,0,0.0)
+        #gl.glVertex3f(100,100,0.0)
+        #gl.glVertex3f(0,100,0.0)
+        #gl.glEnd()
         #draw bars
         gl.glLineWidth(self.bar_width)
-        gl.glColor4f(.1,0.1,.7,.6)
+        gl.glColor4f(.1,0.1,.7,.5)
         gl.glBegin(gl.GL_LINES)
 
         #if self.s_size:

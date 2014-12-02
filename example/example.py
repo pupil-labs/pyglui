@@ -164,13 +164,13 @@ def demo():
         sm.append(ui.Button("Say Hi!",print_hello))
         sm.append(ui.Button("Say Hi!",print_hello))
         sm.append(ui.Button("Say Hi!",print_hello))
-    gui.append(sidebar)
+    # gui.append(sidebar)
 
 
     m = ui.Scrolling_Menu("MyMenu",pos=(200,30),size=(300,500),header_pos='top')
     for x in range(1):
         m.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
-        m.append(ui.Slider("bur",foo,setter=printer,step=5,min=1,max=105))
+        m.append(ui.Slider("bur",foo,step=50,min=1,max=1005, label="wnrfw fwnfwiefnq weeofinhw"))
         m.append(ui.Button("Say Hi!",print_hello))
         m.append(ui.Button("Say Hi!",print_hello))
         m.append(ui.Switch("myswitch",foo,on_val=1000,off_val=10,setter=printer,label="Switch Me"))
@@ -178,15 +178,8 @@ def demo():
         m.append(ui.Button("Say Hi!",print_hello))
         sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
         sm.append(ui.Slider("bar",foo))
-        sm.append(ui.Slider("bar",foo))
-        sm.append(ui.Slider("bar",foo))
-        sm.append(ui.Slider("bar",foo))
-        sm.append(ui.Slider("bar",foo))
-        sm.append(ui.Slider("bar",foo))
-        sm.append(ui.Slider("bar",foo))
-        sm.append(ui.Slider("bar",foo))
 
-        sm.append(ui.TextInput('mytext',foo,setter=printer))
+        sm.append(ui.TextInput('mytext',foo))
         m.append(sm)
         m.append(ui.Button("Say Hi!",print_hello))
 

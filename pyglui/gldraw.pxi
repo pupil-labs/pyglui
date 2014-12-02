@@ -16,7 +16,7 @@ cdef inline pop_view():
 
 
 cdef inline rect(Vec2 org, Vec2 size):
-    gl.glColor4f(.0,.0,.0,.3)
+    gl.glColor4f(.0,.0,.0,.5)
     gl.glBegin(gl.GL_POLYGON)
     gl.glVertex3f(org.x,org.y,0.0)
     gl.glVertex3f(org.x,org.y+size.y,0.0)
@@ -32,7 +32,7 @@ cdef inline rect_highlight(Vec2 org, Vec2 end):
     gl.glVertex3f(end.x,end.y,0.0)
     gl.glVertex3f(end.x,org.y,0.0)
     gl.glEnd()
-  
+
 cdef inline tripple_h(Vec2 org, Vec2 size):
     gl.glColor4f(1,1,1,.5)
     gl.glLineWidth(2)

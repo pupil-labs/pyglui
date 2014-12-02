@@ -108,12 +108,15 @@ cdef class Slider(UI_element):
         glfont.push_state()
         glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)
         if type(self.sync_val.value) == float:
-            used_x = glfont.draw_text(self.field.size.x-x_spacer,0,bytes('%0.2f'%self.sync_val.value) )
+            glfont.draw_text(self.field.size.x-x_spacer,0,bytes('%0.2f'%self.sync_val.value) )
+            glfont.pop_state()
+            used_x = glfont.text_bounds(0,0,bytes('%0.2f'%self.sync_val.value))
         else:
-            used_x = glfont.draw_text(self.field.size.x-x_spacer,0,bytes(self.sync_val.value ))
-        print used_x
-        glfont.pop_state()
-        glfont.draw_limited_text(x_spacer,0,self.label,used_x)
+            glfont.draw_text(self.field.size.x-x_spacer,0,bytes(self.sync_val.value ))
+            glfont.pop_state()
+            used_x = glfont.text_bounds(0,0,bytes(self.sync_val.value))
+
+        glfont.draw_limited_text(x_spacer,0,self.label,self.field.size.x-3*x_spacer-used_x)
 
         line(Vec2(0,slider_handle_org_y),Vec2(self.field.size.x, slider_handle_org_y))
         line_highlight(Vec2(0,slider_handle_org_y),Vec2(self.slider_pos.x,slider_handle_org_y))
@@ -522,7 +525,7 @@ cdef class TextInput(UI_element):
                         if self.highlight:
                             self.preview = self.preview[:min(self.caret_highlight,self.caret)] + self.preview[max(self.caret_highlight,self.caret):]
                             self.highlight = False
-                        
+
                         self.caret = max(0,self.caret)
                         should_redraw = True
 
@@ -587,15 +590,15 @@ cdef class TextInput(UI_element):
             pre_caret = self.preview[:self.caret]
             post_caret = self.preview[self.caret:]
             highlight_size = self.preview[:self.caret_highlight]
-            
+
             gl.glPushMatrix()
 
             #then transform locally and render the UI element
             #self.textfield.sketch()
             gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
             line_highlight(Vec2(0,self.textfield.size.y), self.textfield.size)
-            x = glfont.draw_text(x_spacer,0,pre_caret)
-            glfont.draw_text(x,0,post_caret)
+            x = glfont.draw_limited_text(x_spacer,0,pre_caret,self.textfield.size.x-x_spacer)
+            glfont.draw_limited_text(x,0,post_caret,self.textfield.size.x-x_spacer-x)
 
             # draw highlighted text if any
             if self.highlight:
@@ -653,7 +656,7 @@ cdef class Button(UI_element):
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.button.org.x),int(self.button.org.y),0)
-        glfont.draw_limited_text(0,0,self.label,self.button.size.x)
+        glfont.draw_limited_text(x_spacer,0,self.label,self.button.size.x-x_spacer)
         gl.glPopMatrix()
 
 
