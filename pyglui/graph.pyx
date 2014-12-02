@@ -109,10 +109,9 @@ cdef class Graph:
         gl.glPushMatrix()
         gl.glLoadIdentity()
         gl.glTranslatef(self.x,self.y,0)
-        gl.glRotatef(180,0,0,0)
         #scale such that a bar at max val is 100px high
         gl.glPushMatrix()
-        gl.glScalef(1,100./self.max_val,1)
+        gl.glScalef(1,-100./self.max_val,1)
         gl.glTranslatef(0,self.min_val,0)
 
         ##draw background
@@ -145,7 +144,6 @@ cdef class Graph:
         gl.glPopMatrix()
 
 
-        gl.glRotatef(180,0,0,0)
         self.glfont.draw_text(0,0,bytes(self.label%self.avg))
         gl.glPopMatrix()
 
