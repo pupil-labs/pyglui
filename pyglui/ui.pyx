@@ -30,7 +30,7 @@ cdef class UI:
         #global init of gl fonts
         global glfont
         glfont = fs.Context()
-        glfont.add_font('roboto', 'Roboto-Regular.ttf')
+        glfont.add_font('roboto', 'OpenSans-Regular.ttf')
 
 
 
@@ -89,6 +89,7 @@ cdef class UI:
             glfont.clear_state()
             glfont.set_size(int(ui_scale * 18.0))
             glfont.set_color_float(1,1,1,1)
+            glfont.set_blur(.1)
             glfont.set_align(fs.FONS_ALIGN_TOP)
 
             for e in self.elements:
