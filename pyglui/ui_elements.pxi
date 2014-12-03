@@ -356,7 +356,8 @@ cdef class Selector(UI_element):
         self.selection_labels = labels or [str(s) for s in selection]
 
         for s in self.selection_labels:
-            assert isinstance(s,str)
+            if not isinstance(s,str):
+                raise Exception('Lables need to be strings not "%s"'%s)
 
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter,self._on_change)
 
