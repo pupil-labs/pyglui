@@ -227,10 +227,10 @@ cdef class Switch(UI_element):
         # self.button.sketch()
         if self.sync_val.value == self.on_val:
             utils.draw_points(((self.button.center),),size=switch_button_size_on+switch_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=switch_button_size_on, color=color_selected)
+            utils.draw_points(((self.button.center),),size=switch_button_size_on, color=color_on)
         elif self.selected:
             utils.draw_points(((self.button.center),),size=switch_button_size_selected+switch_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=switch_button_size_selected, color=color_on)
+            utils.draw_points(((self.button.center),),size=switch_button_size_selected, color=color_selected)
         else:
             utils.draw_points(((self.button.center),),size=switch_button_size+switch_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
             utils.draw_points(((self.button.center),),size=switch_button_size, color=color_default)
