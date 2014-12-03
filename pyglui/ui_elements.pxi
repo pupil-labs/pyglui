@@ -520,6 +520,7 @@ cdef class TextInput(UI_element):
                         if self.textfield.mouse_over(new_input.m):
                             new_input.buttons.remove(b)
                             self.selected = True
+                            self.highlight = False
                             # self.preview = self.sync_val.value
                             should_redraw = True
                             if self.selected and new_input.dm:
