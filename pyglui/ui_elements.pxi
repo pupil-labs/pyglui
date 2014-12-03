@@ -93,7 +93,7 @@ cdef class Slider(UI_element):
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
         self.sync()
         if not isinstance(self.sync_val.value, (float,int) ):
-            rasie Exception('Slider values should be float or int type. "%s" is of type %s'%(self.sync_val.value,type(self.sync_val.value)))
+            raise Exception('Slider values should be float or int type. "%s" is of type %s'%(self.sync_val.value,type(self.sync_val.value)))
 
 
     cpdef sync(self):
@@ -518,6 +518,7 @@ cdef class TextInput(UI_element):
                         if self.textfield.mouse_over(new_input.m):
                             new_input.buttons.remove(b)
                             self.selected = True
+                            self.highlight = False
                             # self.preview = self.sync_val.value
                             should_redraw = True
                             if self.selected and new_input.dm:
