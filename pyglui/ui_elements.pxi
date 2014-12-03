@@ -8,14 +8,14 @@ DEF circle_button_size = 20
 DEF circle_button_size_selected = 25
 DEF circle_button_shadow = 10
 
-DEF color_selected = (.5,.5,.9,.9)
+DEF color_selected = (.5,.9,.9,.9)
+DEF color_on = (.5,.5,.9,.9)
 DEF color_default = (.5,.5,.5,.9)
 DEF color_shadow = (.0,.0,.0,.8)
 DEF shadow_sharpness = 0.3
 
 
 ########## UI_element ##########
-
 cdef class UI_element:
     '''
     The base class for all UI elements.
@@ -55,6 +55,12 @@ DEF slider_button_shadow = circle_button_shadow
 DEF slider_step_mark_size = 8
 DEF slider_color_step = (.8,.8,.8,.6)
 
+#    +--------------------------------+
+#    | Label                    Value |
+#    | ------------------O----------- |
+#    +--------------------------------+
+
+
 cdef class Slider(UI_element):
     cdef float minimum,maximum,step
     cdef public FitBox field
@@ -86,7 +92,8 @@ cdef class Slider(UI_element):
 
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
         self.sync()
-        assert isinstance(self.sync_val.value,(float,int) )
+        if not isinstance(self.sync_val.value, (float,int) ):
+            rasie Exception('Slider values should be float or int type. "%s" is of type %s'%(self.sync_val.value,type(self.sync_val.value)))
 
 
     cpdef sync(self):
@@ -172,7 +179,15 @@ cdef class Slider(UI_element):
 DEF switch_outline_size_y = 40
 DEF switch_button_size = circle_button_size
 DEF switch_button_size_selected = circle_button_size_selected
+DEF switch_button_size_on = switch_button_size
 DEF switch_button_shadow = circle_button_shadow
+
+
+
+#   +--------------------------------+
+#   | Label                        O |
+#   +--------------------------------+
+
 
 cdef class Switch(UI_element):
     cdef public FitBox field,button
@@ -209,8 +224,11 @@ cdef class Switch(UI_element):
         # self.field.sketch()
         # self.button.sketch()
         if self.sync_val.value == self.on_val:
+            utils.draw_points(((self.button.center),),size=switch_button_size_on+switch_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=switch_button_size_on, color=color_selected)
+        elif self.selected:
             utils.draw_points(((self.button.center),),size=switch_button_size_selected+switch_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=switch_button_size_selected, color=color_selected)
+            utils.draw_points(((self.button.center),),size=switch_button_size_selected, color=color_on)
         else:
             utils.draw_points(((self.button.center),),size=switch_button_size+switch_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
             utils.draw_points(((self.button.center),),size=switch_button_size, color=color_default)
@@ -251,94 +269,18 @@ cdef class Switch(UI_element):
                     should_redraw = True
 
 
-########## Thumb ##########
-# Thumb - design parameters
-DEF thumb_outline_size = 120
-DEF thumb_default_on_color = (.5,.5,.9,.9)
-DEF thumb_button_size_offset_on = 25
-DEF thumb_button_size_offset_selected = 20
-DEF thumb_button_size_offset_off = thumb_button_size_offset_on
-DEF thumb_color_on = (.9,.9,.5,.6)
-DEF thumb_color_off = (.5,.5,.5,.6)
-DEF thumb_color_shadow = (.0,.0,.0,.5)
-DEF thumb_button_sharpness = 0.9
-DEF thumb_font_padding = 30
-
-cdef class Thumb(UI_element):
-    '''
-    Not a classical UI element. Use button instead.
-    '''
-    cdef public FitBox button
-    cdef bint selected
-    cdef int on_val,off_val
-    cdef Synced_Value sync_val
-    cdef public RGBA on_color
-
-    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None,RGBA on_color=RGBA(*thumb_default_on_color)):
-        self.uid = id(self)
-        self.label = label or attribute_name
-        self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
-        self.on_val = on_val
-        self.off_val = off_val
-        self.outline = FitBox(Vec2(0,0),Vec2(thumb_outline_size,thumb_outline_size))
-        self.button = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
-        self.selected = False
-        self.on_color = on_color
-
-    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None,RGBA on_color=RGBA(*thumb_default_on_color)):
-        pass
-
-
-    cpdef sync(self):
-        self.sync_val.sync()
-
-
-    cpdef draw(self,FitBox parent,bint nested=True):
-        #update appearance
-        self.outline.compute(parent)
-        self.button.compute(self.outline)
-        if self.sync_val.value == self.on_val:
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=thumb_color_shadow,sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_on, color=self.on_color[:],sharpness=thumb_button_sharpness)
-        elif self.selected:
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=thumb_color_shadow,sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_selected, color=thumb_color_on,sharpness=thumb_button_sharpness)
-        else:
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=thumb_color_shadow,sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_off, color=thumb_color_off,sharpness=thumb_button_sharpness)
-
-        glfont.push_state()
-        glfont.set_size(max(1,int(min(self.button.size))-thumb_font_padding))
-        glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_CENTER)
-        glfont.draw_text(self.button.center[0],self.button.center[1],self.label[0])
-        glfont.pop_state()
-
-
-    cpdef handle_input(self,Input new_input,bint visible):
-        if not self.read_only:
-            global should_redraw
-
-            for b in new_input.buttons:
-                if visible and self.button.mouse_over(new_input.m):
-                    if b[1] == 1:
-                        new_input.buttons.remove(b)
-                        self.selected = True
-                        should_redraw = True
-                if self.selected and b[1] == 0 and (self.sync_val.value == self.on_val):
-                    new_input.buttons.remove(b)
-                    self.sync_val.value = self.off_val
-                    self.selected = False
-                    should_redraw = True
-                if self.selected and b[1] == 0 and (self.sync_val.value == self.off_val):
-                    new_input.buttons.remove(b)
-                    self.sync_val.value = self.on_val
-                    self.selected = False
-                    should_redraw = True
 
 
 ########## Selector ##########
 # Selector - design parameters
 DEF selector_outline_size_y = 40
+
+#   +--------------------------------+
+#   |       +----------------------+ |
+#   | Label | Selection            | |
+#   |       +----------------------+ |
+#   +--------------------------------+
+
 
 cdef class Selector(UI_element):
     cdef public FitBox field
@@ -458,6 +400,10 @@ cdef class Selector(UI_element):
 ########## TextInput ##########
 # TextInput - design parameters
 DEF text_input_outline_size_y = 40
+
+#   +--------------------------------+
+#   | Label  Input text              |
+#   +--------------------------------+
 
 cdef class TextInput(UI_element):
     '''
@@ -605,7 +551,7 @@ cdef class TextInput(UI_element):
                 x = glfont.draw_limited_text(x_spacer,0,pre_caret,self.textfield.size.x-x_spacer)
             else:
                 x = x_spacer
-            
+
             if len(post_caret) > 0:
                 glfont.draw_limited_text(x,0,post_caret,self.textfield.size.x-x_spacer-x)
 
@@ -634,6 +580,14 @@ cdef class TextInput(UI_element):
 ########## Button ##########
 # Button - design parameters
 DEF button_outline_size_y = 40
+
+
+#   +--------------------------------+
+#   | +----------------------------+ |
+#   | | Label                      | |
+#   | +----------------------------+ |
+#   +--------------------------------+
+
 
 
 cdef class Button(UI_element):
@@ -685,3 +639,88 @@ cdef class Button(UI_element):
                     self.selected = False
                     should_redraw = True
                     self.function()
+
+
+########## Thumb ##########
+# Thumb - design parameters
+DEF thumb_outline_size = 120
+DEF thumb_default_on_color = (.5,.5,.9,.9)
+DEF thumb_button_size_offset_on = 25
+DEF thumb_button_size_offset_selected = 20
+DEF thumb_button_size_offset_off = thumb_button_size_offset_on
+DEF thumb_color_on = (.9,.9,.5,.6)
+DEF thumb_color_off = (.5,.5,.5,.6)
+DEF thumb_color_shadow = (.0,.0,.0,.5)
+DEF thumb_button_sharpness = 0.9
+DEF thumb_font_padding = 30
+
+cdef class Thumb(UI_element):
+    '''
+    Not a classical UI element. Use button instead.
+    '''
+    cdef public FitBox button
+    cdef bint selected
+    cdef int on_val,off_val
+    cdef Synced_Value sync_val
+    cdef public RGBA on_color
+
+    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None,RGBA on_color=RGBA(*thumb_default_on_color)):
+        self.uid = id(self)
+        self.label = label or attribute_name
+        self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
+        self.on_val = on_val
+        self.off_val = off_val
+        self.outline = FitBox(Vec2(0,0),Vec2(thumb_outline_size,thumb_outline_size))
+        self.button = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
+        self.selected = False
+        self.on_color = on_color
+
+    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None,RGBA on_color=RGBA(*thumb_default_on_color)):
+        pass
+
+
+    cpdef sync(self):
+        self.sync_val.sync()
+
+
+    cpdef draw(self,FitBox parent,bint nested=True):
+        #update appearance
+        self.outline.compute(parent)
+        self.button.compute(self.outline)
+        if self.sync_val.value == self.on_val:
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=thumb_color_shadow,sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_on, color=self.on_color[:],sharpness=thumb_button_sharpness)
+        elif self.selected:
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=thumb_color_shadow,sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_selected, color=thumb_color_on,sharpness=thumb_button_sharpness)
+        else:
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=thumb_color_shadow,sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_off, color=thumb_color_off,sharpness=thumb_button_sharpness)
+
+        glfont.push_state()
+        glfont.set_size(max(1,int(min(self.button.size))-thumb_font_padding))
+        glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_CENTER)
+        glfont.draw_text(self.button.center[0],self.button.center[1],self.label[0])
+        glfont.pop_state()
+
+
+    cpdef handle_input(self,Input new_input,bint visible):
+        if not self.read_only:
+            global should_redraw
+
+            for b in new_input.buttons:
+                if visible and self.button.mouse_over(new_input.m):
+                    if b[1] == 1:
+                        new_input.buttons.remove(b)
+                        self.selected = True
+                        should_redraw = True
+                if self.selected and b[1] == 0 and (self.sync_val.value == self.on_val):
+                    new_input.buttons.remove(b)
+                    self.sync_val.value = self.off_val
+                    self.selected = False
+                    should_redraw = True
+                if self.selected and b[1] == 0 and (self.sync_val.value == self.off_val):
+                    new_input.buttons.remove(b)
+                    self.sync_val.value = self.on_val
+                    self.selected = False
+                    should_redraw = True
