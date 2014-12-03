@@ -30,7 +30,8 @@ cdef class UI:
         #global init of gl fonts
         global glfont
         glfont = fs.Context()
-        glfont.add_font('roboto', 'OpenSans-Regular.ttf')
+        glfont.add_font('roboto', 'Roboto-Regular.ttf')
+        glfont.add_font('opensans', 'OpenSans-Regular.ttf')
 
 
 
@@ -87,9 +88,10 @@ cdef class UI:
             push_view(self.window.size)
             render_to_ui_texture(self.ui_layer)
             glfont.clear_state()
+            glfont.set_font('opensans')
             glfont.set_size(int(ui_scale * 18.0))
             glfont.set_color_float(1,1,1,1)
-            glfont.set_blur(.1)
+            #glfont.set_blur(.1)
             glfont.set_align(fs.FONS_ALIGN_TOP)
 
             for e in self.elements:
@@ -340,7 +342,7 @@ cdef class Draggable:
                 if self.outline.mouse_over(new_input.m):
                     self.selected = True
                     self.dragged  = False
-                    new_input.buttons.remove(b)
+                    #new_input.buttons.remove(b)
                     self.touch_point.x = new_input.m.x
                     self.touch_point.y = new_input.m.y
                     self.drag_accumulator = Vec2(0,0)

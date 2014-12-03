@@ -168,7 +168,7 @@ cdef class Slider(UI_element):
             for b in new_input.buttons:
                 if b[1] == 1 and visible:
                     if mouse_over_center(self.slider_pos+self.field.org,self.field.size.y,self.field.size.y,new_input.m):
-                        new_input.buttons.remove(b)
+                        #new_input.buttons.remove(b)
                         self.selected = True
                         should_redraw = True
                 if self.selected and b[1] == 0:
@@ -256,16 +256,16 @@ cdef class Switch(UI_element):
             for b in new_input.buttons:
                 if visible and self.button.mouse_over(new_input.m):
                     if b[1] == 1:
-                        new_input.buttons.remove(b)
+                        #new_input.buttons.remove(b)
                         self.selected = True
                         should_redraw = True
                 if self.selected and b[1] == 0 and (self.sync_val.value == self.on_val):
-                    new_input.buttons.remove(b)
+                    #new_input.buttons.remove(b)
                     self.sync_val.value = self.off_val
                     self.selected = False
                     should_redraw = True
                 if self.selected and b[1] == 0 and (self.sync_val.value == self.off_val):
-                    new_input.buttons.remove(b)
+                    #new_input.buttons.remove(b)
                     self.sync_val.value = self.on_val
                     self.selected = False
                     should_redraw = True
@@ -362,7 +362,7 @@ cdef class Selector(UI_element):
 
             for b in new_input.buttons:
                 if visible and self.select_field.mouse_over(new_input.m):
-                    new_input.buttons.remove(b)
+                    #new_input.buttons.remove(b)
                     if b[1] == 0:
                         should_redraw = True
                         if not self.selected:
@@ -518,7 +518,7 @@ cdef class TextInput(UI_element):
                 for b in new_input.buttons:
                     if b[1] == 1 and visible:
                         if self.textfield.mouse_over(new_input.m):
-                            new_input.buttons.remove(b)
+                            #new_input.buttons.remove(b)
                             self.selected = True
                             self.highlight = False
                             # self.preview = self.sync_val.value
@@ -634,11 +634,11 @@ cdef class Button(UI_element):
             for b in new_input.buttons:
                 if  visible and self.button.mouse_over(new_input.m):
                     if b[1] == 1:
-                        new_input.buttons.remove(b)
+                        #new_input.buttons.remove(b)
                         self.selected = True
                         should_redraw = True
                 if self.selected and b[1] == 0:
-                    new_input.buttons.remove(b)
+                    #new_input.buttons.remove(b)
                     self.selected = False
                     should_redraw = True
                     self.function()
@@ -703,8 +703,12 @@ cdef class Thumb(UI_element):
         glfont.push_state()
         glfont.set_size(max(1,int(min(self.button.size))-thumb_font_padding))
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_CENTER)
+        glfont.set_blur(1.)
+        glfont.set_font('roboto')
         glfont.draw_text(self.button.center[0],self.button.center[1],self.label[0])
         glfont.pop_state()
+        glfont.set_font('opensans')
+
 
 
     cpdef handle_input(self,Input new_input,bint visible):
@@ -714,7 +718,7 @@ cdef class Thumb(UI_element):
             for b in new_input.buttons:
                 if visible and self.button.mouse_over(new_input.m):
                     if b[1] == 1:
-                        new_input.buttons.remove(b)
+                        #new_input.buttons.remove(b)
                         self.selected = True
                         should_redraw = True
                 if self.selected and b[1] == 0 and (self.sync_val.value == self.on_val):
