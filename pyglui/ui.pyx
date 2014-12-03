@@ -114,6 +114,9 @@ cdef class UI:
         self.elements.append(obj)
 
     def extend(self, objs):
+        for obj in objs:
+            if not issubclass(obj.__class__,UI_element):
+                raise Exception("Can only append UI elements, not: '%s'"%obj )
         self.elements.extend(objs)
 
     def remove(self, obj):
@@ -147,7 +150,6 @@ include 'ui_elements.pxi'
 include 'menus.pxi'
 
 #below are classes used by menu and ui_elements.
-
 cdef class Synced_Value:
     '''
     an element that has a synced value
@@ -183,6 +185,10 @@ cdef class Synced_Value:
                 except KeyError:
                     raise Exception("Dict: '%s' has no entry '%s'"%(self.attribute_context,self.attribute_name))
             else:
+                try:
+                    _ = self.attribute_context.__dict__
+                except AttributeError:
+                    raise Exception('"%s" is not an instance of a newstyle class (does not have "__dict__" for member access). Please use a new style class OR a dict OR getter/setter.'%self.attribute_context)
                 try:
                     _ = self.attribute_context.__dict__[self.attribute_name]
                 except KeyError:

@@ -44,6 +44,8 @@ cdef class UI_element:
         def __get__(self):
             return self.outline.size.y
 
+
+
 ########## Slider ##########
 # Slider - design parameters
 DEF slider_outline_size_y = 80
