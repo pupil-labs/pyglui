@@ -24,6 +24,8 @@ def basic_gl_setup():
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
     glEnable(GL_LINE_SMOOTH)
     glEnable(GL_POLYGON_SMOOTH)
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST)
+
 
 def adjust_gl_view(w,h,window):
     """

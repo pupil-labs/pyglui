@@ -95,7 +95,7 @@ cdef class Slider(UI_element):
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
         self.sync()
         if not isinstance(self.sync_val.value, (float,int) ):
-            rasie Exception('Slider values should be float or int type. "%s" is of type %s'%(self.sync_val.value,type(self.sync_val.value)))
+            raise Exception('Slider values should be float or int type. "%s" is of type %s'%(self.sync_val.value,type(self.sync_val.value)))
 
 
     cpdef sync(self):

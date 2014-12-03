@@ -3,7 +3,8 @@
 #Layout parameters
 DEF menu_pad = 8
 DEF menu_topbar_pad = 37
-DEF menu_topbar_min_width = 200
+DEF menu_move_corner_size = 25
+DEF menu_topbar_min_width = 100
 DEF menu_bottom_pad = 20
 
 DEF menu_sidebar_pad = 34
@@ -66,6 +67,7 @@ cdef class Base_Menu(UI_element):
 
     cdef draw_menu(self,bint nested):
         #draw translucent background
+        cdef Vec2 square = Vec2(25*ui_scale,25*ui_scale)
         if nested:
             pass
         else:
@@ -91,13 +93,29 @@ cdef class Base_Menu(UI_element):
 
         if self.handlebar is not None:
             self.handlebar.outline.compute(self.outline)
-            if 2<= self.header_pos_id <= 3:
-                tripple_v(self.handlebar.outline.org,Vec2(25*ui_scale,25*ui_scale))
-            else:
-                tripple_h(self.handlebar.outline.org,Vec2(25*ui_scale,25*ui_scale))
-                glfont.draw_text(self.handlebar.outline.org.x+30*ui_scale,
-                                 self.handlebar.outline.org.y+4*ui_scale,self.label)
+            if 2 == self.header_pos_id: #left
 
+                if self.element_space.has_area():
+                    tripple_v(self.handlebar.outline.org,self.handlebar.outline.size)
+                else:
+                    triangle_right(self.handlebar.outline.org,self.handlebar.outline.size)
+            elif 3 == self.header_pos_id: #right
+
+                if self.element_space.has_area():
+                    tripple_v(self.handlebar.outline.org,self.handlebar.outline.size)
+                else:
+                    triangle_left(self.handlebar.outline.org,self.handlebar.outline.size)
+
+            else:
+                if self.element_space.has_area():
+                    tripple_h(self.handlebar.outline.org,self.handlebar.outline.size)
+                else:
+                    triangle_h(self.handlebar.outline.org,self.handlebar.outline.size)
+
+                glfont.draw_text(self.outline.org.x+10*ui_scale,
+                                 self.outline.org.y+4*ui_scale,self.label)
+                line(Vec2(self.outline.org.x,self.handlebar.outline.org.y+self.handlebar.outline.size.y),
+                     Vec2(self.outline.org.x +self.outline.size.x, self.handlebar.outline.org.y+self.handlebar.outline.size.y))
 
 cdef class Stretching_Menu(Base_Menu):
     '''
@@ -200,7 +218,7 @@ cdef class Growing_Menu(Base_Menu):
         def __set__(self, header_pos):
             if header_pos == 'top':
                 self.element_space = FitBox(Vec2(menu_pad,menu_topbar_pad + menu_pad),Vec2(-menu_pad,-menu_pad- menu_bottom_pad))
-                self.handlebar = Draggable(Vec2(0,0),Vec2(0,menu_topbar_pad),
+                self.handlebar = Draggable(Vec2(-menu_move_corner_size,0),Vec2(0,menu_move_corner_size),
                                             self.outline.design_org,
                                             arrest_axis=0,zero_crossing = False,
                                             click_cb=self.toggle_iconified )
@@ -213,7 +231,7 @@ cdef class Growing_Menu(Base_Menu):
 
             elif header_pos == 'bottom':
                 self.element_space = FitBox(Vec2(menu_pad,menu_bottom_pad + menu_pad),Vec2(-menu_pad,-menu_pad- menu_topbar_pad))
-                self.handlebar = Draggable(Vec2(0,-menu_bottom_pad),Vec2(0,0),
+                self.handlebar = Draggable(Vec2(-menu_move_corner_size,-menu_move_corner_size),Vec2(0,0),
                                             self.outline.design_size,
                                             arrest_axis=0,zero_crossing = False,
                                             click_cb=self.toggle_iconified )
@@ -221,7 +239,7 @@ cdef class Growing_Menu(Base_Menu):
 
             elif header_pos == 'right':
                 self.element_space = FitBox(Vec2(menu_pad,0),Vec2(-menu_pad-menu_sidebar_pad,0))
-                self.handlebar = Draggable(Vec2(-menu_sidebar_pad,0),Vec2(0,0),
+                self.handlebar = Draggable(Vec2(-menu_move_corner_size,menu_move_corner_size),Vec2(0,0),
                                             self.outline.design_size,
                                             arrest_axis=0,zero_crossing = False,
                                             click_cb=self.toggle_iconified )
@@ -229,7 +247,7 @@ cdef class Growing_Menu(Base_Menu):
 
             elif header_pos == 'left':
                 self.element_space = FitBox(Vec2(menu_sidebar_pad+menu_pad,0),Vec2(-menu_pad,0))
-                self.handlebar = Draggable(Vec2(0,0),Vec2(menu_sidebar_pad,0),
+                self.handlebar = Draggable(Vec2(0,0),Vec2(menu_move_corner_size,menu_move_corner_size),
                                             self.outline.design_org,
                                             arrest_axis=0,zero_crossing = False,
                                             click_cb=self.toggle_iconified )
@@ -293,7 +311,7 @@ cdef class Growing_Menu(Base_Menu):
             cdef float height = 0
             #space from outline to element space at top
             height += self.element_space.design_org.y*ui_scale
-            #space from elementspace to outline at bottom
+            #space from element_space to outline at bottom
             height -= self.element_space.design_size.y*ui_scale #double neg
             if self.collapsed:
                 #elemnt space is 0
@@ -367,7 +385,7 @@ cdef class Scrolling_Menu(Base_Menu):
         def __set__(self, header_pos):
             if header_pos == 'top':
                 self.element_space = FitBox(Vec2(menu_pad,menu_topbar_pad + menu_pad),Vec2(-menu_pad,-menu_pad- menu_bottom_pad))
-                self.handlebar = Draggable(Vec2(0,0),Vec2(0,menu_topbar_pad),
+                self.handlebar = Draggable(Vec2(-menu_move_corner_size,0),Vec2(0,menu_move_corner_size),
                                             self.outline.design_org,
                                             arrest_axis=0,zero_crossing = False,
                                             click_cb=self.toggle_iconified )
@@ -380,7 +398,7 @@ cdef class Scrolling_Menu(Base_Menu):
 
             elif header_pos == 'bottom':
                 self.element_space = FitBox(Vec2(menu_pad, +menu_bottom_pad+menu_pad),Vec2(-menu_pad,-menu_pad- menu_topbar_pad))
-                self.handlebar = Draggable(Vec2(0,-menu_topbar_pad),Vec2(0,0),
+                self.handlebar = Draggable(Vec2(-menu_topbar_pad,-menu_bottom_pad),Vec2(0,0),
                                             self.outline.design_size,
                                             arrest_axis=0,zero_crossing = False,
                                             click_cb=self.toggle_iconified )
@@ -394,7 +412,7 @@ cdef class Scrolling_Menu(Base_Menu):
 
             elif header_pos == 'right':
                 self.element_space = FitBox(Vec2(menu_pad, 0),Vec2(-menu_pad-menu_sidebar_pad,0))
-                self.handlebar = Draggable(Vec2(-menu_sidebar_pad,0),Vec2(0,0),
+                self.handlebar = Draggable(Vec2(-menu_move_corner_size,menu_move_corner_size),Vec2(0,0),
                                             self.outline.design_size,
                                             arrest_axis=0,zero_crossing = False,
                                             click_cb=self.toggle_iconified )
@@ -408,7 +426,7 @@ cdef class Scrolling_Menu(Base_Menu):
 
             elif header_pos == 'left':
                 self.element_space = FitBox(Vec2(menu_pad+menu_sidebar_pad, 0),Vec2(-menu_pad,0))
-                self.handlebar = Draggable(Vec2(0,0),Vec2(menu_sidebar_pad,0),
+                self.handlebar = Draggable(Vec2(0,0),Vec2(menu_move_corner_size,menu_move_corner_size),
                                             self.outline.design_org,
                                             arrest_axis=0,zero_crossing = False,
                                             click_cb=self.toggle_iconified )
@@ -527,7 +545,7 @@ cdef class Scrolling_Menu(Base_Menu):
         global should_redraw
         should_redraw = True
 
-        if self.outline.is_collapsed():
+        if self.collapsed:
             self.outline.inflate(self.uncollapsed_outline)
         else:
             self.uncollapsed_outline = self.outline.copy()
@@ -536,15 +554,15 @@ cdef class Scrolling_Menu(Base_Menu):
 
     property collapsed:
         def __get__(self):
-            return self.outline.is_collapsed()
+            return not self.element_space.has_area()
 
         def __set__(self,new_state):
-            if bool(new_state) == bool(self.outline.is_collapsed()):
+            if bool(new_state) != bool(self.element_space.has_area()):
                 self.toggle_iconified()
 
     property configuration:
         def __get__(self):
-            if self.outline.is_collapsed():
+            if not self.element_space.has_area():
                 return {'pos':self.uncollapsed_outline.design_org[:],'size':self.uncollapsed_outline.design_size[:],'collapsed':True}
             else:
                 return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':False}
@@ -553,6 +571,6 @@ cdef class Scrolling_Menu(Base_Menu):
             self.outline.design_org[:] = new_conf['pos']
             self.outline.design_size[:] = new_conf['size']
             self.header_pos = self.header_pos #update layout
-            if new_conf['collapsed'] and not self.outline.is_collapsed():
+            if new_conf['collapsed'] and self.element_space.has_area():
                 self.toggle_iconified()
 

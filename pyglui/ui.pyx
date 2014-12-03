@@ -464,13 +464,6 @@ cdef class FitBox:
             pass
 
 
-    cdef is_collapsed(self,float slack = 30):
-        cdef FitBox collapser = self.copy()
-        collapser.collapse()
-        return slack >= self.design_distance(collapser)
-
-
-
     cdef compute(self,FitBox context):
 
         # all x
