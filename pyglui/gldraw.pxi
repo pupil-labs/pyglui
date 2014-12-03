@@ -37,14 +37,14 @@ cdef inline tripple_h(Vec2 org, Vec2 size):
     gl.glColor4f(1,1,1,.5)
     gl.glLineWidth(2)
     gl.glBegin(gl.GL_LINES)
-    gl.glVertex3f(org.x + 0         ,org.y+5,0)
-    gl.glVertex3f(org.x + size.x- 0 ,org.y+ 5,0)
+    gl.glVertex3f(org.x + 3         ,org.y+5,0)
+    gl.glVertex3f(org.x + size.x- 3 ,org.y+ 5,0)
 
-    gl.glVertex3f(org.x + 0         ,org.y+size.y/2,0)
-    gl.glVertex3f(org.x + size.x -0 ,org.y+size.y/2,0)
+    gl.glVertex3f(org.x + 3         ,org.y+size.y/2,0)
+    gl.glVertex3f(org.x + size.x -3 ,org.y+size.y/2,0)
 
-    gl.glVertex3f(org.x + 0         ,org.y+size.y-5,0)
-    gl.glVertex3f(org.x + size.x -0 ,org.y+size.y-5,0)
+    gl.glVertex3f(org.x + 3         ,org.y+size.y-5,0)
+    gl.glVertex3f(org.x + size.x -3 ,org.y+size.y-5,0)
 
     gl.glEnd()
 
@@ -53,8 +53,8 @@ cdef inline triangle_h(Vec2 org, Vec2 size):
 
     gl.glLineWidth(2)
     gl.glBegin(gl.GL_LINES)
-    gl.glVertex3f(org.x + 0         ,org.y+5,0)
-    gl.glVertex3f(org.x + size.x- 0 ,org.y+ 5,0)
+    gl.glVertex3f(org.x + 3         ,org.y+5,0)
+    gl.glVertex3f(org.x + size.x- 3 ,org.y+ 5,0)
     gl.glEnd()
 
     #gl.glBegin(gl.GL_POLYGON)
@@ -64,9 +64,9 @@ cdef inline triangle_h(Vec2 org, Vec2 size):
     #gl.glEnd()
 
     gl.glBegin(gl.GL_LINE_LOOP)
-    gl.glVertex3f(org.x + 0         ,org.y+size.y/2,0)
+    gl.glVertex3f(org.x + 3         ,org.y+size.y/2,0)
     gl.glVertex3f(org.x + size.x/2. ,org.y+size.y-5,0)
-    gl.glVertex3f(org.x + size.x -0 ,org.y+size.y/2,0)
+    gl.glVertex3f(org.x + size.x -3 ,org.y+size.y/2,0)
     gl.glEnd()
 
 cdef inline tripple_v(Vec2 org, Vec2 size):
@@ -96,7 +96,7 @@ cdef inline triangle_right(Vec2 org, Vec2 size):
 
     gl.glBegin(gl.GL_LINE_LOOP)
     gl.glVertex3f(org.x + size.x/2  ,org.y+3,0)
-    gl.glVertex3f(org.x -0          ,org.y+size.y/2,0)
+    gl.glVertex3f(org.x + 5          ,org.y+size.y/2,0)
     gl.glVertex3f(org.x + size.x/2  ,org.y+size.y-3,0)
     gl.glEnd()
 
@@ -112,7 +112,7 @@ cdef inline triangle_left(Vec2 org, Vec2 size):
 
     gl.glBegin(gl.GL_LINE_LOOP)
     gl.glVertex3f(org.x + size.x/2  ,org.y+3,0)
-    gl.glVertex3f(org.x + size.x-0. ,org.y+size.y/2,0)
+    gl.glVertex3f(org.x + size.x -5. ,org.y+size.y/2,0)
     gl.glVertex3f(org.x + size.x/2 ,org.y+size.y-3,0)
     gl.glEnd()
 

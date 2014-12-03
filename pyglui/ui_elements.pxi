@@ -512,7 +512,7 @@ cdef class TextInput(UI_element):
 
                 for b in new_input.buttons:
                     if b[1] == 1:
-                        self.finish_input()
+                        self.abort_input()
 
             else:
                 for b in new_input.buttons:
@@ -534,6 +534,15 @@ cdef class TextInput(UI_element):
         self.caret = len(self.preview)
         self.sync_val.value = self.preview
         should_redraw = True
+
+
+    cdef abort_input(self):
+        global should_redraw
+        self.selected = False
+        self.preview = self.sync_val.value
+        self.caret = len(self.preview)
+        should_redraw = True
+
 
 
     cdef draw_text_field(self):

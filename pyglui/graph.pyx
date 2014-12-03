@@ -144,7 +144,7 @@ cdef class Graph:
         gl.glPopMatrix()
 
 
-        self.glfont.draw_text(0,0,bytes(self.label%self.avg))
+        self.glfont.draw_text(0,-3,bytes(self.label%self.avg))
         gl.glPopMatrix()
 
 

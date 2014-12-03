@@ -114,8 +114,8 @@ cdef class Base_Menu(UI_element):
 
                 glfont.draw_text(self.outline.org.x+10*ui_scale,
                                  self.outline.org.y+4*ui_scale,self.label)
-                line(Vec2(self.outline.org.x,self.handlebar.outline.org.y+self.handlebar.outline.size.y),
-                     Vec2(self.outline.org.x +self.outline.size.x, self.handlebar.outline.org.y+self.handlebar.outline.size.y))
+                line(Vec2(self.outline.org.x,self.outline.org.y+menu_topbar_pad),
+                     Vec2(self.outline.org.x +self.outline.size.x, self.outline.org.y+menu_topbar_pad))
 
 cdef class Stretching_Menu(Base_Menu):
     '''
