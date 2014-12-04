@@ -173,10 +173,10 @@ def demo():
     gui.append(sidebar)
 
 
-    m = ui.Scrolling_Menu("MyMenu",pos=(200,30),size=(300,500),header_pos='top')
+    m = ui.Scrolling_Menu("MyMenu",pos=(250,30),size=(300,500),header_pos='top')
     for x in range(1):
         m.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
-        m.append(ui.Slider("bur",foo,step=50,min=1,max=1005, label="wnrfw fwnfwiefnq weeofinhw"))
+        m.append(ui.Slider("bur",foo,step=50,min=1,max=1005, label="Slider label with long label text to test overflow handling"))
         m.append(ui.Button("Say Hi!",print_hello))
         m.append(ui.Button("Say Hi!",print_hello))
         m.append(ui.Switch("myswitch",foo,on_val=1000,off_val=10,setter=printer,label="Switch Me"))
