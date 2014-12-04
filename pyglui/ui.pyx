@@ -6,6 +6,7 @@ from pyfontstash cimport fontstash as fs
 include 'gldraw.pxi'
 include 'helpers.pxi'
 
+from os import path
 #global cdefs
 cdef fs.Context glfont
 cdef double ui_scale = 1.0
@@ -37,9 +38,8 @@ cdef class UI:
         #global init of gl fonts
         global glfont
         glfont = fs.Context()
-        glfont.add_font('roboto', 'Roboto-Regular.ttf')
-        glfont.add_font('opensans', 'OpenSans-Regular.ttf')
-
+        glfont.add_font('roboto', path.join(path.dirname(__file__),'Roboto-Regular.ttf'))
+        glfont.add_font('opensans', path.join(path.dirname(__file__),'OpenSans-Regular.ttf'))
 
 
     def __init__(self):

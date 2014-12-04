@@ -62,5 +62,7 @@ setup( 	name="pyglui",
 		packages = ['pyglui'],
 		py_modules = ['pyglui.cygl.__init__','pyglui.pyfontstash.__init__'], #add  __init__.py files
 		description="OpenGL UI powered by cython",
+        package_dir={'pyglui':'pyglui'},
+        package_data={'pyglui': ['*.ttf']},
 		ext_modules=cythonize(extensions)
 )

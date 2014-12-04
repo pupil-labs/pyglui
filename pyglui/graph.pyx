@@ -1,7 +1,8 @@
 from cython cimport view
 from cygl cimport cgl as gl
 from cygl cimport utils
-from pyfontstash cimport pyfontstash as fs
+from pyfontstash cimport fontstash as fs
+from os import path
 
 
 cdef int win_height, win_width
@@ -45,7 +46,7 @@ cdef class Graph:
         self.max_val = max_val
 
         self.glfont = fs.Context()
-        self.glfont.add_font('opensans', 'Roboto-Regular.ttf')
+        self.glfont.add_font('opensans', path.join(path.dirname(__file__),'OpenSans-Regular.ttf'))
         self.glfont.set_size(18)
 
     def __init__(self,int data_points = 25,float min_val = 0, float max_val = 100):
