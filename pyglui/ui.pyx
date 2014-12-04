@@ -75,6 +75,13 @@ cdef class UI:
     cdef handle_input(self):
         if self.new_input:
             #print self.new_input
+
+            #let active elements deal with input first:
+            for e in self.new_input.active_ui_elements:
+                e.pre_handle_input(self.new_input)
+            self.new_input.active_ui_elements = []
+
+            #now everybody
             for e in self.elements:
                 e.handle_input(self.new_input,True)
             self.new_input.purge()
@@ -242,13 +249,14 @@ cdef class Input:
     Holds accumulated user input collect during a frame.
     '''
 
-    cdef public list keys,chars,buttons
+    cdef public list keys,chars,buttons,active_ui_elements
     cdef Vec2 dm,m,s
 
     def __cinit__(self):
         self.keys = []
         self.buttons = []
         self.chars = []
+        self.active_ui_elements = []
         self.m = Vec2(0,0)
         self.dm = Vec2(0,0)
         self.s = Vec2(0,0)

@@ -37,6 +37,14 @@ cdef class UI_element:
             global should_redraw
             pass
 
+    cpdef pre_handle_input(self,Input new_input):
+        # if your element needs to catch input event in front of very boday else:
+        # add yourself to new_input.active_ui_elements during handle_input
+        # pre_handle input will be called in the next frame with new input.
+        # add yourself again in handle input if you need to stay in active_ui_elements
+
+        pass
+
     cpdef precompute(self,FitBox parent):
         self.outline.compute(parent)
 
@@ -168,7 +176,7 @@ cdef class Slider(UI_element):
             for b in new_input.buttons:
                 if b[1] == 1 and visible:
                     if mouse_over_center(self.slider_pos+self.field.org,self.field.size.y,self.field.size.y,new_input.m):
-                        #new_input.buttons.remove(b)
+                        new_input.buttons.remove(b) # the slider should catch the event (unlike other elements)
                         self.selected = True
                         should_redraw = True
                 if self.selected and b[1] == 0:
@@ -457,74 +465,84 @@ cdef class TextInput(UI_element):
         # self.draw_text_selection()
 
 
-    cpdef handle_input(self,Input new_input,bint visible):
-        if not self.read_only:
-            global should_redraw
+    cpdef pre_handle_input(self,Input new_input):
+        global should_redraw
+        while new_input.keys:
+            k = new_input.keys.pop(0)
+            if k == (257,36,0,0): #Enter and key up:
+                self.finish_input()
+                return
 
-            if self.selected:
-                for c in new_input.chars:
-                    self.preview = self.preview[:self.caret] + c + self.preview[self.caret:]
-                    self.caret +=1
+            elif k == (259,51,0,0) or k ==(259,51,2,0): #Delete and key up:
+                if self.caret > 0 and self.highlight is False:
+                    self.preview = self.preview[:self.caret-1] + self.preview[self.caret:]
+                    self.caret -=1
+                if self.highlight:
+                    self.preview = self.preview[:min(self.caret_highlight,self.caret)] + self.preview[max(self.caret_highlight,self.caret):]
                     self.highlight = False
-                    should_redraw = True
 
-                for k in new_input.keys:
-                    if k == (257,36,0,0): #Enter and key up:
-                        self.finish_input()
-                    elif k == (259,51,0,0) or k ==(259,51,2,0): #Delete and key up:
-                        if self.caret > 0 and self.highlight is False:
-                            self.preview = self.preview[:self.caret-1] + self.preview[self.caret:]
-                            self.caret -=1
-                        if self.highlight:
-                            self.preview = self.preview[:min(self.caret_highlight,self.caret)] + self.preview[max(self.caret_highlight,self.caret):]
-                            self.highlight = False
+                self.caret = max(0,self.caret)
+                should_redraw = True
 
-                        self.caret = max(0,self.caret)
+            elif k == (263,123,0,0): #key left:
+                self.caret -=1
+                self.caret = max(0,self.caret)
+                should_redraw = True
+
+            elif k == (262,124,0,0): #key right
+                self.caret +=1
+                self.caret = min(len(self.preview),self.caret)
+                should_redraw = True
+                self.highlight=False
+
+            elif k == (263,123,0,1): #key left with shift:
+                if self.highlight is False:
+                    self.caret_highlight = max(0,self.caret)
+                self.caret -=1
+                self.caret = max(0,self.caret)
+                self.highlight = True
+                should_redraw = True
+
+            elif k == (262,124,0,1): #key left with shift:
+                if self.highlight is False:
+                    self.caret_highlight = min(len(self.preview),self.caret)
+                self.caret +=1
+                self.caret = min(len(self.preview),self.caret)
+                self.highlight = True
+                should_redraw = True
+
+        while new_input.chars:
+            c = new_input.chars.pop(0)
+            self.preview = self.preview[:self.caret] + c + self.preview[self.caret:]
+            self.caret +=1
+            self.highlight = False
+            should_redraw = True
+
+        for b in new_input.buttons:
+            if b[1] == 1:
+                if self.textfield.mouse_over(new_input.m):
+                    self.finish_input()
+                    new_input.buttons.remove(b) #avoid reselection during handle_input
+                else:
+                    self.abort_input()
+
+
+
+    cpdef handle_input(self,Input new_input,bint visible):
+        global should_redraw
+        if not self.read_only and not self.selected:
+            for b in new_input.buttons:
+                if b[1] == 1 and visible:
+                    if self.textfield.mouse_over(new_input.m):
+                        #new_input.buttons.remove(b)
+                        self.selected = True
+                        self.highlight = False
+                        self.preview = self.sync_val.value
                         should_redraw = True
 
-                    elif k == (263,123,0,0): #key left:
-                        self.caret -=1
-                        self.caret = max(0,self.caret)
-                        should_redraw = True
 
-                    elif k == (262,124,0,0): #key right
-                        self.caret +=1
-                        self.caret = min(len(self.preview),self.caret)
-                        should_redraw = True
-                        self.highlight=False
-
-                    elif k == (263,123,0,1): #key left with shift:
-                        if self.highlight is False:
-                            self.caret_highlight = max(0,self.caret)
-                        self.caret -=1
-                        self.caret = max(0,self.caret)
-                        self.highlight = True
-                        should_redraw = True
-
-                    elif k == (262,124,0,1): #key left with shift:
-                        if self.highlight is False:
-                            self.caret_highlight = min(len(self.preview),self.caret)
-                        self.caret +=1
-                        self.caret = min(len(self.preview),self.caret)
-                        self.highlight = True
-                        should_redraw = True
-
-
-                for b in new_input.buttons:
-                    if b[1] == 1:
-                        self.abort_input()
-
-            else:
-                for b in new_input.buttons:
-                    if b[1] == 1 and visible:
-                        if self.textfield.mouse_over(new_input.m):
-                            #new_input.buttons.remove(b)
-                            self.selected = True
-                            self.highlight = False
-                            # self.preview = self.sync_val.value
-                            should_redraw = True
-                            if self.selected and new_input.dm:
-                                pass
+        if self.selected:
+            new_input.active_ui_elements.append(self)
 
 
 
@@ -585,7 +603,7 @@ cdef class TextInput(UI_element):
             #self.textfield.sketch()
             gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
             if len(self.preview) > 0:
-                glfont.draw_limited_text(x_spacer,0,self.preview,self.textfield.size.x-x_spacer)
+                glfont.draw_limited_text(x_spacer,0,self.sync_val.value,self.textfield.size.x-x_spacer)
             gl.glPopMatrix()
 
 
