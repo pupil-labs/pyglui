@@ -1,9 +1,6 @@
 
-########## Global Design Parameters ##########
-DEF text_height = 20
+########## Element Design Parameters ##########
 DEF outline_padding = 10
-DEF x_spacer = 5
-
 DEF circle_button_size = 20
 DEF circle_button_size_selected = 25
 DEF circle_button_shadow = 10
@@ -358,7 +355,7 @@ cdef class Selector(UI_element):
         #glfont.push_state()
         if self.selected:
             for y in range(len(self.selection)):
-                glfont.draw_limited_text(x_spacer,y*text_height*ui_scale,self.selection_labels[y],self.select_field.size.x-x_spacer)
+                glfont.draw_limited_text(x_spacer,y*line_height*ui_scale,self.selection_labels[y],self.select_field.size.x-x_spacer)
         else:
             glfont.draw_limited_text(x_spacer,0,self.selection_labels[self.selection_idx],self.select_field.size.x-x_spacer)
         #glfont.pop_state()
@@ -381,7 +378,7 @@ cdef class Selector(UI_element):
     cdef init_selection(self):
         self.selected = True
         #blow up the menu to fit the open selector field
-        cdef h = text_height * len(self.selection_labels)
+        cdef h = line_height * len(self.selection_labels)
         h+= self.field.design_org.y - self.field.design_size.y #double neg
         h+= self.select_field.design_org.y - self.select_field.design_size.y #double neg
         self.outline.design_size.y = h
@@ -396,7 +393,7 @@ cdef class Selector(UI_element):
         self.sync_val.value = self.selection[self.selection_idx]
 
         #make the outline small again
-        cdef h = text_height
+        cdef h = line_height
         h+= self.field.design_org.y - self.field.design_size.y #double neg
         h+= self.select_field.design_org.y - self.select_field.design_size.y #double neg
         self.outline.design_size.y = h

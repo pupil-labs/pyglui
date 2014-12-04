@@ -11,6 +11,13 @@ cdef fs.Context glfont
 cdef double ui_scale = 1.0
 cdef bint should_redraw = True
 
+########## Global Design Parameters ##########
+DEF text_size = 18.
+DEF line_height = 20.
+DEF x_spacer = 5
+
+
+
 cdef class UI:
     '''
     The UI context for a glfw window.
@@ -96,7 +103,7 @@ cdef class UI:
             render_to_ui_texture(self.ui_layer)
             glfont.clear_state()
             glfont.set_font('opensans')
-            glfont.set_size(int(ui_scale * 18.0))
+            glfont.set_size(int(ui_scale * text_size))
             glfont.set_color_float(1,1,1,1)
             #glfont.set_blur(.1)
             glfont.set_align(fs.FONS_ALIGN_TOP)
