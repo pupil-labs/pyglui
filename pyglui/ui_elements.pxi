@@ -693,8 +693,9 @@ cdef class Thumb(UI_element):
     cdef int on_val,off_val
     cdef Synced_Value sync_val
     cdef public RGBA on_color
+    cdef bytes hotkey
 
-    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None,RGBA on_color=RGBA(*thumb_default_on_color)):
+    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None,bytes hotkey = None, RGBA on_color=RGBA(*thumb_default_on_color)):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
@@ -704,8 +705,9 @@ cdef class Thumb(UI_element):
         self.button = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
         self.selected = False
         self.on_color = on_color
+        self.hotkey = hotkey
 
-    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None,RGBA on_color=RGBA(*thumb_default_on_color)):
+    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None,bytes hotkey = None,RGBA on_color=RGBA(*thumb_default_on_color)):
         pass
 
 
@@ -749,12 +751,25 @@ cdef class Thumb(UI_element):
                         self.selected = True
                         should_redraw = True
                 if self.selected and b[1] == 0 and (self.sync_val.value == self.on_val):
-                    new_input.buttons.remove(b)
+                    #new_input.buttons.remove(b)
                     self.sync_val.value = self.off_val
                     self.selected = False
                     should_redraw = True
                 if self.selected and b[1] == 0 and (self.sync_val.value == self.off_val):
-                    new_input.buttons.remove(b)
+                    #new_input.buttons.remove(b)
                     self.sync_val.value = self.on_val
                     self.selected = False
                     should_redraw = True
+
+        cdef bytes k
+        if self.hotkey is not None:
+            for k in new_input.chars:
+                if k == self.hotkey:
+                    if self.sync_val.value == self.on_val:
+                        self.sync_val.value = self.off_val
+                        self.selected = False
+                        should_redraw = True
+                    elif self.sync_val.value == self.off_val:
+                            self.sync_val.value = self.on_val
+                            self.selected = False
+                            should_redraw = True
