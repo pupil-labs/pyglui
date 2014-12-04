@@ -2,7 +2,7 @@
 
 from cygl cimport cgl as gl
 from cygl cimport utils
-from pyfontstash cimport pyfontstash as fs
+from pyfontstash cimport fontstash as fs
 include 'gldraw.pxi'
 include 'helpers.pxi'
 
