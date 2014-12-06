@@ -5,18 +5,13 @@ from cygl cimport utils
 from pyfontstash cimport fontstash as fs
 include 'gldraw.pxi'
 include 'helpers.pxi'
+include 'design_params.pxi'
 
 from os import path
 #global cdefs
 cdef fs.Context glfont
 cdef double ui_scale = 1.0
 cdef bint should_redraw = True
-
-########## Global Design Parameters ##########
-DEF text_size = 18.
-DEF line_height = 20.
-DEF x_spacer = 5
-
 
 
 cdef class UI:
