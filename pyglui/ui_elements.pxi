@@ -524,39 +524,36 @@ cdef class TextInput(UI_element):
         should_redraw = True
 
 
-
     cdef draw_text_field(self):
-        cdef bytes pre_caret, post_caret
-        cdef float x
+        cdef bytes pre_caret
+        cdef float x,caret_x
         if self.selected:
             pre_caret = self.preview[:self.caret]
-            post_caret = self.preview[self.caret:]
             highlight_size = self.preview[:self.caret_highlight]
 
             gl.glPushMatrix()
 
             #then transform locally and render the UI element
-            #self.textfield.sketch()
             gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
             line_highlight(Vec2(0,self.textfield.size.y), self.textfield.size)
-            if len(pre_caret) > 0:
-                x = glfont.draw_limited_text(x_spacer,0,pre_caret,self.textfield.size.x-x_spacer)
-            else:
-                x = x_spacer
+            x = glfont.draw_limited_text(x_spacer,0,self.preview,self.textfield.size.x-x_spacer)
 
-            if len(post_caret) > 0:
-                glfont.draw_limited_text(x,0,post_caret,self.textfield.size.x-x_spacer-x)
+            caret_x = min(glfont.text_bounds(0,0,pre_caret)+x_spacer,x)
+
+            # to be removed 
+            # if glfont.text_bounds(0,0,pre_caret) > self.textfield.size.x-3*x_spacer:
+            #     print "caret index: %s, width: %s, caret pos: %s" %(self.caret, self.textfield.size.x, glfont.text_bounds(0,0,pre_caret))
 
             # draw highlighted text if any
             if self.highlight:
-                rect_highlight(Vec2(x,0),Vec2(glfont.text_bounds(0,0,highlight_size)+x_spacer,self.textfield.size.y))
+                rect_highlight(Vec2(caret_x,0),Vec2(glfont.text_bounds(0,0,highlight_size)+x_spacer,self.textfield.size.y))
 
             # draw the caret
             gl.glColor4f(1,1,1,.5)
             gl.glLineWidth(1)
             gl.glBegin(gl.GL_LINES)
-            gl.glVertex3f(x,0,0)
-            gl.glVertex3f(x,self.textfield.size.y,0)
+            gl.glVertex3f(caret_x,0,0)
+            gl.glVertex3f(caret_x,self.textfield.size.y,0)
             gl.glEnd()
             gl.glPopMatrix()
         else:
