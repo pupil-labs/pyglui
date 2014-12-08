@@ -100,7 +100,7 @@ cdef class UI:
             glfont.set_font('opensans')
             glfont.set_size(int(ui_scale * text_size))
             glfont.set_color_float(1,1,1,1)
-            #glfont.set_blur(.1)
+            glfont.set_blur(.1)
             glfont.set_align(fs.FONS_ALIGN_TOP)
 
             for e in self.elements:
@@ -282,6 +282,7 @@ cdef class Input:
         return 'Current Input: \n   Mouse pos  : %s\n   Mouse delta: %s\n   Scroll: %s\n   Buttons: %s\n   Keys: %s\n   Chars: %s' %(self.m,self.dm,self.s,self.buttons,self.keys,self.chars)
 
 
+DEF drag_threshold = 10
 cdef class Draggable:
     '''
     A rectangle that can be dragged.
@@ -321,7 +322,7 @@ cdef class Draggable:
             self.drag_accumulator = (new_input.m-self.touch_point)
             self.drag_accumulator *= 1/ui_scale
 
-            if self.drag_accumulator.x < 2 or self.drag_accumulator.y  < 2:
+            if (abs(self.drag_accumulator.x) + abs(self.drag_accumulator.y))  > drag_threshold:
                 self.dragged  = True
 
             if self.arrest_axis == 1:
