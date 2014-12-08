@@ -324,7 +324,8 @@ cdef class Selector(UI_element):
             for y in range(len(self.selection)):
                 glfont.draw_limited_text(x_spacer,y*line_height*ui_scale,self.selection_labels[y],self.select_field.size.x-x_spacer)
         else:
-            glfont.draw_limited_text(x_spacer,0,self.selection_labels[self.selection_idx],self.select_field.size.x-x_spacer)
+            glfont.draw_limited_text(x_spacer,0,self.selection_labels[self.selection_idx],self.select_field.size.x-x_spacer-self.select_field.size.y)
+            triangle_h(self.select_field.size-Vec2(self.select_field.size.y,self.select_field.size.y),Vec2(self.select_field.size.y,self.select_field.size.y))
         #glfont.pop_state()
         gl.glPopMatrix()
 
@@ -353,7 +354,7 @@ cdef class Selector(UI_element):
 
 
     cdef finish_selection(self,float mouse_y):
-        self.selection_idx = int(mouse_y/(self.select_field.size.y/len(self.selection)) )
+        self.selection_idx = int(mouse_y/(self.select_field.size.y/float(len(self.selection))) )
         #just for sanity
         self.selection_idx = int(clamp(self.selection_idx,0,len(self.selection)-1))
 
@@ -540,7 +541,7 @@ cdef class TextInput(UI_element):
 
             caret_x = min(glfont.text_bounds(0,0,pre_caret)+x_spacer,x)
 
-            # to be removed 
+            # to be removed
             # if glfont.text_bounds(0,0,pre_caret) > self.textfield.size.x-3*x_spacer:
             #     print "caret index: %s, width: %s, caret pos: %s" %(self.caret, self.textfield.size.x, glfont.text_bounds(0,0,pre_caret))
 
