@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 import time
 from pyglui import ui
+from pyglui.cygl.utils import init
 
 width, height = (1280,720)
 
@@ -100,7 +101,16 @@ def demo():
 
     # get glfw started
     glfwInit()
+    version = 2,1
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, version[0])
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, version[1])
+    # glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1)
+    # glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE)
+
     window = glfwCreateWindow(width, height, "pyglui demo", None, None)
+    if not window:
+        exit()
+
     glfwSetWindowPos(window,0,0)
     # Register callbacks window
     glfwSetWindowSizeCallback(window,on_resize)
@@ -115,8 +125,11 @@ def demo():
 
     glfwSwapInterval(1)
     glfwMakeContextCurrent(window)
+    init()
     basic_gl_setup()
 
+    print('GL:',glGetString(GL_VERSION))
+    print('GLFW3:',glfwGetVersionString())
     class t(object):
         pass
 
