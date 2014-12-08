@@ -1,4 +1,5 @@
 import os, platform
+from stat import ST_MTIME
 
 from distutils.core import setup
 from distutils.extension import Extension
@@ -6,20 +7,24 @@ from Cython.Build import cythonize
 
 from pyglui.cygl.glew_pxd import generate_pxd
 if platform.system() == 'Darwin':
-    glew_header_loc = '/usr/local/Cellar/glew/1.10.0/include/GL/glew.h'
+    glew_header = '/usr/local/Cellar/glew/1.10.0/include/GL/glew.h'
     includes = ['/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/','pyglui/cygl']
     link_args = []
     libs = ['GLEW']
     libglew = [] #we are using the dylib
 elif platform.system() == 'Linux':
-    glew_header_loc = '/usr/include/GL/glew.h'
+    glew_header = '/usr/include/GL/glew.h'
     includes = ['/usr/include/GL','pyglui/cygl','pyglui/cygl']
     libs = ['GLEW']
     link_args = []
 else:
     raise Exception('Platform build not implemented.')
 
-generate_pxd(glew_header_loc,'pyglui/cygl')
+
+if os.path.isfile('pyglui/cygl/glew.pxd') and os.stat('pyglui/cygl/glew.pxd')[ST_MTIME] > os.stat(glew_header)[ST_MTIME]:
+    print "'glew.pxd' is up-to-date."
+else:
+    generate_pxd(glew_header,'pyglui/cygl')
 
 
 extensions = [
