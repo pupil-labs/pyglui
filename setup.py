@@ -6,16 +6,14 @@ from Cython.Build import cythonize
 
 if platform.system() == 'Darwin':
     includes = ['/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/','pyglui/cygl']
-    f = '-framework'
-    link_args = [f, 'OpenGL']
+    link_args = []
     libs = ['GLEW']
-    libglew = ["/usr/local/Cellar/glew/1.10.0/lib/libGLEW.a"]
+    libglew = [] #we are using the dylib
 
 elif platform.system() == 'Linux':
-    includes = ['/usr/include/GL',]
-    libs = ['GL']
+    includes = ['/usr/include/GL','pyglui/cygl']
+    libs = ['GLEW']
     link_args = []
-    libglew = ["/usr/local/Cellar/glew/1.10.0/lib/libGLEW.a"]
 
 
 
@@ -25,7 +23,6 @@ extensions = [
 				sources=['pyglui/ui.pyx'],
 				include_dirs = includes+['pyglui/pyfontstash/fontstash/src'],
 				libraries = libs,
-                # extra_objects = libglew,
 				extra_link_args=link_args,
 				extra_compile_args=["-Wno-strict-aliasing", "-O2"]),
 
@@ -33,7 +30,6 @@ extensions = [
 				sources=['pyglui/graph.pyx'],
 				include_dirs = includes+['pyglui/pyfontstash/fontstash/src'],
 				libraries = libs,
-                # extra_objects = libglew,
 				extra_link_args=link_args,
 				extra_compile_args=["-Wno-strict-aliasing", "-O2"]),
 
@@ -41,7 +37,6 @@ extensions = [
 				sources=['pyglui/cygl/utils.pyx'],
 				include_dirs = includes,
 				libraries = libs,
-                # extra_objects = libglew,
 				extra_link_args=link_args,
 				extra_compile_args=[]),
 
@@ -49,7 +44,6 @@ extensions = [
 				sources=['pyglui/cygl/shader.pyx'],
 				include_dirs = includes,
 				libraries = libs,
-                # extra_objects = libglew,
 				extra_link_args=link_args,
 				extra_compile_args=["-Wno-strict-aliasing", "-O2"]),
 
