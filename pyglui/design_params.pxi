@@ -7,9 +7,9 @@ DEF x_spacer = 5
 ########## UI Elements Design Parameters ##########
 # ui element design params should be declared here
 # name variables starting with the element name
-# example: `slider_` or `text_input_` followed by the attributes  
+# example: `slider_` or `text_input_` followed by the attributes
 
-# UI_element parameters - base class 
+# UI_element parameters - base class
 DEF outline_padding = 10
 DEF circle_button_size = 20
 DEF circle_button_size_selected = 25
