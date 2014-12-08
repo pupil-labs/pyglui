@@ -5,18 +5,16 @@ from distutils.extension import Extension
 from Cython.Build import cythonize
 
 if platform.system() == 'Darwin':
-    includes = ['/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/']
-    f = '-framework'
-    link_args = [f, 'OpenGL']
-    libs = []
-    gl_compile_args = []
-
-
-else:
-    includes = ['/usr/include/GL',]
-    libs = ['GL']
+    includes = ['/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/','pyglui/cygl']
     link_args = []
-    gl_compile_args = ['-D GL_GLEXT_PROTOTYPES']
+    libs = ['GLEW']
+    libglew = [] #we are using the dylib
+
+elif platform.system() == 'Linux':
+    includes = ['/usr/include/GL','pyglui/cygl']
+    libs = ['GLEW']
+    link_args = []
+
 
 
 
@@ -26,35 +24,35 @@ extensions = [
 				include_dirs = includes+['pyglui/pyfontstash/fontstash/src'],
 				libraries = libs,
 				extra_link_args=link_args,
-				extra_compile_args=[]+gl_compile_args),
+				extra_compile_args=["-Wno-strict-aliasing", "-O2"]),
 
 	Extension(	name="pyglui.graph",
 				sources=['pyglui/graph.pyx'],
 				include_dirs = includes+['pyglui/pyfontstash/fontstash/src'],
 				libraries = libs,
 				extra_link_args=link_args,
-				extra_compile_args=[]+gl_compile_args),
+				extra_compile_args=["-Wno-strict-aliasing", "-O2"]),
 
 	Extension(	name="pyglui.cygl.utils",
 				sources=['pyglui/cygl/utils.pyx'],
 				include_dirs = includes,
 				libraries = libs,
 				extra_link_args=link_args,
-				extra_compile_args=[]+gl_compile_args),
+				extra_compile_args=[]),
 
 	Extension(	name="pyglui.cygl.shader",
 				sources=['pyglui/cygl/shader.pyx'],
 				include_dirs = includes,
 				libraries = libs,
 				extra_link_args=link_args,
-				extra_compile_args=[]+gl_compile_args),
+				extra_compile_args=["-Wno-strict-aliasing", "-O2"]),
 
 	Extension(	name="pyglui.pyfontstash.fontstash",
 				sources=['pyglui/pyfontstash/fontstash.pyx'],
 				include_dirs = includes+['pyglui/pyfontstash/fontstash/src'],
 				libraries = libs,
 				extra_link_args=link_args,
-				extra_compile_args=['-D FONTSTASH_IMPLEMENTATION','-D GLFONTSTASH_IMPLEMENTATION'])
+				extra_compile_args=["-Wno-strict-aliasing", "-O2"]+['-D FONTSTASH_IMPLEMENTATION','-D GLFONTSTASH_IMPLEMENTATION'])
 ]
 
 setup( 	name="pyglui",
@@ -63,6 +61,6 @@ setup( 	name="pyglui",
 		py_modules = ['pyglui.cygl.__init__','pyglui.pyfontstash.__init__'], #add  __init__.py files
 		description="OpenGL UI powered by cython",
         package_dir={'pyglui':'pyglui'},
-        package_data={'pyglui': ['*.ttf']},
+        package_data={'pyglui': ['*.ttf']}, #fonts
 		ext_modules=cythonize(extensions)
 )

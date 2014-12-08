@@ -1,5 +1,5 @@
 from cython cimport view
-from cygl cimport cgl as gl
+from cygl cimport glew as gl
 from cygl cimport utils
 from pyfontstash cimport fontstash as fs
 from os import path
