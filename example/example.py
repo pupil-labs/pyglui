@@ -16,12 +16,13 @@ width, height = (1280,720)
 
 
 def basic_gl_setup():
-    glEnable( GL_POINT_SPRITE )
+    # glEnable(GL_POINT_SPRITE )
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE) # overwrite pointsize
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     glEnable(GL_BLEND)
     glClearColor(.8,.8,.8,1.)
     glEnable(GL_LINE_SMOOTH)
+    glEnable(GL_POINT_SMOOTH)
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
     glEnable(GL_LINE_SMOOTH)
     glEnable(GL_POLYGON_SMOOTH)
@@ -96,7 +97,6 @@ def demo():
         global quit
         quit = True
         logger.info('Process closing from window')
-
 
 
     # get glfw started
