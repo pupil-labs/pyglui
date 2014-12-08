@@ -211,7 +211,7 @@ cdef class Switch(UI_element):
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
-        glfont.draw_text(x_spacer,0,self.label)
+        glfont.draw_limited_text(x_spacer,0,self.label,self.field.size.x-(switch_button_size_on+switch_button_shadow))
         glfont.push_state()
 
         #glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_CENTER)
