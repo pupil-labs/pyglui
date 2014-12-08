@@ -444,7 +444,6 @@ cdef class Scrolling_Menu(Base_Menu):
     cpdef draw(self,FitBox parent,bint nested=True):
         self.outline.compute(parent)
         self.element_space.compute(self.outline)
-
         self.draw_menu(nested)
 
         #if elements are not visible, no need to draw them.
@@ -454,7 +453,6 @@ cdef class Scrolling_Menu(Base_Menu):
     cdef draw_scroll_window_elements(self):
         self.push_scissor()
         self.scrollbar.outline.compute(self.element_space)
-
         #compute scroll stack height.
         cdef float h = sum([e.height for e in self.elements])
 
@@ -469,15 +467,13 @@ cdef class Scrolling_Menu(Base_Menu):
             #self.scrollstate.y = clamp(self.scrollstate.y,min(-h,self.element_space.size.y-h),0)
             self.scrollstate.y = clamp(self.scrollstate.y,(-h/ui_scale)+35,0)
 
-        #render elements
         self.element_space.org.y += self.scrollstate.y*ui_scale
 
+        #render elements
         for e in self.elements:
             e.draw(self.element_space)
             self.element_space.org.y+= e.height
-        self.element_space.org.y -= self.scrollstate.y*ui_scale
-        self.element_space.org.y -= h
-
+        self.element_space.compute(self.outline)
 
         self.pop_scissor()
 
@@ -504,9 +500,10 @@ cdef class Scrolling_Menu(Base_Menu):
 
 
     cpdef handle_input(self, Input new_input,bint visible):
+        global should_redraw
         cdef bint mouse_over_menu = 0
+
         if not self.read_only:
-            global should_redraw
 
             if self.resize_corner is not None:
                 self.resize_corner.handle_input(new_input,visible)
