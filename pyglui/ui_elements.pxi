@@ -386,7 +386,7 @@ cdef class TextInput(UI_element):
     cdef bint selected,highlight
     cdef Synced_Value sync_val
     cdef bytes preview
-    cdef int caret,text_offset,caret_highlight
+    cdef int caret,clip_start,caret_highlight,caret_prior
 
 
     def __cinit__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
@@ -401,7 +401,8 @@ cdef class TextInput(UI_element):
         self.preview = str(self.sync_val.value)
         self.caret = len(self.preview)
         self.caret_highlight = 0
-        self.text_offset = 0
+        self.caret_prior = self.caret
+        self.clip_start = 0
 
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
         pass
@@ -442,6 +443,7 @@ cdef class TextInput(UI_element):
                     self.caret -=1
                 if self.highlight:
                     self.preview = self.preview[:min(self.caret_highlight,self.caret)] + self.preview[max(self.caret_highlight,self.caret):]
+                    self.caret = min(self.caret_highlight,self.caret)
                     self.highlight = False
 
                 self.caret = max(0,self.caret)
@@ -450,13 +452,14 @@ cdef class TextInput(UI_element):
             elif k == (263,123,0,0): #key left:
                 self.caret -=1
                 self.caret = max(0,self.caret)
+                self.highlight=False
                 should_redraw = True
 
             elif k == (262,124,0,0): #key right
                 self.caret +=1
                 self.caret = min(len(self.preview),self.caret)
-                should_redraw = True
                 self.highlight=False
+                should_redraw = True
 
             elif k == (263,123,0,1): #key left with shift:
                 if self.highlight is False:
@@ -525,40 +528,62 @@ cdef class TextInput(UI_element):
         should_redraw = True
 
 
+    cdef _handle_overflow(self):
+        cdef float right_bound,left_bound,caret_x,dx
+        right_bound = self.textfield.size.x - x_spacer*2
+        left_bound = 0.0
+        # current caret position
+        caret_x = glfont.text_bounds(x_spacer,0,self.preview[self.clip_start:self.caret])
+        dx = self.caret - self.caret_prior
+        if caret_x > right_bound:
+            self.clip_start += 1
+            self.clip_start = min(len(self.preview),self.clip_start)
+            self.caret_prior = self.caret
+
+        if self.caret == 0:
+            self.clip_start = 0
+        elif caret_x == left_bound:
+            self.clip_start -= 1
+        
     cdef draw_text_field(self):
-        cdef bytes pre_caret
-        cdef float x,caret_x
+        cdef bytes pre_caret, post_caret
+        cdef float x
+        
+        self._handle_overflow()
+
         if self.selected:
-            pre_caret = self.preview[:self.caret]
-            highlight_size = self.preview[:self.caret_highlight]
-
+            pre_caret = self.preview[self.clip_start:self.caret]
+            post_caret = self.preview[self.caret:]
+            highlight_size = self.preview[self.clip_start:self.caret_highlight]
+        
             gl.glPushMatrix()
-
             #then transform locally and render the UI element
             gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
             line_highlight(Vec2(0,self.textfield.size.y), self.textfield.size)
-            x = glfont.draw_limited_text(x_spacer,0,self.preview,self.textfield.size.x-x_spacer)
+            
+            if len(pre_caret) > 0:
+                x = glfont.draw_limited_text(x_spacer,0,pre_caret,self.textfield.size.x-x_spacer)
+            else:
+                x = x_spacer
 
-            caret_x = min(glfont.text_bounds(0,0,pre_caret)+x_spacer,x)
-
-            # to be removed
-            # if glfont.text_bounds(0,0,pre_caret) > self.textfield.size.x-3*x_spacer:
-            #     print "caret index: %s, width: %s, caret pos: %s" %(self.caret, self.textfield.size.x, glfont.text_bounds(0,0,pre_caret))
-
+            if len(post_caret) > 0:
+                glfont.draw_limited_text(x,0,post_caret,self.textfield.size.x-x_spacer-x)
+        
             # draw highlighted text if any
             if self.highlight:
-                rect_highlight(Vec2(caret_x,0),Vec2(glfont.text_bounds(0,0,highlight_size)+x_spacer,self.textfield.size.y))
+                rect_highlight(Vec2(x,0),Vec2(glfont.text_bounds(0,0,highlight_size)+x_spacer,self.textfield.size.y))
 
             # draw the caret
             gl.glColor4f(1,1,1,.5)
             gl.glLineWidth(1)
             gl.glBegin(gl.GL_LINES)
-            gl.glVertex3f(caret_x,0,0)
-            gl.glVertex3f(caret_x,self.textfield.size.y,0)
+            gl.glVertex3f(x,0,0)
+            gl.glVertex3f(x,self.textfield.size.y,0)
             gl.glEnd()
             gl.glPopMatrix()
         else:
             gl.glPushMatrix()
+            self.clip_start = 0
             #then transform locally and render the UI element
             #self.textfield.sketch()
             gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
