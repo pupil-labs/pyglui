@@ -553,7 +553,7 @@ cdef class TextInput(UI_element):
 
         if self.selected:
             self._handle_overflow()
-            print 'clip start: %s' %(self.clip_start)    
+            # print 'clip start: %s' %(self.clip_start)    
             pre_caret = self.preview[self.clip_start:self.caret]
             post_caret = self.preview[self.caret:]
             highlight_size = self.preview[self.clip_start:self.caret_highlight]
