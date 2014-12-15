@@ -387,6 +387,7 @@ cdef class TextInput(UI_element):
     cdef Synced_Value sync_val
     cdef bytes preview
     cdef int caret,clip_start,caret_highlight
+    cdef float prior_textfield_x
 
 
     def __cinit__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
@@ -402,7 +403,8 @@ cdef class TextInput(UI_element):
         self.caret = len(self.preview)
         self.caret_highlight = 0
         self.clip_start = 0
-        
+        self.prior_textfield_x = self.textfield.size.x
+
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
         pass
 
@@ -530,22 +532,26 @@ cdef class TextInput(UI_element):
         right_bound = self.textfield.size.x - x_spacer*2
         left_bound = 0.0
 
-        if glfont.text_bounds(x_spacer,0,self.preview[:self.caret]) < right_bound:
-            # reset clip_start to 0
-            self.clip_start = 0
-
         caret_x = glfont.text_bounds(x_spacer,0,self.preview[self.clip_start:self.caret])
 
-        # this only works if we are adding new text
-        # but if we resize the window, then we need to adjust again. 
-        if caret_x >= right_bound:
-            self.clip_start += 1
-            # self.clip_start = min(len(self.preview),self.clip_start)
+        if self.textfield.size.x != self.prior_textfield_x:
+            # then we resized
+            if glfont.text_bounds(x_spacer,0,self.preview[:self.caret]) < right_bound:
+                # reset clip_start to 0
+                self.clip_start = 0
+        else:
+            # this only works if we are adding new text
+            # but if we resize the window, then we need to adjust again. 
+            if caret_x >= right_bound:
+                self.clip_start += 1
+                # self.clip_start = min(len(self.preview),self.clip_start)
 
-        if self.caret == 0:
-            self.clip_start = 0
-        elif caret_x == left_bound:
-            self.clip_start -= 1
+            if self.caret == 0:
+                self.clip_start = 0
+            elif caret_x == left_bound:
+                self.clip_start -= 1
+
+        self.prior_textfield_x = self.textfield.size.x
         
     cdef draw_text_field(self):
         cdef bytes pre_caret, post_caret
