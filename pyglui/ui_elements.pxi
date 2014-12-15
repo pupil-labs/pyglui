@@ -23,7 +23,7 @@ cdef class UI_element:
             pass
 
     cpdef pre_handle_input(self,Input new_input):
-        # if your element needs to catch input event in front of very boday else:
+        # if your element needs to catch input event in front of everybody else:
         # add yourself to new_input.active_ui_elements during handle_input
         # pre_handle input will be called in the next frame with new input.
         # add yourself again in handle input if you need to stay in active_ui_elements
@@ -402,7 +402,7 @@ cdef class TextInput(UI_element):
         self.caret = len(self.preview)
         self.caret_highlight = 0
         self.clip_start = 0
-
+        
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
         pass
 
@@ -492,7 +492,6 @@ cdef class TextInput(UI_element):
                     self.abort_input()
 
 
-
     cpdef handle_input(self,Input new_input,bint visible):
         global should_redraw
         if not self.read_only and not self.selected:
@@ -530,12 +529,18 @@ cdef class TextInput(UI_element):
         cdef float right_bound,left_bound,caret_x
         right_bound = self.textfield.size.x - x_spacer*2
         left_bound = 0.0
-        # current caret position
+
+        if glfont.text_bounds(x_spacer,0,self.preview[:self.caret]) < right_bound:
+            # reset clip_start to 0
+            self.clip_start = 0
+
         caret_x = glfont.text_bounds(x_spacer,0,self.preview[self.clip_start:self.caret])
 
-        if caret_x > right_bound:
+        # this only works if we are adding new text
+        # but if we resize the window, then we need to adjust again. 
+        if caret_x >= right_bound:
             self.clip_start += 1
-            self.clip_start = min(len(self.preview),self.clip_start)
+            # self.clip_start = min(len(self.preview),self.clip_start)
 
         if self.caret == 0:
             self.clip_start = 0
@@ -547,7 +552,8 @@ cdef class TextInput(UI_element):
         cdef float x
 
         if self.selected:
-            self._handle_overflow()    
+            self._handle_overflow()
+            print 'clip start: %s' %(self.clip_start)    
             pre_caret = self.preview[self.clip_start:self.caret]
             post_caret = self.preview[self.caret:]
             highlight_size = self.preview[self.clip_start:self.caret_highlight]
