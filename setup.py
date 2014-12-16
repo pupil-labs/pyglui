@@ -14,7 +14,7 @@ if platform.system() == 'Darwin':
     libglew = [] #we are using the dylib
 elif platform.system() == 'Linux':
     glew_header = '/usr/include/GL/glew.h'
-    includes = ['/usr/include/GL','pyglui/cygl','pyglui/cygl']
+    includes = ['/usr/include/GL','pyglui/cygl']
     libs = ['GLEW']
     link_args = []
 else:
@@ -24,6 +24,7 @@ else:
 if os.path.isfile('pyglui/cygl/glew.pxd') and os.stat('pyglui/cygl/glew.pxd')[ST_MTIME] > os.stat(glew_header)[ST_MTIME]:
     print "'glew.pxd' is up-to-date."
 else:
+    print "generating glew.pxd based on '%s'"%glew_header
     generate_pxd(glew_header,'pyglui/cygl')
 
 
