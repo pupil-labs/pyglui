@@ -214,10 +214,6 @@ def demo():
     m.color.a = 0
 
 
-
-
-
-
     import os
     import psutil
     pid = os.getpid()
