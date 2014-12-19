@@ -522,7 +522,7 @@ cdef class TextInput(UI_element):
     cdef abort_input(self):
         global should_redraw
         self.selected = False
-        self.preview = self.sync_val.value
+        self.sync_val.value = self.preview
         self.caret = len(self.preview)
         should_redraw = True
 
@@ -559,11 +559,10 @@ cdef class TextInput(UI_element):
          
     cdef draw_text_field(self):
         cdef float x
-        # cdef bytes highlight_size = <bytes>''
+        cdef bytes highlight_size = <bytes>''
 
         if self.selected:
             self.calculate_start_idx()
-  
             highlight_text = self.preview[self.start_char_idx:self.start_highlight_idx]
         
             gl.glPushMatrix()
@@ -571,7 +570,6 @@ cdef class TextInput(UI_element):
             gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
             line_highlight(Vec2(0,self.textfield.size.y), self.textfield.size)
             
-        
             glfont.draw_limited_text(x_spacer,0,self.preview[self.start_char_idx:],self.textfield.size.x-x_spacer)
 
             x = glfont.text_bounds(0,0,self.preview[self.start_char_idx:self.caret])+x_spacer
