@@ -192,7 +192,7 @@ def demo():
         m.append(ui.Slider("bur",foo,step=50,min=1,max=1005, label="Slider label with long label text to test overflow handling"))
         m.append(ui.Button("Say Hi!",print_hello))
         m.append(ui.Button("Say Hi!",print_hello))
-        m.append(ui.Switch("myswitch",foo,on_val=1000,off_val=10,setter=printer,label="Switch Me"))
+        m.append(ui.Switch("myswitch",foo,on_val=1000,off_val=10,label="Switch Me"))
 
         m.append(ui.Button("Say Hi!",print_hello))
         sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
@@ -202,6 +202,8 @@ def demo():
         m.append(sm)
         m.append(ui.Button("Say Hi!",print_hello))
 
+    m.elements[1].read_only = True
+    m.elements[4].read_only = True
 
     rightbar = ui.Stretching_Menu('Right Bar',(0,100),(150,-100))
     rightbar.append(ui.Thumb("record",foo,label="Record") )

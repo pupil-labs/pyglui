@@ -17,15 +17,19 @@ DEF circle_button_shadow = 10
 
 DEF color_selected = (.5,.9,.9,.9)
 DEF color_on = (.5,.5,.9,.9)
+DEF color_on_read_only = (.5,.5,.9,.4)
 DEF color_default = (.5,.5,.5,.9)
+DEF color_default_read_only = (.5,.5,.5,.5)
 DEF color_shadow = (.0,.0,.0,.8)
 DEF shadow_sharpness = 0.3
+DEF color_txt_read_only = (.5,.5,.5,.5)
 
 # Slider - design parameters
 DEF slider_outline_size_y = 80
 DEF slider_label_org_y = 20
 DEF slider_handle_org_y = 40
 DEF slider_button_size = circle_button_size
+DEF slider_button_size_read_only = 15 
 DEF slider_button_size_selected = circle_button_size_selected
 DEF slider_button_shadow = circle_button_shadow
 DEF slider_step_mark_size = 8

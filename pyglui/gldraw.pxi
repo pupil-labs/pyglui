@@ -124,6 +124,14 @@ cdef inline line(Vec2 org, Vec2 end):
     gl.glVertex3f(end.x, end.y,0)
     gl.glEnd()
 
+cdef inline line_read_only(Vec2 org, Vec2 end):
+    gl.glColor4f(.5,.5,.5,.5)
+    gl.glLineWidth(1)
+    gl.glBegin(gl.GL_LINES)
+    gl.glVertex3f(org.x, org.y,0)
+    gl.glVertex3f(end.x, end.y,0)
+    gl.glEnd()
+
 cdef inline menu_line(Vec2 org, Vec2 end):
     gl.glColor4f(1,1,1,.8)
     gl.glLineWidth(2)
@@ -134,6 +142,14 @@ cdef inline menu_line(Vec2 org, Vec2 end):
 
 cdef inline line_highlight(Vec2 org, Vec2 end):
     gl.glColor4f(.5,.5,.9,.9)
+    gl.glLineWidth(1.5)
+    gl.glBegin(gl.GL_LINES)
+    gl.glVertex3f(org.x, org.y,0)
+    gl.glVertex3f(end.x, end.y,0)
+    gl.glEnd()
+
+cdef inline line_highlight_read_only(Vec2 org, Vec2 end):
+    gl.glColor4f(.5,.5,.9,.4)
     gl.glLineWidth(1.5)
     gl.glBegin(gl.GL_LINES)
     gl.glVertex3f(org.x, org.y,0)

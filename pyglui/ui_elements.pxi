@@ -99,6 +99,10 @@ cdef class Slider(UI_element):
 
         glfont.push_state()
         glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)
+        # if read_only set font color to gray
+        if self.read_only:
+            glfont.set_color_float(color_txt_read_only[0],color_txt_read_only[1],color_txt_read_only[2],color_txt_read_only[3])
+
         if type(self.sync_val.value) == float:
             glfont.draw_text(self.field.size.x-x_spacer,0,bytes('%0.2f'%self.sync_val.value) )
             glfont.pop_state()
@@ -108,12 +112,19 @@ cdef class Slider(UI_element):
             glfont.pop_state()
             used_x = glfont.text_bounds(0,0,bytes(self.sync_val.value))
 
+        glfont.push_state()
+        if self.read_only:
+            glfont.set_color_float(color_txt_read_only[0],color_txt_read_only[1],color_txt_read_only[2],color_txt_read_only[3])
+
         glfont.draw_limited_text(x_spacer,0,self.label,self.field.size.x-3*x_spacer-used_x)
+        glfont.pop_state()
 
-
-
-        line(Vec2(0,slider_handle_org_y),Vec2(self.field.size.x, slider_handle_org_y))
-        line_highlight(Vec2(0,slider_handle_org_y),Vec2(self.slider_pos.x,slider_handle_org_y))
+        if not self.read_only:
+            line(Vec2(0,slider_handle_org_y),Vec2(self.field.size.x, slider_handle_org_y))
+            line_highlight(Vec2(0,slider_handle_org_y),Vec2(self.slider_pos.x,slider_handle_org_y))
+        else:
+            line_read_only(Vec2(0,slider_handle_org_y),Vec2(self.field.size.x, slider_handle_org_y))
+            line_highlight_read_only(Vec2(0,slider_handle_org_y),Vec2(self.slider_pos.x,slider_handle_org_y))
 
         cdef float step_pixel_size,x
         if self.steps>1:
@@ -126,8 +137,13 @@ cdef class Slider(UI_element):
             utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size_selected+slider_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
             utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size_selected, color=color_selected)
         else:
-            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size+slider_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
-            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size, color=color_default)
+            if not self.read_only:
+                utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size+slider_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
+                utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size, color=color_default)
+            else:
+                # no shadow and smaller button handle
+                utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size, color=color_default_read_only)
+
 
         gl.glPopMatrix()
 
@@ -196,23 +212,33 @@ cdef class Switch(UI_element):
         self.field.compute(self.outline)
         self.button.compute(self.field)
 
-        # self.outline.sketch()
-        # self.field.sketch()
-        # self.button.sketch()
         if self.sync_val.value == self.on_val:
-            utils.draw_points(((self.button.center),),size=switch_button_size_on+switch_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=switch_button_size_on, color=color_on)
+            if not self.read_only:
+                utils.draw_points(((self.button.center),),size=switch_button_size_on+switch_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
+                utils.draw_points(((self.button.center),),size=switch_button_size_on, color=color_on)
+            else:
+                utils.draw_points(((self.button.center),),size=switch_button_size_on, color=color_on_read_only)                
         elif self.selected:
             utils.draw_points(((self.button.center),),size=switch_button_size_selected+switch_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
             utils.draw_points(((self.button.center),),size=switch_button_size_selected, color=color_selected)
         else:
-            utils.draw_points(((self.button.center),),size=switch_button_size+switch_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=switch_button_size, color=color_default)
+            if not self.read_only:
+                utils.draw_points(((self.button.center),),size=switch_button_size+switch_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
+                utils.draw_points(((self.button.center),),size=switch_button_size, color=color_default)
+            else:
+                # read only no shadow
+                utils.draw_points(((self.button.center),),size=switch_button_size, color=color_default_read_only)
+
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
-        glfont.draw_limited_text(x_spacer,0,self.label,self.field.size.x-(switch_button_size_on+switch_button_shadow))
+        
         glfont.push_state()
+        if self.read_only:
+            glfont.set_color_float(color_txt_read_only[0],color_txt_read_only[1],color_txt_read_only[2],color_txt_read_only[3])
+
+        glfont.draw_limited_text(x_spacer,0,self.label,self.field.size.x-(switch_button_size_on+switch_button_shadow))
+
 
         #glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_CENTER)
 
@@ -308,9 +334,11 @@ cdef class Selector(UI_element):
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
-        #glfont.push_state()
+        glfont.push_state()
+        if self.read_only:
+            glfont.set_color_float(color_txt_read_only[0],color_txt_read_only[1],color_txt_read_only[2],color_txt_read_only[3])
         cdef float label_text_space = glfont.draw_text(x_spacer,0,self.label)
-        #glfont.pop_state()
+        glfont.pop_state()
         gl.glPopMatrix()
 
         self.select_field.org.x += label_text_space
@@ -319,14 +347,19 @@ cdef class Selector(UI_element):
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.select_field.org.x),int(self.select_field.org.y),0)
-        #glfont.push_state()
+
         if self.selected:
             for y in range(len(self.selection)):
                 glfont.draw_limited_text(x_spacer,y*line_height*ui_scale,self.selection_labels[y],self.select_field.size.x-x_spacer)
         else:
+            glfont.push_state()
+            if self.read_only:
+                glfont.set_color_float(color_txt_read_only[0],color_txt_read_only[1],color_txt_read_only[2],color_txt_read_only[3])
+
             glfont.draw_limited_text(x_spacer,0,self.selection_labels[self.selection_idx],self.select_field.size.x-x_spacer-self.select_field.size.y)
             triangle_h(self.select_field.size-Vec2(self.select_field.size.y,self.select_field.size.y),Vec2(self.select_field.size.y,self.select_field.size.y))
-        #glfont.pop_state()
+            glfont.pop_state()
+        
         gl.glPopMatrix()
 
     cpdef handle_input(self,Input new_input,bint visible):
