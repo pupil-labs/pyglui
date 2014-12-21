@@ -204,7 +204,9 @@ def demo():
 
     m.elements[0].read_only = True
     m.elements[1].read_only = True
-    m.elements[4].read_only = True
+    m.elements[2].read_only = True
+    sm.elements[0].read_only = True
+    sm.elements[1].read_only = True
 
     rightbar = ui.Stretching_Menu('Right Bar',(0,100),(150,-100))
     rightbar.append(ui.Thumb("record",foo,label="Record") )

@@ -394,7 +394,6 @@ cdef class Selector(UI_element):
         self.outline.design_size.y = h
 
 
-
     cdef finish_selection(self,float mouse_y):
         self.selection_idx = int(mouse_y/(self.select_field.size.y/float(len(self.selection))) )
         #just for sanity
@@ -454,10 +453,20 @@ cdef class TextInput(UI_element):
         self.sync_val.sync()
 
     cpdef draw(self,FitBox parent,bint nested=True):
+        cdef tuple text_color        
+        # read only rendering rules
+        if self.read_only:
+            text_color = color_text_read_only
+        else:
+            text_color = color_text_default
+
         #update appearance:
         self.outline.compute(parent)
         self.field.compute(self.outline)
         self.textfield.compute(self.field)
+
+        glfont.push_state()
+        glfont.set_color_float(text_color)
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
@@ -468,6 +477,7 @@ cdef class TextInput(UI_element):
         self.textfield.size.x -=dx
 
         self.draw_text_field()
+        glfont.pop_state()
         # self.draw_text_selection()
 
 
@@ -665,6 +675,13 @@ cdef class Button(UI_element):
 
 
     cpdef draw(self,FitBox parent,bint nested=True):
+        cdef tuple text_color        
+        # read only rendering rules
+        if self.read_only:
+            text_color = color_text_read_only
+        else:
+            text_color = color_text_default
+
         #update appearance:
         self.outline.compute(parent)
         self.button.compute(self.outline)
@@ -676,10 +693,12 @@ cdef class Button(UI_element):
             self.button.sketch()
 
         gl.glPushMatrix()
+        glfont.push_state()    
         gl.glTranslatef(int(self.button.org.x),int(self.button.org.y),0)
+        glfont.set_color_float(text_color)
         glfont.draw_limited_text(x_spacer,0,self.label,self.button.size.x-x_spacer)
+        glfont.pop_state()
         gl.glPopMatrix()
-
 
     cpdef handle_input(self,Input new_input,bint visible):
         if not self.read_only:
