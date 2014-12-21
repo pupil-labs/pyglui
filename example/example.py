@@ -202,6 +202,7 @@ def demo():
         m.append(sm)
         m.append(ui.Button("Say Hi!",print_hello))
 
+    m.elements[0].read_only = True
     m.elements[1].read_only = True
     m.elements[4].read_only = True
 

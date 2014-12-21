@@ -48,8 +48,8 @@ cdef inline tripple_h(Vec2 org, Vec2 size):
 
     gl.glEnd()
 
-cdef inline triangle_h(Vec2 org, Vec2 size):
-    gl.glColor4f(1,1,1,.5)
+cdef inline triangle_h(Vec2 org, Vec2 size, tuple color):
+    gl.glColor4f(color[0],color[1],color[2],color[3])
 
     gl.glLineWidth(2)
     gl.glBegin(gl.GL_LINES)
@@ -116,8 +116,16 @@ cdef inline triangle_left(Vec2 org, Vec2 size):
     gl.glVertex3f(org.x + size.x/2 ,org.y+size.y-3,0)
     gl.glEnd()
 
-cdef inline line(Vec2 org, Vec2 end):
+cdef inline line_old(Vec2 org, Vec2 end):
     gl.glColor4f(1,1,1,.5)
+    gl.glLineWidth(1)
+    gl.glBegin(gl.GL_LINES)
+    gl.glVertex3f(org.x, org.y,0)
+    gl.glVertex3f(end.x, end.y,0)
+    gl.glEnd()
+
+cdef inline line(Vec2 org, Vec2 end, tuple color):
+    gl.glColor4f(color[0], color[1], color[2], color[3])
     gl.glLineWidth(1)
     gl.glBegin(gl.GL_LINES)
     gl.glVertex3f(org.x, org.y,0)

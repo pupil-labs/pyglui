@@ -99,7 +99,7 @@ cdef class UI:
             glfont.clear_state()
             glfont.set_font('opensans')
             glfont.set_size(int(ui_scale * text_size))
-            glfont.set_color_float(1,1,1,1)
+            glfont.set_color_float(color_text_default)
             glfont.set_blur(.1)
             glfont.set_align(fs.FONS_ALIGN_TOP)
 

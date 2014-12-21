@@ -21,8 +21,11 @@ DEF color_on_read_only = (.5,.5,.9,.4)
 DEF color_default = (.5,.5,.5,.9)
 DEF color_default_read_only = (.5,.5,.5,.5)
 DEF color_shadow = (.0,.0,.0,.8)
+DEF color_shadow_read_only = (.0,.0,.0,.0)
 DEF shadow_sharpness = 0.3
-DEF color_txt_read_only = (.5,.5,.5,.5)
+DEF color_text_default = (1.,1.,1.,1.)
+DEF color_text_read_only = (.5,.5,.5,.5)
+DEF color_line_default = (1.,1.,1.,.5)
 
 # Slider - design parameters
 DEF slider_outline_size_y = 80
@@ -34,6 +37,10 @@ DEF slider_button_size_selected = circle_button_size_selected
 DEF slider_button_shadow = circle_button_shadow
 DEF slider_step_mark_size = 8
 DEF slider_color_step = (.8,.8,.8,.6)
+DEF slider_line_color_default = color_line_default
+DEF slider_line_color_highlight = (.5,.5,.9,.9)
+DEF slider_line_color_default_read_only = (1.,1.,1.,.5)
+DEF slider_line_color_highlight_read_only = (.5,.5,.9,.6)
 
 # Switch - design parameters
 DEF switch_outline_size_y = 40
@@ -44,6 +51,8 @@ DEF switch_button_shadow = circle_button_shadow
 
 # Selector - design parameters
 DEF selector_outline_size_y = 40
+DEF selector_triangle_color_default = color_line_default
+DEF selector_triangle_color_read_only = color_text_read_only
 
 # TextInput - design parameters
 DEF text_input_outline_size_y = 40

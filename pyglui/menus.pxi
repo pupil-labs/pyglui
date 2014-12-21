@@ -113,12 +113,13 @@ cdef class Base_Menu(UI_element):
                 if self.element_space.has_area():
                     tripple_h(self.menu_bar.outline.org+menu_offset,tripple_h_size)
                 else:
-                    triangle_h(self.menu_bar.outline.org+menu_offset,tripple_h_size)
+                    triangle_h(self.menu_bar.outline.org+menu_offset,tripple_h_size,color_line_default)
 
                 glfont.draw_text(self.menu_bar.outline.org.x+menu_offset.x+menu_topbar_text_x_org*ui_scale,
                                  self.outline.org.y+menu_offset.y,self.label)
                 line(Vec2(self.menu_bar.outline.org.x+menu_offset.x,self.menu_bar.outline.org.y+self.menu_bar.outline.size.y),
-                     Vec2(self.menu_bar.outline.org.x+self.menu_bar.outline.size.x-menu_offset.x,self.menu_bar.outline.org.y+self.menu_bar.outline.size.y))
+                     Vec2(self.menu_bar.outline.org.x+self.menu_bar.outline.size.x-menu_offset.x,self.menu_bar.outline.org.y+self.menu_bar.outline.size.y),
+                     color_line_default)
 
 cdef class Stretching_Menu(Base_Menu):
     '''
