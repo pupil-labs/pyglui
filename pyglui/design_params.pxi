@@ -2,6 +2,7 @@
 DEF text_size = 18.
 DEF line_height = 20.
 DEF x_spacer = 5
+DEF rect_color_default = (.0,.0,.0,.8)
 
 
 ########## UI Elements Design Parameters ##########
@@ -56,6 +57,8 @@ DEF selector_triangle_color_read_only = color_text_read_only
 
 # TextInput - design parameters
 DEF text_input_outline_size_y = 40
+DEF text_input_highlight_color = (.5,.5,.9,.5)
+DEF text_input_line_highlight_color = slider_line_color_highlight
 
 # Button - design parameters
 DEF button_outline_size_y = 40

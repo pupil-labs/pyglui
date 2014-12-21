@@ -620,14 +620,16 @@ cdef class TextInput(UI_element):
             gl.glPushMatrix()
             #then transform locally and render the UI element
             gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
-            line_highlight(Vec2(0,self.textfield.size.y), self.textfield.size)
+            line(Vec2(0,self.textfield.size.y), self.textfield.size,text_input_line_highlight_color)
             
             glfont.draw_limited_text(x_spacer,0,self.preview[self.start_char_idx:],self.textfield.size.x-x_spacer)
 
             x = glfont.text_bounds(0,0,self.preview[self.start_char_idx:self.caret])+x_spacer
             # draw highlighted text if any
             if self.highlight:
-               rect_highlight(Vec2(x,0),Vec2(min(self.textfield.size.x-x_spacer,glfont.text_bounds(0,0,highlight_text)+x_spacer),self.textfield.size.y))
+               rect_corners(Vec2(x,0),Vec2(min(self.textfield.size.x-x_spacer,
+                    glfont.text_bounds(0,0,highlight_text)+x_spacer),self.textfield.size.y),
+                    text_input_highlight_color)
 
             # draw the caret
             gl.glColor4f(1,1,1,.5)

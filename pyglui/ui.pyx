@@ -542,7 +542,7 @@ cdef class FitBox:
         return d
 
     cdef sketch(self):
-        rect(self.org,self.size)
+        rect(self.org,self.size,rect_color_default)
 
     cdef copy(self):
         return FitBox( Vec2(*self.design_org), Vec2(*self.design_size), Vec2(*self.min_size) )

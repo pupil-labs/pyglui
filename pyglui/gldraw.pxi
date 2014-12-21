@@ -14,9 +14,8 @@ cdef inline pop_view():
     gl.glMatrixMode(gl.GL_MODELVIEW)
     gl.glPopMatrix()
 
-
-cdef inline rect(Vec2 org, Vec2 size):
-    gl.glColor4f(.0,.0,.0,.8)
+cdef inline rect(Vec2 org, Vec2 size, tuple color):
+    gl.glColor4f(color[0], color[1], color[2], color[3]) 
     gl.glBegin(gl.GL_POLYGON)
     gl.glVertex3f(org.x,org.y,0.0)
     gl.glVertex3f(org.x,org.y+size.y,0.0)
@@ -24,8 +23,8 @@ cdef inline rect(Vec2 org, Vec2 size):
     gl.glVertex3f(org.x+size.x,org.y,0.0)
     gl.glEnd()
 
-cdef inline rect_highlight(Vec2 org, Vec2 end):
-    gl.glColor4f(.5,.5,.9,.5)
+cdef inline rect_corners(Vec2 org, Vec2 end, tuple color):
+    gl.glColor4f(color[0], color[1], color[2], color[3])
     gl.glBegin(gl.GL_POLYGON)
     gl.glVertex3f(org.x,org.y,0.0)
     gl.glVertex3f(org.x,end.y,0.0)
@@ -116,13 +115,6 @@ cdef inline triangle_left(Vec2 org, Vec2 size):
     gl.glVertex3f(org.x + size.x/2 ,org.y+size.y-3,0)
     gl.glEnd()
 
-cdef inline line_old(Vec2 org, Vec2 end):
-    gl.glColor4f(1,1,1,.5)
-    gl.glLineWidth(1)
-    gl.glBegin(gl.GL_LINES)
-    gl.glVertex3f(org.x, org.y,0)
-    gl.glVertex3f(end.x, end.y,0)
-    gl.glEnd()
 
 cdef inline line(Vec2 org, Vec2 end, tuple color):
     gl.glColor4f(color[0], color[1], color[2], color[3])
@@ -132,13 +124,6 @@ cdef inline line(Vec2 org, Vec2 end, tuple color):
     gl.glVertex3f(end.x, end.y,0)
     gl.glEnd()
 
-cdef inline line_read_only(Vec2 org, Vec2 end):
-    gl.glColor4f(.5,.5,.5,.5)
-    gl.glLineWidth(1)
-    gl.glBegin(gl.GL_LINES)
-    gl.glVertex3f(org.x, org.y,0)
-    gl.glVertex3f(end.x, end.y,0)
-    gl.glEnd()
 
 cdef inline menu_line(Vec2 org, Vec2 end):
     gl.glColor4f(1,1,1,.8)
@@ -148,21 +133,6 @@ cdef inline menu_line(Vec2 org, Vec2 end):
     gl.glVertex3f(end.x, end.y,0)
     gl.glEnd()
 
-cdef inline line_highlight(Vec2 org, Vec2 end):
-    gl.glColor4f(.5,.5,.9,.9)
-    gl.glLineWidth(1.5)
-    gl.glBegin(gl.GL_LINES)
-    gl.glVertex3f(org.x, org.y,0)
-    gl.glVertex3f(end.x, end.y,0)
-    gl.glEnd()
-
-cdef inline line_highlight_read_only(Vec2 org, Vec2 end):
-    gl.glColor4f(.5,.5,.9,.4)
-    gl.glLineWidth(1.5)
-    gl.glBegin(gl.GL_LINES)
-    gl.glVertex3f(org.x, org.y,0)
-    gl.glVertex3f(end.x, end.y,0)
-    gl.glEnd()
 
 ### OpenGL funtions for rendering to texture.
 ### Using this saves us considerable cpu/gpu time when the UI remains static.
