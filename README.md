@@ -23,5 +23,5 @@ Cython powered OpenGL gui.
 * `cd /example`
 * `python example.py` 
 
-![](https://raw.github.com/wiki/pupil-labs/pyglui/media/demo_screenshot_20141205.png)
+![](https://raw.github.com/wiki/pupil-labs/pyglui/media/demo_screenshot_20141221.png)
 *Demo screenshot as of 2014-12-05*
