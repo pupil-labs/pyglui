@@ -574,13 +574,13 @@ cdef class TextInput(UI_element):
     cdef abort_input(self):
         global should_redraw
         self.selected = False
-        self.sync_val.value = self.preview
+        self.preview = self.sync_val.value
         self.caret = len(self.preview)
         should_redraw = True
 
     cdef calculate_start_idx(self):
         # clip the preview text appropriately so that it always fits within the textfield
-        # make sure there is always one char before or after caret 
+        # make sure there is always one char before or after caret
         cdef float width
         cdef int start_char_idx, caret_x
         width = self.textfield.size.x - 2*x_spacer
