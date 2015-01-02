@@ -33,7 +33,7 @@ DEF slider_outline_size_y = 80
 DEF slider_label_org_y = 20
 DEF slider_handle_org_y = 40
 DEF slider_button_size = circle_button_size
-DEF slider_button_size_read_only = 15 
+DEF slider_button_size_read_only = 15
 DEF slider_button_size_selected = circle_button_size_selected
 DEF slider_button_shadow = circle_button_shadow
 DEF slider_step_mark_size = 8
@@ -74,4 +74,19 @@ DEF thumb_color_off = (.5,.5,.5,.6)
 DEF thumb_color_shadow = (.0,.0,.0,.5)
 DEF thumb_button_sharpness = 0.9
 DEF thumb_font_padding = 30
+
+# Menu - design parameters
+DEF menu_pad = 10
+DEF menu_move_corner_height = text_size
+DEF menu_move_corner_width = menu_move_corner_height
+DEF menu_topbar_pad = 2 * menu_pad + menu_move_corner_height
+DEF menu_topbar_text_x_org =  menu_move_corner_width + x_spacer
+DEF resize_corner_size = 20
+DEF menu_topbar_min_width = 100
+DEF menu_bottom_pad = 20
+
+DEF menu_sidebar_pad = menu_topbar_pad
+DEF menu_sidebar_min_height = 20
+
+
 

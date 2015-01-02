@@ -8,17 +8,17 @@ cdef class UI_element:
     cdef readonly bytes label
     cdef readonly long  uid
     cdef public FitBox outline
-    cdef public bint read_only
+    cdef bint _read_only
 
     cpdef sync(self):
         global should_redraw
         pass
 
-    cpdef draw(self,FitBox context, bint nested=True):
+    cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         pass
 
-    cpdef handle_input(self,Input new_input,bint visible):
-        if not self.read_only:
+    cpdef handle_input(self,Input new_input,bint visible, bint parent_read_only = False):
+        if not (self._read_only or parent_read_only):
             global should_redraw
             pass
 
@@ -27,7 +27,6 @@ cdef class UI_element:
         # add yourself to new_input.active_ui_elements during handle_input
         # pre_handle input will be called in the next frame with new input.
         # add yourself again in handle input if you need to stay in active_ui_elements
-
         pass
 
     cpdef precompute(self,FitBox parent):
@@ -36,6 +35,15 @@ cdef class UI_element:
     property height:
         def __get__(self):
             return self.outline.size.y
+
+    property read_only:
+        def __get__(self):
+            return self._read_only
+        def __set__(self,bint val):
+            if self._read_only != val:
+                self._read_only = val
+                global should_redraw
+                should_redraw = True
 
 
 
@@ -67,7 +75,7 @@ cdef class Slider(UI_element):
         self.field = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
         self.slider_pos = Vec2(0,slider_label_org_y)
         self.selected = False
-        self.read_only = False
+        self._read_only = False
         if self.step:
             self.steps = int((self.maximum-self.minimum)/float(step))
         else:
@@ -83,7 +91,7 @@ cdef class Slider(UI_element):
     cpdef sync(self):
         self.sync_val.sync()
 
-    cpdef draw(self,FitBox parent, bint nested=True):
+    cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         #update appearance:
         self.outline.compute(parent)
         self.field.compute(self.outline)
@@ -95,7 +103,7 @@ cdef class Slider(UI_element):
 
         # read only rendering rules
         cdef tuple line_default_color, line_highlight_color, text_color, button_color, button_shadow_color
-        if self.read_only:
+        if self._read_only or parent_read_only:
             line_default_color = slider_line_color_default_read_only
             line_highlight_color = slider_line_color_highlight_read_only
             text_color = color_text_read_only
@@ -106,7 +114,7 @@ cdef class Slider(UI_element):
             line_highlight_color = slider_line_color_highlight
             text_color = color_text_default
             button_color = color_default
-            button_shadow_color = color_shadow            
+            button_shadow_color = color_shadow
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
@@ -151,8 +159,8 @@ cdef class Slider(UI_element):
 
 
 
-    cpdef handle_input(self,Input new_input,bint visible):
-        if not self.read_only:
+    cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
+        if not (self._read_only or parent_read_only):
             global should_redraw
 
             if self.selected and new_input.dm:
@@ -207,7 +215,7 @@ cdef class Switch(UI_element):
     cpdef sync(self):
         self.sync_val.sync()
 
-    cpdef draw(self,FitBox parent,bint nested=True):
+    cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         #update appearance
         self.outline.compute(parent)
         self.field.compute(self.outline)
@@ -215,7 +223,7 @@ cdef class Switch(UI_element):
 
         # read only rendering rules
         cdef tuple text_color, button_color_on, button_color_off, button_shadow_color
-        if self.read_only:
+        if self._read_only or parent_read_only:
             text_color = color_text_read_only
             button_color_on = color_on_read_only
             button_color_off = color_default_read_only
@@ -242,7 +250,7 @@ cdef class Switch(UI_element):
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
-        
+
         glfont.push_state()
         glfont.set_color_float(text_color)
 
@@ -251,8 +259,8 @@ cdef class Switch(UI_element):
         glfont.pop_state()
         gl.glPopMatrix()
 
-    cpdef handle_input(self,Input new_input,bint visible):
-        if not self.read_only:
+    cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
+        if not (self._read_only or parent_read_only):
             global should_redraw
 
             for b in new_input.buttons:
@@ -324,7 +332,7 @@ cdef class Selector(UI_element):
             self.selection_idx = len(self.selection_labels)-1
 
 
-    cpdef draw(self,FitBox parent,bint nested=True):
+    cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
 
         #update appearance
         self.outline.compute(parent)
@@ -333,7 +341,7 @@ cdef class Selector(UI_element):
 
         # read only rendering rules
         cdef tuple text_color, triangle_color
-        if self.read_only:
+        if self._read_only or parent_read_only:
             text_color = color_text_read_only
             triangle_color = selector_triangle_color_read_only
         else:
@@ -368,11 +376,11 @@ cdef class Selector(UI_element):
                         Vec2(self.select_field.size.y,self.select_field.size.y),
                         triangle_color)
             glfont.pop_state()
-        
+
         gl.glPopMatrix()
 
-    cpdef handle_input(self,Input new_input,bint visible):
-        if not self.read_only:
+    cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
+        if not (self._read_only or parent_read_only):
             global should_redraw
 
             for b in new_input.buttons:
@@ -452,10 +460,10 @@ cdef class TextInput(UI_element):
     cpdef sync(self):
         self.sync_val.sync()
 
-    cpdef draw(self,FitBox parent,bint nested=True):
-        cdef tuple text_color        
+    cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        cdef tuple text_color
         # read only rendering rules
-        if self.read_only:
+        if self._read_only or parent_read_only:
             text_color = color_text_read_only
         else:
             text_color = color_text_default
@@ -545,9 +553,9 @@ cdef class TextInput(UI_element):
                     self.abort_input()
 
 
-    cpdef handle_input(self,Input new_input,bint visible):
+    cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
         global should_redraw
-        if not self.read_only and not self.selected:
+        if not (self._read_only or parent_read_only) and not self.selected:
             for b in new_input.buttons:
                 if b[1] == 1 and visible:
                     if self.textfield.mouse_over(new_input.m):
@@ -589,26 +597,26 @@ cdef class TextInput(UI_element):
         if glfont.text_bounds(x_spacer,0,self.preview[self.start_char_idx:]) < width:
             self.start_char_idx = 0
 
-        # get the position of the caret 
+        # get the position of the caret
         caret_x = glfont.text_bounds(x_spacer,0,self.preview[self.start_char_idx:self.caret])
-        
+
         # scroll left:
         # if the caret is == start_char_idx subtract one from start_char_idx until idx = 0
         if self.caret == self.start_char_idx:
-            # start_char_idx = len(self.preview)-glfont.get_clip_position(self.preview[::-1],width)        
+            # start_char_idx = len(self.preview)-glfont.get_clip_position(self.preview[::-1],width)
             self.start_char_idx = max(0,self.start_char_idx-1)
-        
+
         # scroll right:
         # if the caret reaches the right bound
         if caret_x >= width:
             # find the starting idx of the left most (starting) char if >= width of textfield+padding
             # at the current caret position - overflow on the right is handled by draw_limited_text
-            start_char_idx = glfont.get_first_char_idx(self.preview[:self.caret],width)        
+            start_char_idx = glfont.get_first_char_idx(self.preview[:self.caret],width)
             # adding some preview after the caret by modifying the start_char
-            # this may result in more than one extra char after, unless monospaced fonts are used 
+            # this may result in more than one extra char after, unless monospaced fonts are used
             self.start_char_idx = min(len(self.preview),start_char_idx)
 
-         
+
     cdef draw_text_field(self):
         cdef float x
         cdef bytes highlight_size = <bytes>''
@@ -616,12 +624,12 @@ cdef class TextInput(UI_element):
         if self.selected:
             self.calculate_start_idx()
             highlight_text = self.preview[self.start_char_idx:self.start_highlight_idx]
-        
+
             gl.glPushMatrix()
             #then transform locally and render the UI element
             gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
             line(Vec2(0,self.textfield.size.y), self.textfield.size,text_input_line_highlight_color)
-            
+
             glfont.draw_limited_text(x_spacer,0,self.preview[self.start_char_idx:],self.textfield.size.x-x_spacer)
 
             x = glfont.text_bounds(0,0,self.preview[self.start_char_idx:self.caret])+x_spacer
@@ -676,10 +684,10 @@ cdef class Button(UI_element):
         pass
 
 
-    cpdef draw(self,FitBox parent,bint nested=True):
-        cdef tuple text_color        
+    cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        cdef tuple text_color
         # read only rendering rules
-        if self.read_only:
+        if self._read_only or parent_read_only:
             text_color = color_text_read_only
         else:
             text_color = color_text_default
@@ -695,15 +703,15 @@ cdef class Button(UI_element):
             self.button.sketch()
 
         gl.glPushMatrix()
-        glfont.push_state()    
+        glfont.push_state()
         gl.glTranslatef(int(self.button.org.x),int(self.button.org.y),0)
         glfont.set_color_float(text_color)
         glfont.draw_limited_text(x_spacer,0,self.label,self.button.size.x-x_spacer)
         glfont.pop_state()
         gl.glPopMatrix()
 
-    cpdef handle_input(self,Input new_input,bint visible):
-        if not self.read_only:
+    cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
+        if not (self._read_only or parent_read_only):
             global should_redraw
 
             for b in new_input.buttons:
@@ -754,7 +762,7 @@ cdef class Thumb(UI_element):
         self.sync_val.sync()
 
 
-    cpdef draw(self,FitBox parent,bint nested=True):
+    cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         #update appearance
         self.outline.compute(parent)
         self.button.compute(self.outline)
@@ -779,8 +787,8 @@ cdef class Thumb(UI_element):
 
 
 
-    cpdef handle_input(self,Input new_input,bint visible):
-        if not self.read_only:
+    cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
+        if not (self._read_only or parent_read_only):
             global should_redraw
 
             for b in new_input.buttons:

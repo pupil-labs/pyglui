@@ -141,7 +141,7 @@ cdef class Stretching_Menu(Base_Menu):
     def __init__(self,label,pos=(0,0),size=(200,100)):
         pass
 
-    cpdef draw(self,FitBox parent,bint nested=True):
+    cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
         cdef float h = 0,y_spacing=0,org_y=0
         if not self.collapsed:
             self.outline.compute(parent)
@@ -157,18 +157,16 @@ cdef class Stretching_Menu(Base_Menu):
             if self.element_space.has_area():
                 self.element_space.org.y+= y_spacing
                 for e in self.elements:
-                    e.draw(self.element_space,nested= False)
+                    e.draw(self.element_space,nested= False, parent_read_only = parent_read_only or self._read_only)
                     self.element_space.org.y+= e.height + y_spacing
                 self.outline.org.y = org_y
 
 
-    cpdef handle_input(self, Input new_input,bint visible):
-        if not self.read_only and not self.collapsed:
-            global should_redraw
-            #if elements are not visible, no need to interact with them.
-            if self.element_space.has_area():
-                for e in self.elements:
-                    e.handle_input(new_input, visible)
+    cpdef handle_input(self, Input new_input,bint visible,bint parent_read_only = False):
+        #if elements are not visible, no need to interact with them.
+        if self.element_space.has_area():
+            for e in self.elements:
+                e.handle_input(new_input, visible,self._read_only or parent_read_only)
 
 
     property configuration:
@@ -274,7 +272,7 @@ cdef class Growing_Menu(Base_Menu):
 
 
 
-    cpdef draw(self,FitBox parent,bint nested=True):
+    cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
         #here we compute the requred design height of this menu.
         self.outline.design_size.y  = self.height/ui_scale
         self.outline.compute(parent)
@@ -286,24 +284,21 @@ cdef class Growing_Menu(Base_Menu):
         #if elements are not visible, no need to draw them.
         if self.element_space.has_area():
             for e in self.elements:
-                e.draw(self.element_space)
+                e.draw(self.element_space,parent_read_only = parent_read_only or self._read_only)
                 self.element_space.org.y+= e.height
             self.outline.org.y = org_y
 
 
-    cpdef handle_input(self, Input new_input,bint visible):
-        if not self.read_only:
-            global should_redraw
+    cpdef handle_input(self, Input new_input,bint visible,bint parent_read_only = False):
+        if self.resize_corner is not None:
+            self.resize_corner.handle_input(new_input,visible)
+        if self.menu_bar is not None:
+            self.menu_bar.handle_input(new_input,visible)
 
-            if self.resize_corner is not None:
-                self.resize_corner.handle_input(new_input,visible)
-            if self.menu_bar is not None:
-                self.menu_bar.handle_input(new_input,visible)
-
-            #if elements are not visible, no need to interact with them.
-            if self.element_space.has_area():
-                for e in self.elements:
-                    e.handle_input(new_input, visible)
+        #if elements are not visible, no need to interact with them.
+        if self.element_space.has_area():
+            for e in self.elements:
+                e.handle_input(new_input, visible,self._read_only or parent_read_only)
 
     cpdef precompute(self,FitBox parent):
         #here we compute the requred design height of this menu.
@@ -442,16 +437,16 @@ cdef class Scrolling_Menu(Base_Menu):
 
 
 
-    cpdef draw(self,FitBox parent,bint nested=True):
+    cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
         self.outline.compute(parent)
         self.element_space.compute(self.outline)
         self.draw_menu(nested)
 
         #if elements are not visible, no need to draw them.
         if self.element_space.has_area():
-            self.draw_scroll_window_elements()
+            self.draw_scroll_window_elements(parent_read_only)
 
-    cdef draw_scroll_window_elements(self):
+    cdef draw_scroll_window_elements(self, bint parent_read_only):
         self.push_scissor()
         self.scrollbar.outline.compute(self.element_space)
         #compute scroll stack height.
@@ -472,7 +467,7 @@ cdef class Scrolling_Menu(Base_Menu):
 
         #render elements
         for e in self.elements:
-            e.draw(self.element_space)
+            e.draw(self.element_space,parent_read_only = parent_read_only or self._read_only)
             self.element_space.org.y+= e.height
         self.element_space.compute(self.outline)
 
@@ -500,25 +495,23 @@ cdef class Scrolling_Menu(Base_Menu):
         gl.glPopAttrib()
 
 
-    cpdef handle_input(self, Input new_input,bint visible):
+    cpdef handle_input(self, Input new_input,bint visible,bint parent_read_only = False):
         global should_redraw
         cdef bint mouse_over_menu = 0
 
-        if not self.read_only:
+        if self.resize_corner is not None:
+            self.resize_corner.handle_input(new_input,visible)
+        if self.menu_bar is not None:
+            self.menu_bar.handle_input(new_input,visible)
 
-            if self.resize_corner is not None:
-                self.resize_corner.handle_input(new_input,visible)
-            if self.menu_bar is not None:
-                self.menu_bar.handle_input(new_input,visible)
-
-            #if elements are not visible, no need to interact with them.
-            if self.element_space.has_area():
-                # let the elements know that the mouse should be ignored
-                # if outside of the visible scroll section
-                mouse_over_menu =  self.element_space.org.y <= new_input.m.y <= self.element_space.org.y+self.element_space.size.y
-                mouse_over_menu = mouse_over_menu and visible
-                for e in self.elements:
-                    e.handle_input(new_input, mouse_over_menu)
+        #if elements are not visible, no need to interact with them.
+        if self.element_space.has_area():
+            # let the elements know that the mouse should be ignored
+            # if outside of the visible scroll section
+            mouse_over_menu =  self.element_space.org.y <= new_input.m.y <= self.element_space.org.y+self.element_space.size.y
+            mouse_over_menu = mouse_over_menu and visible
+            for e in self.elements:
+                e.handle_input(new_input, mouse_over_menu,self._read_only or parent_read_only)
 
             # handle scrollbar interaction after menu items
             # so grabbing a slider does not trigger scrolling
