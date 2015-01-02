@@ -65,10 +65,14 @@ extensions = [
 				extra_compile_args=["-Wno-strict-aliasing", "-O2"]+['-D FONTSTASH_IMPLEMENTATION','-D GLFONTSTASH_IMPLEMENTATION'])
 ]
 
-from pyglui import __version__
+from pyglui import __version__ as pyglui_version
+# from pyglui.pyfontstash import __version__ as fs_version
+# from pyglui.cygl import __version__ as cygl_version
+
+
 
 setup( 	name="pyglui",
-		version=__version__,
+		version=pyglui_version,
 		packages = ['pyglui'],
 		py_modules = ['pyglui.cygl.__init__','pyglui.pyfontstash.__init__'], #add  __init__.py files
 		description="OpenGL UI powered by cython",
