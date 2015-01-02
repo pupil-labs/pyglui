@@ -3,6 +3,7 @@
 from cygl cimport glew as gl
 from cygl cimport utils
 from pyfontstash cimport fontstash as fs
+include 'version.pxi'
 include 'gldraw.pxi'
 include 'helpers.pxi'
 include 'design_params.pxi'

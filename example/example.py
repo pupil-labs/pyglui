@@ -159,6 +159,7 @@ def demo():
         print 'setting to :',val
 
 
+    print ui.__version__
     gui = ui.UI()
     gui.scale = 1.0
     sidebar = ui.Scrolling_Menu("MySideBar",pos=(-300,0),size=(0,0),header_pos='left')
@@ -226,6 +227,7 @@ def demo():
     ts = time.time()
 
     from pyglui import graph
+    print graph.__version__
     cpu_g = graph.Graph()
     cpu_g.pos = (20,100)
     cpu_g.update_fn = ps.get_cpu_percent

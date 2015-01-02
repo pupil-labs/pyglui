@@ -1,20 +1,5 @@
 
 
-#Layout parameters
-DEF menu_pad = 10
-DEF menu_move_corner_height = text_size
-DEF menu_move_corner_width = menu_move_corner_height
-DEF menu_topbar_pad = 2 * menu_pad + menu_move_corner_height
-DEF menu_topbar_text_x_org =  menu_move_corner_width + x_spacer
-DEF resize_corner_size = 20
-DEF menu_topbar_min_width = 100
-DEF menu_bottom_pad = 20
-
-DEF menu_sidebar_pad = menu_topbar_pad
-DEF menu_sidebar_min_height = 20
-
-
-
 cdef class Base_Menu(UI_element):
     """
     Base class that other menu inherit from. Dont use this.

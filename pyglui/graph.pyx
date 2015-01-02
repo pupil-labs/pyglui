@@ -3,6 +3,8 @@ from cygl cimport glew as gl
 from cygl cimport utils
 from pyfontstash cimport fontstash as fs
 from os import path
+include 'version.pxi'
+
 
 
 cdef int win_height, win_width
