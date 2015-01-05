@@ -159,7 +159,7 @@ def demo():
         print 'setting to :',val
 
 
-    print ui.__version__
+    print "pyglui version: %s" %(ui.__version__)
     gui = ui.UI()
     gui.scale = 1.0
     sidebar = ui.Scrolling_Menu("MySideBar",pos=(-300,0),size=(0,0),header_pos='left')
