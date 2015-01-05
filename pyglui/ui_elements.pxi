@@ -128,7 +128,7 @@ cdef class Slider(UI_element):
 
         glfont.push_state()
         glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)
-        glfont.set_color_float(self.text_color)
+        glfont.set_color_float(self.text_color[:])
 
 
         if type(self.sync_val.value) == float:
