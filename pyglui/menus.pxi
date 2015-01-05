@@ -159,9 +159,10 @@ cdef class Stretching_Menu(Base_Menu):
             return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':self.collapsed}
 
         def __set__(self,new_conf):
-            self.outline.design_org[:] = new_conf['pos']
-            self.outline.design_size[:] = new_conf['size']
-            self.collapsed = new_conf['collapsed']
+            if new_conf is not None:
+                self.outline.design_org[:] = new_conf['pos']
+                self.outline.design_size[:] = new_conf['size']
+                self.collapsed = new_conf['collapsed']
 
 
 cdef class Growing_Menu(Base_Menu):
@@ -315,10 +316,11 @@ cdef class Growing_Menu(Base_Menu):
             return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':self.collapsed}
 
         def __set__(self,new_conf):
-            self.outline.design_org[:] = new_conf['pos']
-            self.outline.design_size[:] = new_conf['size']
-            self.collapsed = new_conf['collapsed']
-            self.header_pos = self.header_pos #update layout
+            if new_conf is not None:
+                self.outline.design_org[:] = new_conf['pos']
+                self.outline.design_size[:] = new_conf['size']
+                self.collapsed = new_conf['collapsed']
+                self.header_pos = self.header_pos #update layout
 
 
 cdef class Scrolling_Menu(Base_Menu):
@@ -536,9 +538,10 @@ cdef class Scrolling_Menu(Base_Menu):
                 return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':False}
 
         def __set__(self,new_conf):
-            self.outline.design_org[:] = new_conf['pos']
-            self.outline.design_size[:] = new_conf['size']
-            self.header_pos = self.header_pos #update layout
-            if new_conf['collapsed'] and self.element_space.has_area():
-                self.toggle_iconified()
+            if new_conf is not None:
+                self.outline.design_org[:] = new_conf['pos']
+                self.outline.design_size[:] = new_conf['size']
+                self.header_pos = self.header_pos #update layout
+                if new_conf['collapsed'] and self.element_space.has_area():
+                    self.toggle_iconified()
 
