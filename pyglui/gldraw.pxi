@@ -14,8 +14,8 @@ cdef inline pop_view():
     gl.glMatrixMode(gl.GL_MODELVIEW)
     gl.glPopMatrix()
 
-cdef inline rect(Vec2 org, Vec2 size, tuple color):
-    gl.glColor4f(color[0], color[1], color[2], color[3]) 
+cdef inline rect(Vec2 org, Vec2 size, RGBA color):
+    gl.glColor4f(color.r, color.g, color.b, color.a) 
     gl.glBegin(gl.GL_POLYGON)
     gl.glVertex3f(org.x,org.y,0.0)
     gl.glVertex3f(org.x,org.y+size.y,0.0)
@@ -23,8 +23,8 @@ cdef inline rect(Vec2 org, Vec2 size, tuple color):
     gl.glVertex3f(org.x+size.x,org.y,0.0)
     gl.glEnd()
 
-cdef inline rect_corners(Vec2 org, Vec2 end, tuple color):
-    gl.glColor4f(color[0], color[1], color[2], color[3])
+cdef inline rect_corners(Vec2 org, Vec2 end, RGBA color):
+    gl.glColor4f(color.r, color.g, color.b, color.a)
     gl.glBegin(gl.GL_POLYGON)
     gl.glVertex3f(org.x,org.y,0.0)
     gl.glVertex3f(org.x,end.y,0.0)
@@ -47,8 +47,8 @@ cdef inline tripple_h(Vec2 org, Vec2 size):
 
     gl.glEnd()
 
-cdef inline triangle_h(Vec2 org, Vec2 size, tuple color):
-    gl.glColor4f(color[0],color[1],color[2],color[3])
+cdef inline triangle_h(Vec2 org, Vec2 size, RGBA color):
+    gl.glColor4f(color.r,color.g,color.b,color.a)
 
     gl.glLineWidth(2)
     gl.glBegin(gl.GL_LINES)
@@ -116,8 +116,8 @@ cdef inline triangle_left(Vec2 org, Vec2 size):
     gl.glEnd()
 
 
-cdef inline line(Vec2 org, Vec2 end, tuple color):
-    gl.glColor4f(color[0], color[1], color[2], color[3])
+cdef inline line(Vec2 org, Vec2 end, RGBA color):
+    gl.glColor4f(color.r, color.g, color.b, color.a)
     gl.glLineWidth(1)
     gl.glBegin(gl.GL_LINES)
     gl.glVertex3f(org.x, org.y,0)

@@ -60,6 +60,7 @@ cdef class Slider(UI_element):
     cdef Vec2 slider_pos
     cdef Synced_Value sync_val
     cdef int steps
+    cdef RGBA line_default_color, line_highlight_color, text_color, button_color, button_selected_color, button_shadow_color
 
     def __cinit__(self,bytes attribute_name, object attribute_context = None,label = None, min = 0, max = 100, step = 0,setter= None,getter= None):
         self.uid = id(self)
@@ -80,6 +81,12 @@ cdef class Slider(UI_element):
             self.steps = int((self.maximum-self.minimum)/float(step))
         else:
             self.steps = 0
+        self.line_default_color = RGBA(*slider_line_color_default)
+        self.line_highlight_color = RGBA(*slider_line_color_highlight)
+        self.text_color = RGBA(*color_text_default)
+        self.button_color = RGBA(*color_default)
+        self.button_selected_color = RGBA(*color_selected)
+        self.button_shadow_color = RGBA(*color_shadow)
 
 
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
@@ -102,26 +109,26 @@ cdef class Slider(UI_element):
         #self.field.sketch()
 
         # read only rendering rules
-        cdef tuple line_default_color, line_highlight_color, text_color, button_color, button_shadow_color
+        # cdef tuple line_default_color, line_highlight_color, text_color, button_color, button_shadow_color
         if self._read_only or parent_read_only:
-            line_default_color = slider_line_color_default_read_only
-            line_highlight_color = slider_line_color_highlight_read_only
-            text_color = color_text_read_only
-            button_color = color_default_read_only
-            button_shadow_color = color_shadow_read_only
+            self.line_default_color = RGBA(*slider_line_color_default_read_only)
+            self.line_highlight_color = RGBA(*slider_line_color_highlight_read_only)
+            self.text_color = RGBA(*color_text_read_only)
+            self.button_color = RGBA(*color_default_read_only)
+            self.button_shadow_color = RGBA(*color_shadow_read_only)
         else:
-            line_default_color = slider_line_color_default
-            line_highlight_color = slider_line_color_highlight
-            text_color = color_text_default
-            button_color = color_default
-            button_shadow_color = color_shadow
+            self.line_default_color = RGBA(*slider_line_color_default)
+            self.line_highlight_color = RGBA(*slider_line_color_highlight)
+            self.text_color = RGBA(*color_text_default)
+            self.button_color = RGBA(*color_default)
+            self.button_shadow_color = RGBA(*color_shadow)
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
 
         glfont.push_state()
         glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)
-        glfont.set_color_float(text_color)
+        glfont.set_color_float(self.text_color)
 
 
         if type(self.sync_val.value) == float:
@@ -134,12 +141,12 @@ cdef class Slider(UI_element):
             used_x = glfont.text_bounds(0,0,bytes(self.sync_val.value))
 
         glfont.push_state()
-        glfont.set_color_float(text_color)
+        glfont.set_color_float(self.text_color[:])
         glfont.draw_limited_text(x_spacer,0,self.label,self.field.size.x-3*x_spacer-used_x)
         glfont.pop_state()
 
-        line(Vec2(0,slider_handle_org_y),Vec2(self.field.size.x, slider_handle_org_y),line_default_color)
-        line(Vec2(0,slider_handle_org_y),Vec2(self.slider_pos.x,slider_handle_org_y),line_highlight_color)
+        line(Vec2(0,slider_handle_org_y),Vec2(self.field.size.x, slider_handle_org_y),self.line_default_color)
+        line(Vec2(0,slider_handle_org_y),Vec2(self.slider_pos.x,slider_handle_org_y),self.line_highlight_color)
 
         cdef float step_pixel_size,x
         if self.steps>1:
@@ -149,11 +156,11 @@ cdef class Slider(UI_element):
                 utils.draw_points(step_marks,size=slider_step_mark_size, color=slider_color_step)
 
         if self.selected:
-            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size_selected+slider_button_shadow, color=color_shadow,sharpness=shadow_sharpness)
-            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size_selected, color=color_selected)
+            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size_selected+slider_button_shadow, color=self.button_shadow_color[:],sharpness=shadow_sharpness)
+            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size_selected, color=self.button_selected_color[:])
         else:
-            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size+slider_button_shadow, color=button_shadow_color,sharpness=shadow_sharpness)
-            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size, color=button_color)
+            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size+slider_button_shadow, color=self.button_shadow_color[:],sharpness=shadow_sharpness)
+            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size, color=self.button_color[:])
 
         gl.glPopMatrix()
 
@@ -196,6 +203,7 @@ cdef class Switch(UI_element):
     cdef bint selected
     cdef int on_val,off_val
     cdef Synced_Value sync_val
+    cdef RGBA text_color, button_color_on, button_color_off, button_shadow_color, button_selected_color
 
     def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None):
         self.uid = id(self)
@@ -207,6 +215,13 @@ cdef class Switch(UI_element):
         self.field = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
         self.button = FitBox(Vec2(-switch_button_size-x_spacer,0),Vec2(switch_button_size-x_spacer,switch_button_size-x_spacer))
         self.selected = False
+        # rendering variables
+        self.text_color = RGBA(*color_text_default)
+        self.button_color_on = RGBA(*color_on)
+        self.button_color_off = RGBA(*color_default)
+        self.button_shadow_color = RGBA(*color_shadow)
+        self.button_selected_color = RGBA(*color_selected)
+
 
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None):
         pass
@@ -222,37 +237,36 @@ cdef class Switch(UI_element):
         self.button.compute(self.field)
 
         # read only rendering rules
-        cdef tuple text_color, button_color_on, button_color_off, button_shadow_color
         if self._read_only or parent_read_only:
-            text_color = color_text_read_only
-            button_color_on = color_on_read_only
-            button_color_off = color_default_read_only
-            button_shadow_color = color_shadow_read_only
+            self.text_color = RGBA(*color_text_read_only)
+            self.button_color_on = RGBA(*color_on_read_only)
+            self.button_color_off = RGBA(*color_default_read_only)
+            self.button_shadow_color = RGBA(*color_shadow_read_only)
         else:
-            text_color = color_text_default
-            button_color_on = color_on
-            button_color_off = color_default
-            button_shadow_color = color_shadow
+            self.text_color = RGBA(*color_text_default)
+            self.button_color_on = RGBA(*color_on)
+            self.button_color_off = RGBA(*color_default)
+            self.button_shadow_color = RGBA(*color_shadow)
 
 
         if self.sync_val.value == self.on_val:
             # on state
-            utils.draw_points(((self.button.center),),size=switch_button_size_on+switch_button_shadow, color=button_shadow_color,sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=switch_button_size_on, color=button_color_on)
+            utils.draw_points(((self.button.center),),size=switch_button_size_on+switch_button_shadow, color=self.button_shadow_color[:],sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=switch_button_size_on, color=self.button_color_on)
         elif self.selected:
-            utils.draw_points(((self.button.center),),size=switch_button_size_selected+switch_button_shadow, color=button_shadow_color,sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=switch_button_size_selected, color=color_selected)
+            utils.draw_points(((self.button.center),),size=switch_button_size_selected+switch_button_shadow, color=self.button_shadow_color[:],sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=switch_button_size_selected, color=self.button_selected_color[:])
         else:
             # off state
-            utils.draw_points(((self.button.center),),size=switch_button_size+switch_button_shadow, color=button_shadow_color,sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=switch_button_size, color=button_color_off)
+            utils.draw_points(((self.button.center),),size=switch_button_size+switch_button_shadow, color=self.button_shadow_color[:],sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=switch_button_size, color=self.button_color_off[:])
 
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
 
         glfont.push_state()
-        glfont.set_color_float(text_color)
+        glfont.set_color_float(self.text_color[:])
 
         glfont.draw_limited_text(x_spacer,0,self.label,self.field.size.x-(switch_button_size_on+switch_button_shadow))
 
@@ -299,6 +313,7 @@ cdef class Selector(UI_element):
     cdef Synced_Value sync_val
     cdef int selection_idx
     cdef bint selected
+    cdef RGBA text_color, triangle_color
 
     def __cinit__(self,bytes attribute_name, object attribute_context = None, selection = [], labels=None, label=None, setter=None, getter=None):
         self.uid = id(self)
@@ -306,6 +321,9 @@ cdef class Selector(UI_element):
 
         self.selection = list(selection)
         self.selection_labels = labels or [str(s) for s in selection]
+
+        self.text_color = RGBA(*color_text_default)
+        self.triangle_color = RGBA(*selector_triangle_color_default)
 
         for s in self.selection_labels:
             if not isinstance(s,str):
@@ -340,18 +358,17 @@ cdef class Selector(UI_element):
         self.select_field.compute(self.field)
 
         # read only rendering rules
-        cdef tuple text_color, triangle_color
         if self._read_only or parent_read_only:
-            text_color = color_text_read_only
-            triangle_color = selector_triangle_color_read_only
+            self.text_color = RGBA(*color_text_read_only)
+            self.triangle_color = RGBA(*selector_triangle_color_read_only)
         else:
-            text_color = color_text_default
-            triangle_color = selector_triangle_color_default
+            self.text_color = RGBA(*color_text_default)
+            self.triangle_color = RGBA(*selector_triangle_color_default)
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
         glfont.push_state()
-        glfont.set_color_float(text_color)
+        glfont.set_color_float(self.text_color[:])
 
         cdef float label_text_space = glfont.draw_text(x_spacer,0,self.label)
         glfont.pop_state()
@@ -369,12 +386,12 @@ cdef class Selector(UI_element):
                 glfont.draw_limited_text(x_spacer,y*line_height*ui_scale,self.selection_labels[y],self.select_field.size.x-x_spacer)
         else:
             glfont.push_state()
-            glfont.set_color_float(text_color)
+            glfont.set_color_float(self.text_color[:])
 
             glfont.draw_limited_text(x_spacer,0,self.selection_labels[self.selection_idx],self.select_field.size.x-x_spacer-self.select_field.size.y)
             triangle_h(self.select_field.size-Vec2(self.select_field.size.y,self.select_field.size.y),
                         Vec2(self.select_field.size.y,self.select_field.size.y),
-                        triangle_color)
+                        self.triangle_color)
             glfont.pop_state()
 
         gl.glPopMatrix()
@@ -436,6 +453,7 @@ cdef class TextInput(UI_element):
     cdef Synced_Value sync_val
     cdef bytes preview
     cdef int caret,start_char_idx,end_char_idx,start_highlight_idx
+    cdef RGBA text_color, text_input_highlight_color, text_input_line_highlight_color
 
     def __cinit__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
         self.uid = id(self)
@@ -451,6 +469,9 @@ cdef class TextInput(UI_element):
         self.start_char_idx = 0
         self.end_char_idx = self.caret
         self.start_highlight_idx = 0
+        self.text_color = RGBA(*color_text_default)
+        self.text_input_highlight_color = RGBA(*text_input_highlight_color)
+        self.text_input_line_highlight_color = RGBA(*text_input_line_highlight_color)
 
 
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
@@ -461,12 +482,12 @@ cdef class TextInput(UI_element):
         self.sync_val.sync()
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
-        cdef tuple text_color
+
         # read only rendering rules
         if self._read_only or parent_read_only:
-            text_color = color_text_read_only
+            self.text_color = RGBA(*color_text_read_only)
         else:
-            text_color = color_text_default
+            self.text_color = RGBA(*color_text_default)
 
         #update appearance:
         self.outline.compute(parent)
@@ -474,7 +495,7 @@ cdef class TextInput(UI_element):
         self.textfield.compute(self.field)
 
         glfont.push_state()
-        glfont.set_color_float(text_color)
+        glfont.set_color_float(self.text_color[:])
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
@@ -628,7 +649,7 @@ cdef class TextInput(UI_element):
             gl.glPushMatrix()
             #then transform locally and render the UI element
             gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
-            line(Vec2(0,self.textfield.size.y), self.textfield.size,text_input_line_highlight_color)
+            line(Vec2(0,self.textfield.size.y), self.textfield.size,self.text_input_line_highlight_color)
 
             glfont.draw_limited_text(x_spacer,0,self.preview[self.start_char_idx:],self.textfield.size.x-x_spacer)
 
@@ -637,7 +658,7 @@ cdef class TextInput(UI_element):
             if self.highlight:
                rect_corners(Vec2(x,0),Vec2(min(self.textfield.size.x-x_spacer,
                     glfont.text_bounds(0,0,highlight_text)+x_spacer),self.textfield.size.y),
-                    text_input_highlight_color)
+                    self.text_input_highlight_color)
 
             # draw the caret
             gl.glColor4f(1,1,1,.5)
@@ -671,6 +692,7 @@ cdef class Button(UI_element):
     cdef FitBox button
     cdef bint selected
     cdef object function
+    cdef RGBA text_color
 
     def __cinit__(self,label, setter):
         self.uid = id(self)
@@ -679,6 +701,7 @@ cdef class Button(UI_element):
         self.button = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
         self.selected = False
         self.function = setter
+        self.text_color = RGBA(*color_text_default)
 
     def __init__(self,label, setter):
         pass
@@ -688,9 +711,9 @@ cdef class Button(UI_element):
         cdef tuple text_color
         # read only rendering rules
         if self._read_only or parent_read_only:
-            text_color = color_text_read_only
+            self.text_color = RGBA(*color_text_read_only)
         else:
-            text_color = color_text_default
+            self.text_color = RGBA(*color_text_default)
 
         #update appearance:
         self.outline.compute(parent)
@@ -705,7 +728,7 @@ cdef class Button(UI_element):
         gl.glPushMatrix()
         glfont.push_state()
         gl.glTranslatef(int(self.button.org.x),int(self.button.org.y),0)
-        glfont.set_color_float(text_color)
+        glfont.set_color_float(self.text_color[:])
         glfont.draw_limited_text(x_spacer,0,self.label,self.button.size.x-x_spacer)
         glfont.pop_state()
         gl.glPopMatrix()
