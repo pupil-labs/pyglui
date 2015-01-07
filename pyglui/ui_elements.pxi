@@ -60,7 +60,7 @@ cdef class Slider(UI_element):
     cdef Vec2 slider_pos
     cdef Synced_Value sync_val
     cdef int steps
-    cdef RGBA line_default_color, line_highlight_color, text_color, button_color, button_selected_color, button_shadow_color
+    cdef RGBA line_default_color, line_highlight_color, text_color, button_color, button_selected_color, button_shadow_color,step_color
 
     def __cinit__(self,bytes attribute_name, object attribute_context = None,label = None, min = 0, max = 100, step = 0,setter= None,getter= None):
         self.uid = id(self)
@@ -87,6 +87,7 @@ cdef class Slider(UI_element):
         self.button_color = RGBA(*color_default)
         self.button_selected_color = RGBA(*color_selected)
         self.button_shadow_color = RGBA(*color_shadow)
+        self.step_color = RGBA(*slider_color_step)
 
 
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
@@ -153,7 +154,7 @@ cdef class Slider(UI_element):
             step_pixel_size = lmap(self.minimum+self.step,self.minimum,self.maximum,0,self.field.size.x)
             if step_pixel_size >= slider_button_size*ui_scale:
                 step_marks = [(x*step_pixel_size,slider_handle_org_y) for x in range(self.steps+1)]
-                utils.draw_points(step_marks,size=slider_step_mark_size, color=slider_color_step)
+                utils.draw_points(step_marks,size=slider_step_mark_size, color=self.step_color)
 
         if self.selected:
             utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size_selected+slider_button_shadow, color=self.button_shadow_color,sharpness=shadow_sharpness)
@@ -748,6 +749,40 @@ cdef class Button(UI_element):
                     self.selected = False
                     should_redraw = True
                     self.function()
+
+
+cdef class Info_Text(UI_element):
+    cdef bytes text
+    cdef int max_height
+    cdef FitBox text_area
+
+
+    def __cinit__(self, text):
+        self.text = bytes(text)
+        self.max_height = 200
+        self.outline = FitBox(Vec2(0,0),Vec2(0,0))
+        self.text_area = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
+
+    def __init__(self, text):
+        pass
+
+    cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        #update appearance
+        self.outline.compute(parent)
+        self.text_area.compute(self.outline)
+        left_word, height = glfont.draw_breaking_text(self.text_area.org.x, self.text_area.org.y, self.text, self.text_area.size.x,self.max_height )
+        self.text_area.design_size.y  = (height-self.text_area.org.y)/ui_scale
+        self.outline.design_size.y = self.text_area.design_size.y+outline_padding*2
+        self.outline.compute(parent)
+
+    cpdef precompute(self,FitBox parent):
+        self.outline.compute(parent)
+        self.text_area.compute(self.outline)
+        left_word, height = glfont.compute_breaking_text(self.text_area.org.x, self.text_area.org.y, self.text, self.text_area.size.x,self.max_height )
+        self.text_area.design_size.y  = (height-self.text_area.org.y)/ui_scale
+        self.outline.design_size.y = self.text_area.design_size.y+outline_padding*2
+        self.outline.compute(parent)
+
 
 
 ########## Thumb ##########
