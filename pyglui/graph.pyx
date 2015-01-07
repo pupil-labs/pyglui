@@ -176,7 +176,7 @@ cdef class Line_Graph:
         self.glfont = fs.Context()
         self.glfont.add_font('opensans', path.join(path.dirname(__file__),'OpenSans-Regular.ttf'))
         self.glfont.set_size(18)
-        self.glfont.set_align(fs.FONS_ALIGN_RIGHT | fs.FONS_ALIGN_MIDDLE)
+        self.glfont.set_align(fs.FONS_ALIGN_LEFT | fs.FONS_ALIGN_MIDDLE)
         self.color = RGBA(.3,.7,.2,.9)
 
 
@@ -254,18 +254,17 @@ cdef class Line_Graph:
 
 
         for i in range(self.idx,self.d_len):
-            gl.glVertex3f(x,self.data[i]-self.avg,0)
+            gl.glVertex3f(x,self.data[i],0)
             x +=self.bar_width
 
         for i in range(self.idx):
-            gl.glVertex3f(x,self.data[i]-self.avg,0)
+            gl.glVertex3f(x,self.data[i],0)
             x +=self.bar_width
 
         gl.glEnd()
         gl.glPopMatrix()
-
-
-        self.glfont.draw_text(-10,0,bytes(self.label%self.avg))
+        self.glfont.set_color_float(self.color[:])
+        self.glfont.draw_text(x +10 ,-self.data[i],bytes(self.label%self.avg))
         gl.glPopMatrix()
 
 
