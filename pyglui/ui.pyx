@@ -1,7 +1,10 @@
 # cython: profile=False
 
-from cygl cimport glew as gl
-from cygl cimport utils
+from pyglui.cygl cimport glew as gl
+from pyglui.cygl cimport utils
+from pyglui.cygl.utils cimport RGBA
+
+
 from pyfontstash cimport fontstash as fs
 include 'version.pxi'
 include 'gldraw.pxi'
@@ -617,44 +620,6 @@ cdef class Vec2:
     def __setitem__(self,idx,obj):
         if isinstance(idx,slice):
             self.x,self.y = obj[0], obj[1] #we should be more specific about the kind of slice
-        else:
-            if idx ==0:
-                self.x = obj
-            elif idx == 1:
-                self.y == obj
-            else:
-                raise IndexError()
-
-cdef class RGBA:
-    cdef public float r,g,b,a
-    def __cinit__(self,r=1,g=1,b=1,a=1):
-        self.r = r
-        self.g = g
-        self.b = b
-        self.a = a
-    def __init__(self,r=1,g=1,b=1,a=1):
-        pass
-
-    def __getitem__(self,idx):
-        if isinstance(idx,slice):
-            return (self.r,self.g,self.b,self.a)[idx]
-        else:
-            if idx==0:
-                return self.r
-            elif idx==1:
-                return self.g
-            elif idx==2:
-                return self.b
-            elif idx==3:
-                return self.a
-
-            raise IndexError()
-
-    def __setitem__(self,idx,obj):
-        if isinstance(idx,slice):
-            t = self[:]
-            t[slice] = obj
-            self.r,self.g,self.b,self.a = t
         else:
             if idx ==0:
                 self.x = obj

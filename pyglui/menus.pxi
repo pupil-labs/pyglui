@@ -22,6 +22,11 @@ cdef class Base_Menu(UI_element):
             raise Exception("Can only append UI elements, not: '%s'"%obj )
         self.elements.append(obj)
 
+    def insert(self,idx, obj):
+        if not issubclass(obj.__class__,UI_element):
+            raise Exception("Can only append UI elements, not: '%s'"%obj )
+        self.elements.insert(idx,obj)
+
     def extend(self, objs):
         for obj in objs:
             if not issubclass(obj.__class__,UI_element):
@@ -537,18 +542,13 @@ cdef class Scrolling_Menu(Base_Menu):
                 return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':False}
 
         def __set__(self,new_conf):
-            print new_conf
             if new_conf.get('collapsed',False):
                 self.uncollapsed_outline.design_org[:] = new_conf.get('pos',self.outline.design_org[:])
                 self.uncollapsed_outline.design_size[:] = new_conf.get('size',self.outline.design_size[:])
-                #toggle if needed
                 self.outline.collapse()
-
             else:
                 self.outline.design_org[:] = new_conf.get('pos',self.outline.design_org[:])
                 self.outline.design_size[:] = new_conf.get('size',self.outline.design_size[:])
 
-
             self.header_pos = self.header_pos #update layout
-            print self.outline
 

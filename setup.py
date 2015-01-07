@@ -6,15 +6,18 @@ from distutils.extension import Extension
 from Cython.Build import cythonize
 
 from pyglui.cygl.glew_pxd import generate_pxd
+
+
+includes = ['pyglui/cygl/']
 if platform.system() == 'Darwin':
     glew_header = '/usr/local/Cellar/glew/1.10.0/include/GL/glew.h'
-    includes = ['/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/','pyglui/cygl']
+    includes += ['/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/']
     link_args = []
     libs = ['GLEW']
     libglew = [] #we are using the dylib
 elif platform.system() == 'Linux':
     glew_header = '/usr/include/GL/glew.h'
-    includes = ['/usr/include/GL','pyglui/cygl']
+    includes += ['/usr/include/GL']
     libs = ['GLEW']
     link_args = []
 else:
@@ -78,5 +81,6 @@ setup( 	name="pyglui",
 		description="OpenGL UI powered by cython",
         package_dir={'pyglui':'pyglui'},
         package_data={'pyglui': ['*.ttf']}, #fonts
+        exclude_package_data= { '': ['glew_pxd.py'] },
 		ext_modules=cythonize(extensions)
 )

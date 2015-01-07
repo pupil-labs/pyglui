@@ -1,6 +1,5 @@
 from cython cimport view
-from cygl cimport glew as gl
-from cygl cimport utils
+from pyglui.cygl cimport glew as gl
 from pyfontstash cimport fontstash as fs
 from os import path
 include 'version.pxi'
@@ -29,7 +28,7 @@ def pop_view():
     gl.glPopMatrix()
     gl.glMatrixMode(gl.GL_MODELVIEW)
 
-cdef class Graph:
+cdef class Bar_Graph:
     cdef fs.Context glfont
     cdef double[::1] data
     cdef public float avg,bar_width,min_val, max_val

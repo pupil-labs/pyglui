@@ -228,13 +228,13 @@ def demo():
 
     from pyglui import graph
     print graph.__version__
-    cpu_g = graph.Graph()
+    cpu_g = graph.Bar_Graph()
     cpu_g.pos = (20,100)
     cpu_g.update_fn = ps.get_cpu_percent
     cpu_g.update_rate = 5
     cpu_g.label = 'CPU %0.1f'
 
-    fps_g = graph.Graph()
+    fps_g = graph.Bar_Graph()
     fps_g.pos = (140,100)
     fps_g.update_rate = 5
     fps_g.label = "%0.0f FPS"
