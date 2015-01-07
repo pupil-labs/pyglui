@@ -234,7 +234,7 @@ def demo():
     cpu_g.update_rate = 5
     cpu_g.label = 'CPU %0.1f'
 
-    fps_g = graph.Bar_Graph()
+    fps_g = graph.Line_Graph()
     fps_g.pos = (140,100)
     fps_g.update_rate = 5
     fps_g.label = "%0.0f FPS"
