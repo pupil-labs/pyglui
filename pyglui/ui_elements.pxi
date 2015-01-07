@@ -156,11 +156,11 @@ cdef class Slider(UI_element):
                 utils.draw_points(step_marks,size=slider_step_mark_size, color=slider_color_step)
 
         if self.selected:
-            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size_selected+slider_button_shadow, color=self.button_shadow_color[:],sharpness=shadow_sharpness)
-            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size_selected, color=self.button_selected_color[:])
+            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size_selected+slider_button_shadow, color=self.button_shadow_color,sharpness=shadow_sharpness)
+            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size_selected, color=self.button_selected_color)
         else:
-            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size+slider_button_shadow, color=self.button_shadow_color[:],sharpness=shadow_sharpness)
-            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size, color=self.button_color[:])
+            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size+slider_button_shadow, color=self.button_shadow_color,sharpness=shadow_sharpness)
+            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size, color=self.button_color)
 
         gl.glPopMatrix()
 
@@ -251,15 +251,15 @@ cdef class Switch(UI_element):
 
         if self.sync_val.value == self.on_val:
             # on state
-            utils.draw_points(((self.button.center),),size=switch_button_size_on+switch_button_shadow, color=self.button_shadow_color[:],sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=switch_button_size_on+switch_button_shadow, color=self.button_shadow_color,sharpness=shadow_sharpness)
             utils.draw_points(((self.button.center),),size=switch_button_size_on, color=self.button_color_on)
         elif self.selected:
-            utils.draw_points(((self.button.center),),size=switch_button_size_selected+switch_button_shadow, color=self.button_shadow_color[:],sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=switch_button_size_selected, color=self.button_selected_color[:])
+            utils.draw_points(((self.button.center),),size=switch_button_size_selected+switch_button_shadow, color=self.button_shadow_color,sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=switch_button_size_selected, color=self.button_selected_color)
         else:
             # off state
-            utils.draw_points(((self.button.center),),size=switch_button_size+switch_button_shadow, color=self.button_shadow_color[:],sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=switch_button_size, color=self.button_color_off[:])
+            utils.draw_points(((self.button.center),),size=switch_button_size+switch_button_shadow, color=self.button_shadow_color,sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=switch_button_size, color=self.button_color_off)
 
 
         gl.glPushMatrix()
@@ -762,8 +762,9 @@ cdef class Thumb(UI_element):
     cdef bint selected
     cdef int on_val,off_val
     cdef Synced_Value sync_val
-    cdef public RGBA on_color
+    cdef public RGBA thumb_on_color
     cdef bytes hotkey
+    cdef RGBA thumb_shadow_color, thumb_off_color
 
     def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None,bytes hotkey = None, RGBA on_color=RGBA(*thumb_default_on_color)):
         self.uid = id(self)
@@ -774,8 +775,10 @@ cdef class Thumb(UI_element):
         self.outline = FitBox(Vec2(0,0),Vec2(thumb_outline_size,thumb_outline_size))
         self.button = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
         self.selected = False
-        self.on_color = on_color
         self.hotkey = hotkey
+        self.thumb_on_color = on_color
+        self.thumb_shadow_color = RGBA(*thumb_color_shadow)
+        self.thumb_off_color = RGBA(*thumb_color_off)
 
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None,bytes hotkey = None,RGBA on_color=RGBA(*thumb_default_on_color)):
         pass
@@ -790,14 +793,14 @@ cdef class Thumb(UI_element):
         self.outline.compute(parent)
         self.button.compute(self.outline)
         if self.sync_val.value == self.on_val:
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=thumb_color_shadow,sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_on, color=self.on_color[:],sharpness=thumb_button_sharpness)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=self.thumb_shadow_color,sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_on, color=self.thumb_on_color,sharpness=thumb_button_sharpness)
         elif self.selected:
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=thumb_color_shadow,sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_selected, color=thumb_color_on,sharpness=thumb_button_sharpness)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=self.thumb_shadow_color,sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_selected, color=self.thumb_on_color,sharpness=thumb_button_sharpness)
         else:
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=thumb_color_shadow,sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_off, color=thumb_color_off,sharpness=thumb_button_sharpness)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=self.thumb_shadow_color,sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_off, color=self.thumb_off_color,sharpness=thumb_button_sharpness)
 
         glfont.push_state()
         glfont.set_size(max(1,int(min(self.button.size))-thumb_font_padding))
