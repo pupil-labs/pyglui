@@ -770,7 +770,10 @@ cdef class Info_Text(UI_element):
         #update appearance
         self.outline.compute(parent)
         self.text_area.compute(self.outline)
+        glfont.push_state()
+        glfont.set_color_float(color_text_info)
         left_word, height = glfont.draw_breaking_text(self.text_area.org.x, self.text_area.org.y, self.text, self.text_area.size.x,self.max_height )
+        glfont.pop_state()
         self.text_area.design_size.y  = (height-self.text_area.org.y)/ui_scale
         self.outline.design_size.y = self.text_area.design_size.y+outline_padding*2
         self.outline.compute(parent)
