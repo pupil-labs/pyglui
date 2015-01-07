@@ -371,7 +371,7 @@ cdef class Selector(UI_element):
         glfont.push_state()
         glfont.set_color_float(self.text_color[:])
 
-        cdef float label_text_space = glfont.draw_text(x_spacer,0,self.label)
+        cdef float label_text_space = glfont.draw_text(0,0,self.label)
         glfont.pop_state()
         gl.glPopMatrix()
 
