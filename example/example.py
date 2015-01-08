@@ -189,7 +189,7 @@ def demo():
 
     m = ui.Scrolling_Menu("MyMenu",pos=(250,30),size=(300,500),header_pos='top')
     for x in range(1):
-        m.append(ui.Info_Text("This is my info text I wounder if it breaks and when it does how does it look? Slider label with long label text to test overflow handling" ))
+        m.append(ui.Info_Text("This is my multiline info text. I wonder if multilines break as designed... How does it look? Info Text with long label text to test multiline break handling." ))
         m.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
         m.append(ui.Slider("bur",foo,step=50,min=1,max=1005, label="Slider label with long label text to test overflow handling"))
         m.append(ui.Button("Say Hi!",print_hello))
