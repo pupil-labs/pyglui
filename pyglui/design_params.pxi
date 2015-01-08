@@ -69,12 +69,11 @@ DEF button_outline_size_y = 40
 
 # Thumb - design parameters
 DEF thumb_outline_size = 120
-DEF thumb_default_on_color = (.5,.5,.9,.9)
 DEF thumb_button_size_offset_on = 25
 DEF thumb_button_size_offset_selected = 20
 DEF thumb_button_size_offset_off = thumb_button_size_offset_on
-DEF thumb_color_on = (.9,.9,.5,.6)
-DEF thumb_color_off = (.5,.5,.5,.6)
+DEF thumb_color_on = (.5,.5,.9,.9)
+DEF thumb_color_off = (.5,.5,.5,.9)
 DEF thumb_color_shadow = (.0,.0,.0,.5)
 DEF thumb_button_sharpness = 0.9
 DEF thumb_font_padding = 30

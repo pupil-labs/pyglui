@@ -51,8 +51,7 @@ cdef class Bar_Graph:
         self.glfont = fs.Context()
         self.glfont.add_font('opensans', path.join(path.dirname(__file__),'OpenSans-Regular.ttf'))
         self.glfont.set_size(18)
-        self.color = RGBA(.3,.7,.2,.9)
-
+        self.color = RGBA(.1,.1,.7,.5)
     def __init__(self,int data_points = 25,float min_val = 0, float max_val = 100):
         cdef int x
         for x in range(data_points):
@@ -177,7 +176,7 @@ cdef class Line_Graph:
         self.glfont.add_font('opensans', path.join(path.dirname(__file__),'OpenSans-Regular.ttf'))
         self.glfont.set_size(18)
         self.glfont.set_align(fs.FONS_ALIGN_LEFT | fs.FONS_ALIGN_MIDDLE)
-        self.color = RGBA(.3,.7,.2,.9)
+        self.color = RGBA(.1,.1,.7,.5)
 
 
 

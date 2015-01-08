@@ -98,6 +98,7 @@ cdef class UI:
         window_size = self.window.size
 
         if should_redraw:
+            #print "UI is redrawing the screen"
             push_view(self.window.size)
             render_to_ui_texture(self.ui_layer)
             glfont.clear_state()

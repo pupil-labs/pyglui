@@ -795,6 +795,7 @@ cdef class Thumb(UI_element):
     '''
     Not a classical UI element. Use button instead.
     Thumb is a circular type of switch/button
+    It can also display status info via a overlay
     '''
     cdef public FitBox button
     cdef bint selected
@@ -802,8 +803,9 @@ cdef class Thumb(UI_element):
     cdef Synced_Value sync_val
     cdef public RGBA on_color,off_color
     cdef bytes hotkey
+    cdef bytes _status_text
 
-    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None,bytes hotkey = None, RGBA on_color=RGBA(*thumb_default_on_color)):
+    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None,bytes hotkey = None,  on_color=thumb_color_on):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
@@ -812,12 +814,24 @@ cdef class Thumb(UI_element):
         self.outline = FitBox(Vec2(0,0),Vec2(thumb_outline_size,thumb_outline_size))
         self.button = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
         self.selected = False
-        self.on_color = on_color
-        self.on_color = RGBA(.5,.5,.5,on_color.a)
+        self.on_color = RGBA(*on_color)
+        self.off_color = RGBA(*thumb_color_off)
         self.hotkey = hotkey
+        self._status_text = bytes('')
 
-    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None,bytes hotkey = None,RGBA on_color=RGBA(*thumb_default_on_color)):
+    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None,bytes hotkey = None, on_color=thumb_color_on):
         pass
+
+
+    property status_text:
+        def __get__(self):
+            return self._status_text
+        def __set__(self,bytes new_status_text):
+            if self._status_text != new_status_text:
+                global should_redraw
+                should_redraw = True
+                self._status_text = new_status_text
+
 
 
     cpdef sync(self):
@@ -844,6 +858,14 @@ cdef class Thumb(UI_element):
         glfont.set_blur(1.)
         glfont.set_font('roboto')
         glfont.draw_text(self.button.center[0],self.button.center[1],self.label[0])
+        glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_LEFT)
+        glfont.set_size( max(1, int( (min(self.button.size) )-thumb_font_padding )/2.) )
+        glfont.set_color_float((0,0,0,1))
+        glfont.set_blur(10.5)
+        glfont.draw_text(self.button.center[0]+self.button.size.x/2.,self.button.center[1],self._status_text)
+        glfont.set_color_float(self.on_color[:])
+        glfont.set_blur(.1)
+        glfont.draw_text(self.button.center[0]+self.button.size.x/2.,self.button.center[1],self._status_text)
         glfont.pop_state()
         glfont.set_font('opensans')
 
@@ -882,3 +904,5 @@ cdef class Thumb(UI_element):
                             self.sync_val.value = self.on_val
                             self.selected = False
                             should_redraw = True
+
+
