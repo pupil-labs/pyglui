@@ -377,24 +377,25 @@ cdef class Selector(UI_element):
 
         self.select_field.org.x += label_text_space
         self.select_field.size.x  = max(0.0,self.select_field.size.x-label_text_space)
-        self.select_field.sketch()
+        #self.select_field.sketch()
+        line(self.select_field.org+Vec2(0,self.select_field.size.y),self.select_field.org+self.select_field.size,color=self.triangle_color)
 
         gl.glPushMatrix()
         gl.glTranslatef(int(self.select_field.org.x),int(self.select_field.org.y),0)
+
+        glfont.push_state()
+        glfont.set_color_float(self.text_color[:])
 
         if self.selected:
             for y in range(len(self.selection)):
                 glfont.draw_limited_text(x_spacer,y*line_height*ui_scale,self.selection_labels[y],self.select_field.size.x-x_spacer)
         else:
-            glfont.push_state()
-            glfont.set_color_float(self.text_color[:])
-
             glfont.draw_limited_text(x_spacer,0,self.selection_labels[self.selection_idx],self.select_field.size.x-x_spacer-self.select_field.size.y)
-            triangle_h(self.select_field.size-Vec2(self.select_field.size.y,self.select_field.size.y),
+            if len(self.selection) > 1:
+                triangle_h(self.select_field.size-Vec2(self.select_field.size.y,self.select_field.size.y),
                         Vec2(self.select_field.size.y,self.select_field.size.y),
                         self.triangle_color)
-            glfont.pop_state()
-
+        glfont.pop_state()
         gl.glPopMatrix()
 
     cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
