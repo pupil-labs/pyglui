@@ -18,7 +18,7 @@ if platform.system() == 'Darwin':
 elif platform.system() == 'Linux':
     glew_header = '/usr/include/GL/glew.h'
     includes += ['/usr/include/GL']
-    libs = ['GLEW']
+    libs = ['GLEW','GL'] #GL needed for fonstash
     link_args = []
 else:
     raise Exception('Platform build not implemented.')
