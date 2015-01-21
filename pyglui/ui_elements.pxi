@@ -328,7 +328,7 @@ cdef class Selector(UI_element):
 
         for s in self.selection_labels:
             if not isinstance(s,str):
-                raise Exception('Lables need to be strings not "%s"'%s)
+                raise Exception('Labels need to be strings not "%s"'%s)
 
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter,self._on_change)
 
