@@ -130,10 +130,12 @@ def demo():
 
     print('GL:',glGetString(GL_VERSION))
     print('GLFW3:',glfwGetVersionString())
-    class t(object):
-        pass
+    class Temp(object):
+        """Temp class to make objects"""
+        def __init__(self):
+            pass
 
-    foo = t()
+    foo = Temp()
     foo.bar = 34
     foo.bur = 4
     foo.mytext = 'change me!'
@@ -179,7 +181,7 @@ def demo():
         sm.append(ssm)
 
         sidebar.append(sm)
-        sm.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
+        sm.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena']) )
 
         sm.append(ui.Button("Say Hi!",print_hello))
         sm.append(ui.Button("Say Hi!",print_hello))
@@ -247,7 +249,7 @@ def demo():
 
     while not quit:
         dt,ts = time.time()-ts,time.time()
-
+        
         clear_gl_screen()
         # gui.scale +=.001
         # print gui.scale
