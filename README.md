@@ -9,7 +9,7 @@ Cython powered OpenGL gui.
 
 * Designed to be used with glfw but should run with other window managers as well.
 
-* Requires OpenGL1.1 with extensions for blending and framebufferobjects.
+* Requires GLEW.
 
 * Uses pyfonstash for rendering text.
 
