@@ -154,14 +154,14 @@ cdef class Slider(UI_element):
             step_pixel_size = lmap(self.minimum+self.step,self.minimum,self.maximum,0,self.field.size.x)
             if step_pixel_size >= slider_button_size*ui_scale:
                 step_marks = [(x*step_pixel_size,slider_handle_org_y) for x in range(self.steps+1)]
-                utils.draw_points(step_marks,size=slider_step_mark_size, color=self.step_color)
+                utils.draw_points(step_marks,size=slider_step_mark_size*ui_scale, color=self.step_color)
 
         if self.selected:
-            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size_selected+slider_button_shadow, color=self.button_shadow_color,sharpness=shadow_sharpness)
-            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size_selected, color=self.button_selected_color)
+            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=(slider_button_size_selected+slider_button_shadow)*ui_scale, color=self.button_shadow_color,sharpness=shadow_sharpness)
+            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size_selected*ui_scale, color=self.button_selected_color)
         else:
-            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size+slider_button_shadow, color=self.button_shadow_color,sharpness=shadow_sharpness)
-            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size, color=self.button_color)
+            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=(slider_button_size+slider_button_shadow)+ui_scale, color=self.button_shadow_color,sharpness=shadow_sharpness)
+            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size*ui_scale, color=self.button_color)
 
         gl.glPopMatrix()
 
@@ -252,15 +252,15 @@ cdef class Switch(UI_element):
 
         if self.sync_val.value == self.on_val:
             # on state
-            utils.draw_points(((self.button.center),),size=switch_button_size_on+switch_button_shadow, color=self.button_shadow_color,sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=switch_button_size_on, color=self.button_color_on)
+            utils.draw_points(((self.button.center),),size=(switch_button_size_on+switch_button_shadow)*ui_scale, color=self.button_shadow_color,sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=switch_button_size_on*ui_scale, color=self.button_color_on)
         elif self.selected:
-            utils.draw_points(((self.button.center),),size=switch_button_size_selected+switch_button_shadow, color=self.button_shadow_color,sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=switch_button_size_selected, color=self.button_selected_color)
+            utils.draw_points(((self.button.center),),size=(switch_button_size_selected+switch_button_shadow)*ui_scale, color=self.button_shadow_color,sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=switch_button_size_selected*ui_scale, color=self.button_selected_color)
         else:
             # off state
-            utils.draw_points(((self.button.center),),size=switch_button_size+switch_button_shadow, color=self.button_shadow_color,sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=switch_button_size, color=self.button_color_off)
+            utils.draw_points(((self.button.center),),size=(switch_button_size+switch_button_shadow)*ui_scale, color=self.button_shadow_color,sharpness=shadow_sharpness)
+            utils.draw_points(((self.button.center),),size=switch_button_size*ui_scale, color=self.button_color_off)
 
 
         gl.glPushMatrix()
