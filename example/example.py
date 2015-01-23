@@ -255,8 +255,9 @@ def demo():
     utils.update_named_texture(tex,a)
     while not quit:
         dt,ts = time.time()-ts,time.time()
-
         clear_gl_screen()
+        utils.draw_polyline( [(20,20),(500,500)] )
+
         # gui.scale +=.001
         # print gui.scale
         cpu_g.update()
