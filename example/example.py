@@ -234,12 +234,12 @@ def demo():
     cpu_g = graph.Line_Graph()
     cpu_g.pos = (50,100)
     cpu_g.update_fn = ps.get_cpu_percent
-    cpu_g.update_rate = 15
+    cpu_g.update_rate = 5
     cpu_g.label = 'CPU %0.1f'
 
     fps_g = graph.Line_Graph()
     fps_g.pos = (50,100)
-    fps_g.update_rate = 15
+    fps_g.update_rate = 5
     fps_g.label = "%0.0f FPS"
     fps_g.color[:] = .1,.1,.8,.9
 
@@ -247,9 +247,15 @@ def demo():
     # gui.update()
     # on_resize(window,*glfwGetWindowSize(window))
 
+    import numpy as np
+    from cygl import utils
+
+    a = (np.random.random_sample((1280,720,3))*100).astype(dtype=np.uint8)
+    tex = utils.create_named_texture(a.shape)
+    utils.update_named_texture(tex,a)
     while not quit:
         dt,ts = time.time()-ts,time.time()
-        
+
         clear_gl_screen()
         # gui.scale +=.001
         # print gui.scale
@@ -261,7 +267,11 @@ def demo():
         # if foo.bar >= 100:
             # foo.bar = 0
         gui.update()
-
+        # tex = utils.create_named_texture(a.shape)
+        # a = (np.random.random_sample((1280,720,1))*100).astype(dtype=np.uint8)
+        utils.update_named_texture(tex,a)
+        utils.draw_named_texture(tex,quad=((500.,500.),(1000.,500.),(1000.,1000.),(500.,1000.)))
+        # utils.draw_gl_texture(a)
         glfwSwapBuffers(window)
         glfwPollEvents()
         # time.sleep(.03)
