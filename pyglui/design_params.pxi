@@ -25,7 +25,7 @@ DEF color_shadow = (.0,.0,.0,.8)
 DEF color_shadow_read_only = (.0,.0,.0,.0)
 DEF shadow_sharpness = 0.3
 DEF color_text_default = (1.,1.,1.,1.)
-DEF color_text_info = (1.,1.,1.,.9)
+DEF color_text_info = (1.,1.,1.,.75)
 DEF color_text_read_only = (.5,.5,.5,.5)
 DEF color_line_default = (1.,1.,1.,.5)
 
