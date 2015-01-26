@@ -173,6 +173,7 @@ cdef class Growing_Menu(Base_Menu):
     '''
     Growing_Menu is a movable object on the canvas grows with its content
 
+    size height will be ignored as it depend on the content.
     size positive -> size from self.org
     size 0 -> span into parent context and lock it like this. If you want it draggable use -.001 or .001
     size negative -> make the box to up to size pixels to the parent container.
@@ -317,7 +318,7 @@ cdef class Growing_Menu(Base_Menu):
 
     property configuration:
         def __get__(self):
-            return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':self.collapsed}
+            return {'pos':self.outline.design_org[:],'size':[self.outline.design_size[0],0],'collapsed':self.collapsed}
 
         def __set__(self,new_conf):
             #load from configutation if avaible, else keep old setting
@@ -360,7 +361,6 @@ cdef class Scrolling_Menu(Base_Menu):
 
         self.scrollstate = Vec2(0,0)
         self.scrollbar = Draggable(Vec2(0,0),Vec2(0,0),self.scrollstate,arrest_axis=1,zero_crossing=True)
-        self.scroll_factor = 1.
         self.header_pos = header_pos
         self.color = RGBA(0,0,0,.3)
 
@@ -438,31 +438,43 @@ cdef class Scrolling_Menu(Base_Menu):
             self.draw_scroll_window_elements(parent_read_only)
 
     cdef draw_scroll_window_elements(self, bint parent_read_only):
-        self.push_scissor()
-        self.scrollbar.outline.compute(self.element_space)
+
         #compute scroll stack height.
         cdef float h = sum([e.height for e in self.elements])
-
-
-        #display that we have scrollable content
-        #if self.scroll_factor < 1:
-        #    self.element_space.size.x -=20
-
 
         #If the scollbar is not active, make sure the content is not scrolled away:
         if not self.scrollbar.selected or 1:
             #self.scrollstate.y = clamp(self.scrollstate.y,min(-h,self.element_space.size.y-h),0)
-            self.scrollstate.y = clamp(self.scrollstate.y,(-h/ui_scale)+35,0)
+            self.scrollstate.y = clamp(self.scrollstate.y*ui_scale,min(0,-h+self.element_space.size.y),0)/ui_scale
 
+        self.push_scissor()
+        self.scrollbar.outline.compute(self.element_space)
         self.element_space.org.y += self.scrollstate.y*ui_scale
 
+        #now we compute h for real:
+        cdef float e_h = 0
+        h = 0
         #render elements
         for e in self.elements:
             e.draw(self.element_space,parent_read_only = parent_read_only or self._read_only)
-            self.element_space.org.y+= e.height
-        self.element_space.compute(self.outline)
+            e_h = e.height
+            h += e_h
+            self.element_space.org.y+= e_h
+        self.element_space.org.y = h
 
         self.pop_scissor()
+
+        cdef float scroll_factor = self.element_space.size.y/h
+        cdef float scroll_handle_offset = max(0,-self.scrollstate.y*ui_scale)*scroll_factor
+        cdef float scroll_handle_size = self.element_space.size.y * scroll_factor
+
+        #display that we have scrollable content
+        if scroll_factor < 1:
+            #self.element_space.size.x -= 10*ui_scale #shrint element space width to make room for scroll bar
+            v_pad = 10*ui_scale
+            start = self.element_space.org + self.element_space.size + Vec2(5*ui_scale,scroll_handle_offset-self.element_space.size.y+v_pad)
+            end = self.element_space.org + self.element_space.size + Vec2(5*ui_scale,scroll_handle_offset+scroll_handle_size-self.element_space.size.y-v_pad)
+            line(start,end,RGBA(*color_line_default))
 
     cdef push_scissor(self):
         # compute and set gl scissor
