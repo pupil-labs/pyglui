@@ -460,7 +460,7 @@ cdef class Scrolling_Menu(Base_Menu):
             e_h = e.height
             h += e_h
             self.element_space.org.y+= e_h
-        self.element_space.org.y = h
+        self.element_space.compute(self.outline)
 
         self.pop_scissor()
 
