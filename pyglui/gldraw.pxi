@@ -15,7 +15,7 @@ cdef inline pop_view():
     gl.glPopMatrix()
 
 cdef inline rect(Vec2 org, Vec2 size, RGBA color):
-    gl.glColor4f(color.r, color.g, color.b, color.a) 
+    gl.glColor4f(color.r, color.g, color.b, color.a)
     gl.glBegin(gl.GL_POLYGON)
     gl.glVertex3f(org.x,org.y,0.0)
     gl.glVertex3f(org.x,org.y+size.y,0.0)
@@ -34,26 +34,26 @@ cdef inline rect_corners(Vec2 org, Vec2 end, RGBA color):
 
 cdef inline tripple_h(Vec2 org, Vec2 size):
     gl.glColor4f(1,1,1,.5)
-    gl.glLineWidth(2)
+    gl.glLineWidth(1.5*ui_scale)
     gl.glBegin(gl.GL_LINES)
-    gl.glVertex3f(org.x + 3         ,org.y+5,0)
-    gl.glVertex3f(org.x + size.x- 3 ,org.y+ 5,0)
+    gl.glVertex3f(org.x + 3*ui_scale         ,org.y+5*ui_scale,0)
+    gl.glVertex3f(org.x + size.x- 3*ui_scale ,org.y+ 5*ui_scale,0)
 
-    gl.glVertex3f(org.x + 3         ,org.y+size.y/2,0)
-    gl.glVertex3f(org.x + size.x -3 ,org.y+size.y/2,0)
+    gl.glVertex3f(org.x + 3   *ui_scale      ,org.y+size.y/2,0)
+    gl.glVertex3f(org.x + size.x -3 *ui_scale,org.y+size.y/2,0)
 
-    gl.glVertex3f(org.x + 3         ,org.y+size.y-5,0)
-    gl.glVertex3f(org.x + size.x -3 ,org.y+size.y-5,0)
+    gl.glVertex3f(org.x + 3 *ui_scale        ,org.y+size.y-5*ui_scale,0)
+    gl.glVertex3f(org.x + size.x -3*ui_scale ,org.y+size.y-5*ui_scale,0)
 
     gl.glEnd()
 
 cdef inline triangle_h(Vec2 org, Vec2 size, RGBA color):
     gl.glColor4f(color.r,color.g,color.b,color.a)
 
-    gl.glLineWidth(2)
+    gl.glLineWidth(1.5*ui_scale)
     gl.glBegin(gl.GL_LINES)
-    gl.glVertex3f(org.x + 3         ,org.y+5,0)
-    gl.glVertex3f(org.x + size.x- 3 ,org.y+ 5,0)
+    gl.glVertex3f(org.x + 3 *ui_scale        ,org.y+5*ui_scale,0)
+    gl.glVertex3f(org.x + size.x- 3*ui_scale ,org.y+ 5*ui_scale,0)
     gl.glEnd()
 
     #gl.glBegin(gl.GL_POLYGON)
@@ -63,75 +63,67 @@ cdef inline triangle_h(Vec2 org, Vec2 size, RGBA color):
     #gl.glEnd()
 
     gl.glBegin(gl.GL_LINE_LOOP)
-    gl.glVertex3f(org.x + 3         ,org.y+size.y/2,0)
-    gl.glVertex3f(org.x + size.x/2. ,org.y+size.y-5,0)
-    gl.glVertex3f(org.x + size.x -3 ,org.y+size.y/2,0)
+    gl.glVertex3f(org.x + 3 *ui_scale        ,org.y+size.y/2,0)
+    gl.glVertex3f(org.x + size.x/2. ,org.y+size.y-5*ui_scale,0)
+    gl.glVertex3f(org.x + size.x -3*ui_scale ,org.y+size.y/2,0)
     gl.glEnd()
 
 cdef inline tripple_v(Vec2 org, Vec2 size):
     gl.glColor4f(1,1,1,.5)
-    gl.glLineWidth(2)
+    gl.glLineWidth(1.5*ui_scale)
     gl.glBegin(gl.GL_LINES)
-    gl.glVertex3f(org.x + 5         ,org.y+3,0)
-    gl.glVertex3f(org.x + 5         ,org.y+size.y-3,0)
+    gl.glVertex3f(org.x + 5*ui_scale         ,org.y+3*ui_scale,0)
+    gl.glVertex3f(org.x + 5*ui_scale         ,org.y+size.y-3*ui_scale,0)
 
-    gl.glVertex3f(org.x + size.x/2  ,org.y+3,0)
-    gl.glVertex3f(org.x + size.x/2 ,org.y+size.y-3,0)
+    gl.glVertex3f(org.x + size.x/2  ,org.y+3*ui_scale,0)
+    gl.glVertex3f(org.x + size.x/2 ,org.y+size.y-3*ui_scale,0)
 
-    gl.glVertex3f(org.x + size.x -5 ,org.y+3,0)
-    gl.glVertex3f(org.x + size.x -5 ,org.y+size.y-3,0)
+    gl.glVertex3f(org.x + size.x -5*ui_scale ,org.y+3*ui_scale,0)
+    gl.glVertex3f(org.x + size.x -5*ui_scale ,org.y+size.y-3*ui_scale,0)
 
     gl.glEnd()
 
 cdef inline triangle_right(Vec2 org, Vec2 size):
     gl.glColor4f(1,1,1,.5)
 
-    gl.glLineWidth(2)
+    gl.glLineWidth(1.5*ui_scale)
     gl.glBegin(gl.GL_LINES)
-    gl.glVertex3f(org.x + size.x -5 ,org.y+3,0)
-    gl.glVertex3f(org.x + size.x -5 ,org.y+size.y-3,0)
+    gl.glVertex3f(org.x + size.x -5*ui_scale ,org.y+3*ui_scale,0)
+    gl.glVertex3f(org.x + size.x -5*ui_scale ,org.y+size.y-3*ui_scale,0)
     gl.glEnd()
 
 
     gl.glBegin(gl.GL_LINE_LOOP)
-    gl.glVertex3f(org.x + size.x/2  ,org.y+3,0)
-    gl.glVertex3f(org.x + 5          ,org.y+size.y/2,0)
-    gl.glVertex3f(org.x + size.x/2  ,org.y+size.y-3,0)
+    gl.glVertex3f(org.x + size.x/2  ,org.y+3*ui_scale,0)
+    gl.glVertex3f(org.x + 5*ui_scale          ,org.y+size.y/2,0)
+    gl.glVertex3f(org.x + size.x/2  ,org.y+size.y-3*ui_scale,0)
     gl.glEnd()
 
 cdef inline triangle_left(Vec2 org, Vec2 size):
     gl.glColor4f(1,1,1,.5)
 
-    gl.glLineWidth(2)
+    gl.glLineWidth(1.5*ui_scale)
     gl.glBegin(gl.GL_LINES)
-    gl.glVertex3f(org.x + 5         ,org.y+3,0)
-    gl.glVertex3f(org.x + 5         ,org.y+size.y-3,0)
+    gl.glVertex3f(org.x + 5 *ui_scale        ,org.y+3*ui_scale,0)
+    gl.glVertex3f(org.x + 5 *ui_scale        ,org.y+size.y-3*ui_scale,0)
     gl.glEnd()
 
 
     gl.glBegin(gl.GL_LINE_LOOP)
-    gl.glVertex3f(org.x + size.x/2  ,org.y+3,0)
-    gl.glVertex3f(org.x + size.x -5. ,org.y+size.y/2,0)
-    gl.glVertex3f(org.x + size.x/2 ,org.y+size.y-3,0)
+    gl.glVertex3f(org.x + size.x/2  ,org.y+3*ui_scale,0)
+    gl.glVertex3f(org.x + size.x -5*ui_scale ,org.y+size.y/2,0)
+    gl.glVertex3f(org.x + size.x/2 ,org.y+size.y-3*ui_scale,0)
     gl.glEnd()
 
 
 cdef inline line(Vec2 org, Vec2 end, RGBA color):
     gl.glColor4f(color.r, color.g, color.b, color.a)
-    gl.glLineWidth(1)
+    gl.glLineWidth(1.1*ui_scale)
     gl.glBegin(gl.GL_LINES)
     gl.glVertex3f(org.x, org.y,0)
     gl.glVertex3f(end.x, end.y,0)
     gl.glEnd()
 
-
-cdef inline menu_line(Vec2 org, Vec2 end):
-    gl.glColor4f(1,1,1,.8)
-    gl.glLineWidth(2)
-    gl.glBegin(gl.GL_LINES)
-    gl.glVertex3f(org.x, org.y,0)
-    gl.glVertex3f(end.x, end.y,0)
-    gl.glEnd()
 
 
 ### OpenGL funtions for rendering to texture.
