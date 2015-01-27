@@ -753,7 +753,7 @@ cdef class Button(UI_element):
 
 
 cdef class Info_Text(UI_element):
-    cdef bytes text
+    cdef public bytes text
     cdef int max_height
     cdef FitBox text_area
 
