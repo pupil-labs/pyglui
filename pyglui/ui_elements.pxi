@@ -753,19 +753,29 @@ cdef class Button(UI_element):
 
 
 cdef class Info_Text(UI_element):
-    cdef public bytes text
+    cdef bytes _text
     cdef int max_height
     cdef FitBox text_area
 
 
-    def __cinit__(self, text):
-        self.text = bytes(text)
+    def __cinit__(self, bytes text):
+        self._text = bytes(text)
         self.max_height = 200
         self.outline = FitBox(Vec2(0,0),Vec2(0,0))
         self.text_area = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
 
-    def __init__(self, text):
+    def __init__(self, bytes text):
         pass
+
+    property text:
+        def __get__(self):
+            return self._text
+
+        def __set__(self,bytes new_text):
+            global should_redraw
+            if self._text != new_text:
+                should_redraw = True
+                self._text = new_text
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         #update appearance
@@ -773,7 +783,7 @@ cdef class Info_Text(UI_element):
         self.text_area.compute(self.outline)
         glfont.push_state()
         glfont.set_color_float(color_text_info)
-        left_word, height = glfont.draw_breaking_text(self.text_area.org.x, self.text_area.org.y, self.text, self.text_area.size.x,self.max_height )
+        left_word, height = glfont.draw_breaking_text(self.text_area.org.x, self.text_area.org.y, self._text, self.text_area.size.x,self.max_height )
         glfont.pop_state()
         self.text_area.design_size.y  = (height-self.text_area.org.y)/ui_scale
         self.outline.design_size.y = self.text_area.design_size.y+outline_padding*2
@@ -782,7 +792,7 @@ cdef class Info_Text(UI_element):
     cpdef precompute(self,FitBox parent):
         self.outline.compute(parent)
         self.text_area.compute(self.outline)
-        left_word, height = glfont.compute_breaking_text(self.text_area.org.x, self.text_area.org.y, self.text, self.text_area.size.x,self.max_height )
+        left_word, height = glfont.compute_breaking_text(self.text_area.org.x, self.text_area.org.y, self._text, self.text_area.size.x,self.max_height )
         self.text_area.design_size.y  = (height-self.text_area.org.y)/ui_scale
         self.outline.design_size.y = self.text_area.design_size.y+outline_padding*2
         self.outline.compute(parent)
