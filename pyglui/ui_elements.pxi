@@ -125,7 +125,7 @@ cdef class Slider(UI_element):
             self.button_shadow_color = RGBA(*color_shadow)
 
         gl.glPushMatrix()
-        gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
+        gl.glTranslatef(self.field.org.x,self.field.org.y,0)
 
         glfont.push_state()
         glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)
@@ -146,8 +146,8 @@ cdef class Slider(UI_element):
         glfont.draw_limited_text(x_spacer,0,self.label,self.field.size.x-3*x_spacer-used_x)
         glfont.pop_state()
 
-        line(Vec2(0,slider_handle_org_y),Vec2(self.field.size.x, slider_handle_org_y),self.line_default_color)
-        line(Vec2(0,slider_handle_org_y),Vec2(self.slider_pos.x,slider_handle_org_y),self.line_highlight_color)
+        line(Vec2(0.,slider_handle_org_y),Vec2(self.field.size.x, slider_handle_org_y),self.line_default_color)
+        line(Vec2(0.,slider_handle_org_y),Vec2(self.slider_pos.x,slider_handle_org_y),self.line_highlight_color)
 
         cdef float step_pixel_size,x
         if self.steps>1:
@@ -264,7 +264,7 @@ cdef class Switch(UI_element):
 
 
         gl.glPushMatrix()
-        gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
+        gl.glTranslatef(self.field.org.x,self.field.org.y,0)
 
         glfont.push_state()
         glfont.set_color_float(self.text_color[:])
@@ -369,7 +369,7 @@ cdef class Selector(UI_element):
             self.triangle_color = RGBA(*selector_triangle_color_default)
 
         gl.glPushMatrix()
-        gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
+        gl.glTranslatef(self.field.org.x,self.field.org.y,0)
         glfont.push_state()
         glfont.set_color_float(self.text_color[:])
 
@@ -383,7 +383,7 @@ cdef class Selector(UI_element):
         line(self.select_field.org+Vec2(0,self.select_field.size.y),self.select_field.org+self.select_field.size,color=self.triangle_color)
 
         gl.glPushMatrix()
-        gl.glTranslatef(int(self.select_field.org.x),int(self.select_field.org.y),0)
+        gl.glTranslatef(self.select_field.org.x,self.select_field.org.y,0)
 
         glfont.push_state()
         glfont.set_color_float(self.text_color[:])
@@ -502,7 +502,7 @@ cdef class TextInput(UI_element):
         glfont.set_color_float(self.text_color[:])
 
         gl.glPushMatrix()
-        gl.glTranslatef(int(self.field.org.x),int(self.field.org.y),0)
+        gl.glTranslatef(self.field.org.x,self.field.org.y,0)
         dx = glfont.draw_text(x_spacer,0,self.label)
         gl.glPopMatrix()
 
@@ -658,7 +658,7 @@ cdef class TextInput(UI_element):
 
             gl.glPushMatrix()
             #then transform locally and render the UI element
-            gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
+            gl.glTranslatef(self.textfield.org.x,self.textfield.org.y,0)
             line(Vec2(0,self.textfield.size.y), self.textfield.size,self.text_input_line_highlight_color)
 
             glfont.draw_limited_text(x_spacer,0,self.preview[self.start_char_idx:],self.textfield.size.x-x_spacer)
@@ -682,7 +682,7 @@ cdef class TextInput(UI_element):
             gl.glPushMatrix()
             #then transform locally and render the UI element
             #self.textfield.sketch()
-            gl.glTranslatef(int(self.textfield.org.x),int(self.textfield.org.y),0)
+            gl.glTranslatef(self.textfield.org.x,self.textfield.org.y,0)
             if len(self.preview) > 0:
                 glfont.draw_limited_text(x_spacer,0,self.sync_val.value,self.textfield.size.x-x_spacer)
             gl.glPopMatrix()
@@ -737,7 +737,7 @@ cdef class Button(UI_element):
 
         gl.glPushMatrix()
         glfont.push_state()
-        gl.glTranslatef(int(self.button.org.x),int(self.button.org.y),0)
+        gl.glTranslatef(self.button.org.x,self.button.org.y,0)
         glfont.set_color_float(self.text_color[:])
         glfont.draw_limited_text(x_spacer,0,self.label,self.button.size.x-x_spacer)
         glfont.pop_state()
