@@ -69,7 +69,7 @@ cdef class Slider(UI_element):
         self.step = abs(step)
         self.minimum = min
         if self.step:
-            self.maximum = ((max-min)//self.step)*self.step+min
+            self.maximum = (((max-min+.0000001)//self.step))*self.step+min # + 0.0000001 becasue of floating point rounding issues.
         else:
             self.maximum = max
         self.outline = FitBox(Vec2(0,0),Vec2(0,slider_outline_size_y)) # we only fix the height
@@ -903,16 +903,16 @@ cdef class Thumb(UI_element):
 
             for b in new_input.buttons:
                 if visible and self.button.mouse_over(new_input.m):
-                    if b[1] == 1:
+                    if b[1] in (1,2):
                         #new_input.buttons.remove(b)
                         self.selected = True
                         should_redraw = True
-                if self.selected and b[1] == 0 and (self.sync_val.value == self.on_val):
+                if self.selected and b[1] in (1,2) and (self.sync_val.value == self.on_val):
                     #new_input.buttons.remove(b)
                     self.sync_val.value = self.off_val
                     self.selected = False
                     should_redraw = True
-                if self.selected and b[1] == 0 and (self.sync_val.value == self.off_val):
+                if self.selected and b[1] in (1,2) and (self.sync_val.value == self.off_val):
                     #new_input.buttons.remove(b)
                     self.sync_val.value = self.on_val
                     self.selected = False
@@ -935,7 +935,7 @@ cdef class Thumb(UI_element):
 
                         break
                 for k in new_input.keys:
-                    if k[2] == 1:  #keydown
+                    if k[2] in (1,2):  #keydown
                         if k[0] == self.hotkey:
                             if self.sync_val.value == self.on_val:
                                 self.sync_val.value = self.off_val
@@ -991,7 +991,7 @@ cdef class Hot_Key(UI_element):
                                 self.sync_val.value = self.on_val
                         break
                 for k in new_input.keys:
-                    if k[2] == 1:  #keydown
+                    if k[2]  in (1,2):  #keydown
                         if k[0] == self.hotkey:
                             if self.sync_val.value == self.on_val:
                                 self.sync_val.value = self.off_val
