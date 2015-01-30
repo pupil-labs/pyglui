@@ -518,14 +518,14 @@ cdef class TextInput(UI_element):
         global should_redraw
         while new_input.keys:
             k = new_input.keys.pop(0)
-            if k == (257,36,0,0): #Enter and key up:
+            if k[0] == 257 and k[2]==0: #Enter and key up:
                 self.finish_input()
                 return
-            if k == (256,53,0,0): #ESC and key up:
+            if  k[0] == 256 and k[2]==0: #ESC and key up:
                 self.abort_input()
                 return
 
-            elif k == (259,51,0,0) or k ==(259,51,2,0): #Delete and key up:
+            elif k[0] == 259 and k[2] !=1: #Delete and key up:
                 if self.caret > 0 and self.highlight is False:
                     self.preview = self.preview[:self.caret-1] + self.preview[self.caret:]
                     self.caret -=1
@@ -537,19 +537,19 @@ cdef class TextInput(UI_element):
                 self.caret = max(0,self.caret)
                 should_redraw = True
 
-            elif k == (263,123,0,0): #key left:
+            elif k[0] == 263 and k[2]==0 and k[3]==0: #key left:
                 self.caret -=1
                 self.caret = max(0,self.caret)
                 self.highlight=False
                 should_redraw = True
 
-            elif k == (262,124,0,0): #key right
+            elif k[0] == 262 and k[2]==0 and k[3]==0: #key right
                 self.caret +=1
                 self.caret = min(len(self.preview),self.caret)
                 self.highlight=False
                 should_redraw = True
 
-            elif k == (263,123,0,1): #key left with shift:
+            elif  k[0] == 263 and k[2]==0 and k[3]==1: #key left with shift:
                 if self.highlight is False:
                     self.start_highlight_idx = max(0,self.caret)
                 self.caret -=1
@@ -557,7 +557,7 @@ cdef class TextInput(UI_element):
                 self.highlight = True
                 should_redraw = True
 
-            elif k == (262,124,0,1): #key left with shift:
+            elif k[0] == 262 and k[2]==0 and k[3]==1: #key left with shift:
                 if self.highlight is False:
                     self.start_highlight_idx = min(len(self.preview),self.caret)
                 self.caret +=1
@@ -565,13 +565,6 @@ cdef class TextInput(UI_element):
                 self.highlight = True
                 should_redraw = True
 
-            elif k == (262,124,0,1): #key left with shift:
-                if self.highlight is False:
-                    self.start_highlight_idx = min(len(self.preview),self.caret)
-                self.caret +=1
-                self.caret = min(len(self.preview),self.caret)
-                self.highlight = True
-                should_redraw = True
 
         while new_input.chars:
             c = new_input.chars.pop(0)
