@@ -34,7 +34,7 @@ cdef inline rect_corners(Vec2 org, Vec2 end, RGBA color):
 
 cdef inline tripple_h(Vec2 org, Vec2 size):
     gl.glColor4f(1,1,1,.5)
-    gl.glLineWidth(1.5*ui_scale)
+    gl.glLineWidth(1.6*ui_scale)
     gl.glBegin(gl.GL_LINES)
     gl.glVertex3f(org.x + 3*ui_scale         ,org.y+5*ui_scale,0)
     gl.glVertex3f(org.x + size.x- 3*ui_scale ,org.y+ 5*ui_scale,0)
@@ -50,7 +50,7 @@ cdef inline tripple_h(Vec2 org, Vec2 size):
 cdef inline triangle_h(Vec2 org, Vec2 size, RGBA color):
     gl.glColor4f(color.r,color.g,color.b,color.a)
 
-    gl.glLineWidth(1.5*ui_scale)
+    gl.glLineWidth(1.6*ui_scale)
     gl.glBegin(gl.GL_LINES)
     gl.glVertex3f(org.x + 3 *ui_scale        ,org.y+5*ui_scale,0)
     gl.glVertex3f(org.x + size.x- 3*ui_scale ,org.y+ 5*ui_scale,0)
@@ -70,7 +70,7 @@ cdef inline triangle_h(Vec2 org, Vec2 size, RGBA color):
 
 cdef inline tripple_v(Vec2 org, Vec2 size):
     gl.glColor4f(1,1,1,.5)
-    gl.glLineWidth(1.5*ui_scale)
+    gl.glLineWidth(1.6*ui_scale)
     gl.glBegin(gl.GL_LINES)
     gl.glVertex3f(org.x + 5*ui_scale         ,org.y+3*ui_scale,0)
     gl.glVertex3f(org.x + 5*ui_scale         ,org.y+size.y-3*ui_scale,0)
@@ -86,7 +86,7 @@ cdef inline tripple_v(Vec2 org, Vec2 size):
 cdef inline triangle_right(Vec2 org, Vec2 size):
     gl.glColor4f(1,1,1,.5)
 
-    gl.glLineWidth(1.5*ui_scale)
+    gl.glLineWidth(1.6*ui_scale)
     gl.glBegin(gl.GL_LINES)
     gl.glVertex3f(org.x + size.x -5*ui_scale ,org.y+3*ui_scale,0)
     gl.glVertex3f(org.x + size.x -5*ui_scale ,org.y+size.y-3*ui_scale,0)
@@ -102,7 +102,7 @@ cdef inline triangle_right(Vec2 org, Vec2 size):
 cdef inline triangle_left(Vec2 org, Vec2 size):
     gl.glColor4f(1,1,1,.5)
 
-    gl.glLineWidth(1.5*ui_scale)
+    gl.glLineWidth(1.6*ui_scale)
     gl.glBegin(gl.GL_LINES)
     gl.glVertex3f(org.x + 5 *ui_scale        ,org.y+3*ui_scale,0)
     gl.glVertex3f(org.x + 5 *ui_scale        ,org.y+size.y-3*ui_scale,0)
@@ -118,7 +118,7 @@ cdef inline triangle_left(Vec2 org, Vec2 size):
 
 cdef inline line(Vec2 org, Vec2 end, RGBA color):
     gl.glColor4f(color.r, color.g, color.b, color.a)
-    gl.glLineWidth(1.1*ui_scale)
+    gl.glLineWidth(1.6*ui_scale) #thinner lines sometimes dont show on certain hardware.
     gl.glBegin(gl.GL_LINES)
     gl.glVertex3f(org.x, org.y,0)
     gl.glVertex3f(end.x, end.y,0)

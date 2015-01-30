@@ -493,7 +493,7 @@ cdef class Scrolling_Menu(Base_Menu):
 
         #display that we have scrollable content
         if scroll_factor < 1:
-            #self.element_space.size.x -= 10*ui_scale #shrint element space width to make room for scroll bar
+            #self.element_space.size.x -= 10*ui_scale #shrink element space width to make room for scroll bar
             v_pad = 10*ui_scale
             start = self.element_space.org + self.element_space.size + Vec2(5*ui_scale,scroll_handle_offset-self.element_space.size.y+v_pad)
             end = self.element_space.org + self.element_space.size + Vec2(5*ui_scale,scroll_handle_offset+scroll_handle_size-self.element_space.size.y-v_pad)
