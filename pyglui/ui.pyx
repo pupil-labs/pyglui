@@ -248,7 +248,6 @@ cdef class Synced_Value:
                 self.attribute_context[self.attribute_name] = new_val
             else:
                 self.attribute_context.__dict__[self.attribute_name] = new_val
-            self.sync()
 
 
 cdef class Input:

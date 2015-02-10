@@ -339,6 +339,8 @@ cdef class Selector(UI_element):
     def __init__(self,bytes attribute_name, object attribute_context = None, selection = [], labels=None, label=None, setter=None, getter=None):
         pass
 
+    cpdef sync(self):
+        self.sync_val.sync()
 
     def _on_change(self,new_value):
         try:
