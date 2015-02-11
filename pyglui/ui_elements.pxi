@@ -815,10 +815,10 @@ cdef class Thumb(UI_element):
     cdef int on_val,off_val
     cdef Synced_Value sync_val
     cdef public RGBA on_color,off_color
-    cdef bytes hotkey
     cdef bytes _status_text
+    cdef object hotkey
 
-    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None,bytes hotkey = None,  on_color=thumb_color_on):
+    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None, hotkey = None,  on_color=thumb_color_on):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
@@ -832,7 +832,7 @@ cdef class Thumb(UI_element):
         self.hotkey = hotkey
         self._status_text = bytes('')
 
-    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None,bytes hotkey = None, on_color=thumb_color_on):
+    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None, hotkey = None, on_color=thumb_color_on):
         pass
 
 
@@ -905,17 +905,32 @@ cdef class Thumb(UI_element):
                     self.selected = False
                     should_redraw = True
 
-        cdef bytes k
+        cdef bytes c
         if self.hotkey is not None:
-            for k in new_input.chars:
-                if k == self.hotkey:
+            for c in new_input.chars:
+                if c == self.hotkey:
                     if self.sync_val.value == self.on_val:
                         self.sync_val.value = self.off_val
                         self.selected = False
                         should_redraw = True
+
                     elif self.sync_val.value == self.off_val:
                             self.sync_val.value = self.on_val
                             self.selected = False
                             should_redraw = True
+                    break
+            for k in new_input.keys:
+                if k[2] == 1:  #keydown
+                    if k[0] == self.hotkey:
+                        if self.sync_val.value == self.on_val:
+                            self.sync_val.value = self.off_val
+                            self.selected = False
+                            should_redraw = True
+                        elif self.sync_val.value == self.off_val:
+                                self.sync_val.value = self.on_val
+                                self.selected = False
+                                should_redraw = True
+                        break
+
 
 

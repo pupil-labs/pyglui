@@ -129,15 +129,21 @@ cdef class UI:
         if not issubclass(obj.__class__,UI_element):
             raise Exception("Can only append UI elements, not: '%s'"%obj )
         self.elements.append(obj)
+        global should_redraw
+        should_redraw = True
 
     def extend(self, objs):
         for obj in objs:
             if not issubclass(obj.__class__,UI_element):
                 raise Exception("Can only append UI elements, not: '%s'"%obj )
         self.elements.extend(objs)
+        global should_redraw
+        should_redraw = True
 
     def remove(self, obj):
         del self.elements[self.elements.index(obj)]
+        global should_redraw
+        should_redraw = True
 
     def __len__ (self):
         return len(self.elements)
