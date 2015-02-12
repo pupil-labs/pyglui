@@ -16,6 +16,7 @@ Cython powered OpenGL gui.
 
 
 ## Install
+* install `glew` (instructions can be found here: https://github.com/pupil-labs/cygl/readme.md )
 * clone with `--recursive` flag
 * `python setup.py install`
 
