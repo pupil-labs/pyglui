@@ -54,7 +54,7 @@ cdef class UI_element:
 #    +--------------------------------+
 
 cdef class Slider(UI_element):
-    cdef float minimum,maximum,step
+    cdef public float minimum,maximum,step
     cdef public FitBox field
     cdef bint selected
     cdef Vec2 slider_pos
