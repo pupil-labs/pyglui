@@ -9,12 +9,13 @@ from pyglui.cygl.glew_pxd import generate_pxd
 
 
 includes = ['pyglui/cygl/','.']
+glew_binaries =[]
+lib_dir = []
 if platform.system() == 'Darwin':
     glew_header = '/usr/local/Cellar/glew/1.10.0/include/GL/glew.h'
     includes += ['/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/']
     link_args = []
     libs = ['GLEW']
-    lib_dir = []
     libglew = [] #we are using the dylib
     extra_compile_args = ["-Wno-strict-aliasing", "-O2"]
     fontstash_compile_args = extra_compile_args + ['-D FONTSTASH_IMPLEMENTATION','-D GLFONTSTASH_IMPLEMENTATION']
@@ -22,7 +23,6 @@ elif platform.system() == 'Linux':
     glew_header = '/usr/include/GL/glew.h'
     includes += ['/usr/include/GL']
     libs = ['GLEW','GL'] #GL needed for fonstash
-    lib_dir = []
     link_args = []
     extra_compile_args = ["-Wno-strict-aliasing", "-O2"]
     fontstash_compile_args = extra_compile_args + ['-D FONTSTASH_IMPLEMENTATION','-D GLFONTSTASH_IMPLEMENTATION']
@@ -35,6 +35,7 @@ elif platform.system() == 'Windows':
     gl_compile_args = [] #['/DGL_GLEXT_PROTOTYPES']
     extra_compile_args = ["-O2"]
     fontstash_compile_args = extra_compile_args + ['/DFONTSTASH_IMPLEMENTATION','/DGLFONTSTASH_IMPLEMENTATION'] 
+    glew_binaries = [('', ['pyglui/cygl/win_glew/glew32.dll'])]
 else:
     raise Exception('Platform build not implemented.')
 
@@ -103,6 +104,7 @@ setup( 	name="pyglui",
 		author='Pupil Labs',
 		author_email='info@pupil-labs.com',
 		license='MIT',
+		data_files=glew_binaries,
         package_dir={'pyglui':'pyglui'},
         package_data={'pyglui': ['*.ttf']}, #fonts
 		ext_modules=cythonize(extensions)
