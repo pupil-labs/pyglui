@@ -14,12 +14,27 @@ if platform.system() == 'Darwin':
     includes += ['/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/']
     link_args = []
     libs = ['GLEW']
+    lib_dir = []
     libglew = [] #we are using the dylib
+    extra_compile_args = ["-Wno-strict-aliasing", "-O2"]
+    fontstash_compile_args = extra_compile_args + ['-D FONTSTASH_IMPLEMENTATION','-D GLFONTSTASH_IMPLEMENTATION']
 elif platform.system() == 'Linux':
     glew_header = '/usr/include/GL/glew.h'
     includes += ['/usr/include/GL']
     libs = ['GLEW','GL'] #GL needed for fonstash
+    lib_dir = []
     link_args = []
+    extra_compile_args = ["-Wno-strict-aliasing", "-O2"]
+    fontstash_compile_args = extra_compile_args + ['-D FONTSTASH_IMPLEMENTATION','-D GLFONTSTASH_IMPLEMENTATION']
+elif platform.system() == 'Windows':
+    glew_header = 'pyglui/cygl/win_glew/gl/glew.h'
+    includes = ['pyglui/cygl/', 'pyglui/cygl/win_glew']
+    libs = ['glew32', 'OpenGL32']
+    lib_dir = ['pyglui/cygl/win_glew']
+    link_args = []
+    gl_compile_args = [] #['/DGL_GLEXT_PROTOTYPES']
+    extra_compile_args = ["-O2"]
+    fontstash_compile_args = extra_compile_args + ['/DFONTSTASH_IMPLEMENTATION','/DGLFONTSTASH_IMPLEMENTATION'] 
 else:
     raise Exception('Platform build not implemented.')
 
@@ -36,20 +51,23 @@ extensions = [
 				sources=['pyglui/ui.pyx'],
 				include_dirs = includes+['pyglui/pyfontstash/fontstash/src'],
 				libraries = libs,
+				library_dirs = lib_dir,
 				extra_link_args=link_args,
-				extra_compile_args=["-Wno-strict-aliasing", "-O2"]),
+				extra_compile_args=extra_compile_args),
 
 	Extension(	name="pyglui.graph",
 				sources=['pyglui/graph.pyx'],
 				include_dirs = includes+['pyglui/pyfontstash/fontstash/src'],
 				libraries = libs,
+				library_dirs = lib_dir,
 				extra_link_args=link_args,
-				extra_compile_args=["-Wno-strict-aliasing", "-O2"]),
+				extra_compile_args=extra_compile_args),
 
 	Extension(	name="pyglui.cygl.utils",
 				sources=['pyglui/cygl/utils.pyx'],
 				include_dirs = includes,
 				libraries = libs,
+				library_dirs = lib_dir,
 				extra_link_args=link_args,
 				extra_compile_args=[]),
 
@@ -57,15 +75,17 @@ extensions = [
 				sources=['pyglui/cygl/shader.pyx'],
 				include_dirs = includes,
 				libraries = libs,
+				library_dirs = lib_dir,
 				extra_link_args=link_args,
-				extra_compile_args=["-Wno-strict-aliasing", "-O2"]),
+				extra_compile_args=extra_compile_args),
 
 	Extension(	name="pyglui.pyfontstash.fontstash",
 				sources=['pyglui/pyfontstash/fontstash.pyx'],
 				include_dirs = includes+['pyglui/pyfontstash/fontstash/src'],
 				libraries = libs,
+				library_dirs = lib_dir,
 				extra_link_args=link_args,
-				extra_compile_args=["-Wno-strict-aliasing", "-O2"]+['-D FONTSTASH_IMPLEMENTATION','-D GLFONTSTASH_IMPLEMENTATION'])
+				extra_compile_args=fontstash_compile_args)
 ]
 
 from pyglui import __version__ as pyglui_version
