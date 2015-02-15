@@ -577,13 +577,14 @@ cdef class Scrolling_Menu(Base_Menu):
                 return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':False}
 
         def __set__(self,new_conf):
+
+            self.outline.design_org[:] = new_conf.get('pos',self.outline.design_org[:])
+            self.outline.design_size[:] = new_conf.get('size',self.outline.design_size[:])
+
             if new_conf.get('collapsed',False):
                 self.uncollapsed_outline.design_org[:] = new_conf.get('pos',self.outline.design_org[:])
                 self.uncollapsed_outline.design_size[:] = new_conf.get('size',self.outline.design_size[:])
                 self.outline.collapse()
-            else:
-                self.outline.design_org[:] = new_conf.get('pos',self.outline.design_org[:])
-                self.outline.design_size[:] = new_conf.get('size',self.outline.design_size[:])
 
             self.header_pos = self.header_pos #update layout
 
