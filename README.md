@@ -9,9 +9,9 @@ Cython powered OpenGL gui.
 
 * Designed to be used with glfw but should run with other window managers as well.
 
-* Uses [pyfonstash](http://github.com/pupil-labs/pyfonstash) for rendering text.
+* Uses [pyfontstash](http://github.com/pupil-labs/pyfontstash) for rendering text.
 
-* Uses [cygl](http://github.com/pupil-labs/cygl) to access GL functions (which in turn uses [GLEW](http://glew.sourceforge.net/)
+* Uses [cygl](http://github.com/pupil-labs/cygl) to access GL functions (which in turn uses [GLEW](http://glew.sourceforge.net/))
 
 
 
