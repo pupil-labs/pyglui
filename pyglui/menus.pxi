@@ -209,7 +209,7 @@ cdef class Growing_Menu(Base_Menu):
         self.header_pos = header_pos
         self.color = RGBA(0,0,0,.3)
 
-    def __init__(self,label, pos=(0,0),size=(200,100),header_pos = 'top'):
+    def __init__(self,label, pos=(0,0),size=(0,0),header_pos = 'top'):
         pass
     property header_pos:
         def __get__(self):
@@ -217,12 +217,15 @@ cdef class Growing_Menu(Base_Menu):
             return header_pos_list[self.header_pos_id]
 
         def __set__(self, header_pos):
+
+            #if the menu position is user changable we want the dragable to catch the input. This is good of user interaction
+            cdef bint catch_input =  bool(self.outline.design_org.x or self.outline.design_org.y)
             if header_pos == 'top':
                 self.element_space = FitBox(Vec2(menu_pad,menu_topbar_pad),Vec2(-menu_pad,-menu_pad- menu_bottom_pad))
                 self.menu_bar = Draggable(Vec2(0,0),Vec2(0,menu_topbar_pad),
                                             self.outline.design_org,
                                             arrest_axis=0,zero_crossing = False,
-                                            click_cb=self.toggle_iconified )
+                                            click_cb=self.toggle_iconified,catch_input = catch_input )
                 if self.outline.design_size.x:
                     self.resize_corner = Draggable(Vec2(-resize_corner_size,-resize_corner_size),Vec2(0,0),
                                                 self.outline.design_size,
@@ -235,7 +238,7 @@ cdef class Growing_Menu(Base_Menu):
                 self.menu_bar = Draggable(Vec2(0,-menu_pad),Vec2(0,0),
                                             self.outline.design_size,
                                             arrest_axis=0,zero_crossing = False,
-                                            click_cb=self.toggle_iconified )
+                                            click_cb=self.toggle_iconified,catch_input = catch_input  )
                 self.resize_corner = None
 
             elif header_pos == 'right':
@@ -243,7 +246,7 @@ cdef class Growing_Menu(Base_Menu):
                 self.menu_bar = Draggable(Vec2(-menu_sidebar_pad,0),Vec2(0,0),
                                             self.outline.design_size,
                                             arrest_axis=0,zero_crossing = False,
-                                            click_cb=self.toggle_iconified )
+                                            click_cb=self.toggle_iconified,catch_input = catch_input  )
                 self.resize_corner = None
 
             elif header_pos == 'left':
@@ -251,7 +254,7 @@ cdef class Growing_Menu(Base_Menu):
                 self.menu_bar = Draggable(Vec2(0,0),Vec2(menu_sidebar_pad,0),
                                             self.outline.design_org,
                                             arrest_axis=0,zero_crossing = False,
-                                            click_cb=self.toggle_iconified )
+                                            click_cb=self.toggle_iconified,catch_input = catch_input  )
 
                 if self.outline.design_size.x:
                     self.resize_corner = Draggable(Vec2(-resize_corner_size,-resize_corner_size),Vec2(0,0),
@@ -353,7 +356,7 @@ cdef class Scrolling_Menu(Base_Menu):
     cdef Vec2 scrollstate
     cdef float scroll_factor
 
-    def __cinit__(self,label,pos=(0,0),size=(200,100),header_pos = 'top'):
+    def __cinit__(self,label,pos=(100,100),size=(200,100),header_pos = 'top'):
         self.uid = id(self)
         self.label = label
 
@@ -372,7 +375,7 @@ cdef class Scrolling_Menu(Base_Menu):
         self.header_pos = header_pos
         self.color = RGBA(0,0,0,.3)
 
-    def __init__(self,label,pos=(0,0),size=(200,100),header_pos = 'top'):
+    def __init__(self,label,pos=(100,100),size=(200,100),header_pos = 'top'):
         pass
 
     property header_pos:
@@ -381,12 +384,15 @@ cdef class Scrolling_Menu(Base_Menu):
             return header_pos_list[self.header_pos_id]
 
         def __set__(self, header_pos):
+            #if the menu position is user changable we want the dragable to catch the input. This is good of user interaction
+            cdef bint catch_input =  bool(self.outline.design_org.x or self.outline.design_org.y)
+
             if header_pos == 'top':
                 self.element_space = FitBox(Vec2(menu_pad,menu_topbar_pad),Vec2(-menu_pad,-menu_pad- menu_bottom_pad))
                 self.menu_bar = Draggable(Vec2(0,0),Vec2(0,menu_topbar_pad),
                                             self.outline.design_org,
                                             arrest_axis=0,zero_crossing = False,
-                                            click_cb=self.toggle_iconified )
+                                            click_cb=self.toggle_iconified,catch_input = catch_input  )
                 if self.outline.design_size.x:
                     self.resize_corner = Draggable(Vec2(-resize_corner_size,-resize_corner_size),Vec2(0,0),
                                                 self.outline.design_size,
@@ -399,7 +405,7 @@ cdef class Scrolling_Menu(Base_Menu):
                 self.menu_bar = Draggable(Vec2(0,-menu_pad),Vec2(0,0),
                                             self.outline.design_size,
                                             arrest_axis=0,zero_crossing = False,
-                                            click_cb=self.toggle_iconified )
+                                            click_cb=self.toggle_iconified,catch_input = catch_input  )
                 self.resize_corner = None
 
             elif header_pos == 'right':
@@ -407,7 +413,7 @@ cdef class Scrolling_Menu(Base_Menu):
                 self.menu_bar = Draggable(Vec2(-menu_sidebar_pad,0),Vec2(0,0),
                                             self.outline.design_size,
                                             arrest_axis=0,zero_crossing = False,
-                                            click_cb=self.toggle_iconified )
+                                            click_cb=self.toggle_iconified,catch_input = catch_input  )
                 self.resize_corner = None
 
             elif header_pos == 'left':
@@ -415,7 +421,7 @@ cdef class Scrolling_Menu(Base_Menu):
                 self.menu_bar = Draggable(Vec2(0,0),Vec2(menu_sidebar_pad,0),
                                             self.outline.design_org,
                                             arrest_axis=0,zero_crossing = False,
-                                            click_cb=self.toggle_iconified )
+                                            click_cb=self.toggle_iconified,catch_input = catch_input  )
 
                 if self.outline.design_size.x:
                     self.resize_corner = Draggable(Vec2(-resize_corner_size,-resize_corner_size),Vec2(0,0),

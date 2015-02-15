@@ -88,7 +88,8 @@ cdef class UI:
             self.new_input.active_ui_elements = []
 
             #now everybody
-            for e in self.elements:
+            # ontop level in reverse so that menues drawn abover other take precendece
+            for e in self.elements[::-1]:
                 e.handle_input(self.new_input,True)
             self.new_input.purge()
 
@@ -98,6 +99,8 @@ cdef class UI:
         window_size = self.window.size
 
         if should_redraw:
+
+            should_redraw = False
             #print "UI is redrawing the screen"
             push_view(self.window.size)
             render_to_ui_texture(self.ui_layer)
@@ -114,7 +117,6 @@ cdef class UI:
             render_to_screen()
             pop_view()
 
-            should_redraw = False
 
         draw_ui_texture(self.ui_layer)
 
@@ -301,12 +303,12 @@ cdef class Draggable:
     '''
     cdef FitBox outline
     cdef Vec2 touch_point,drag_accumulator
-    cdef bint selected,zero_crossing,dragged
+    cdef bint selected,zero_crossing,dragged,catch_input
     cdef Vec2 value
     cdef int arrest_axis
     cdef object click_cb
 
-    def __cinit__(self,Vec2 pos, Vec2 size, Vec2 value, arrest_axis = 0,zero_crossing=True,click_cb = None):
+    def __cinit__(self,Vec2 pos, Vec2 size, Vec2 value, arrest_axis = 0,zero_crossing=True,click_cb = None,catch_input=True):
         self.outline = FitBox(pos,size)
         self.value = value
         self.selected = False
@@ -317,8 +319,9 @@ cdef class Draggable:
         self.zero_crossing = zero_crossing
         self.click_cb = click_cb
         self.dragged = False
+        self.catch_input = catch_input
 
-    def __init__(self,Vec2 pos, Vec2 size, Vec2 value, arrest_axis = 0,zero_crossing=True,click_cb = None):
+    def __init__(self,Vec2 pos, Vec2 size, Vec2 value, arrest_axis = 0,zero_crossing=True,click_cb = None,catch_input=True):
         pass
 
     cdef draw(self, FitBox parent_size,bint nested=True):
@@ -363,7 +366,8 @@ cdef class Draggable:
                 if self.outline.mouse_over(new_input.m):
                     self.selected = True
                     self.dragged  = False
-                    #new_input.buttons.remove(b)
+                    if self.catch_input:
+                        new_input.buttons.remove(b)
                     self.touch_point.x = new_input.m.x
                     self.touch_point.y = new_input.m.y
                     self.drag_accumulator = Vec2(0,0)

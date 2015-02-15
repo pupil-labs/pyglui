@@ -811,7 +811,7 @@ cdef class Thumb(UI_element):
     It can also display status info via a overlay
     '''
     cdef public FitBox button
-    cdef bint selected
+    cdef bint selected,hotkeyed
     cdef int on_val,off_val
     cdef Synced_Value sync_val
     cdef public RGBA on_color,off_color
@@ -865,6 +865,12 @@ cdef class Thumb(UI_element):
             utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=RGBA(*thumb_color_shadow),sharpness=shadow_sharpness)
             utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_off, color=self.off_color,sharpness=thumb_button_sharpness)
 
+        if self.hotkeyed:
+            self.hotkeyed = False
+            self.selected = False
+            global should_redraw
+            should_redraw = True
+
         glfont.push_state()
         glfont.set_size(max(1,int(min(self.button.size))-thumb_font_padding))
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_CENTER)
@@ -911,25 +917,32 @@ cdef class Thumb(UI_element):
                 if c == self.hotkey:
                     if self.sync_val.value == self.on_val:
                         self.sync_val.value = self.off_val
-                        self.selected = False
+                        self.selected = True
                         should_redraw = True
+                        self.hotkeyed = True
 
                     elif self.sync_val.value == self.off_val:
                             self.sync_val.value = self.on_val
-                            self.selected = False
+                            self.selected = True
                             should_redraw = True
+                            self.hotkeyed = True
+
                     break
             for k in new_input.keys:
                 if k[2] == 1:  #keydown
                     if k[0] == self.hotkey:
                         if self.sync_val.value == self.on_val:
                             self.sync_val.value = self.off_val
-                            self.selected = False
+                            self.selected = True
                             should_redraw = True
+                            self.hotkeyed = True
+
                         elif self.sync_val.value == self.off_val:
                                 self.sync_val.value = self.on_val
-                                self.selected = False
+                                self.selected = True
                                 should_redraw = True
+                                self.hotkeyed = True
+
                         break
 
 
