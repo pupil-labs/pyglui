@@ -85,7 +85,7 @@ DEF menu_move_corner_width = menu_move_corner_height
 DEF menu_topbar_pad = 2 * menu_pad + menu_move_corner_height
 DEF menu_topbar_text_x_org =  menu_move_corner_width + x_spacer
 DEF resize_corner_size = 20
-DEF menu_topbar_min_width = 100
+DEF menu_topbar_min_width = 200
 DEF menu_bottom_pad = 20
 
 DEF menu_sidebar_pad = menu_topbar_pad

@@ -122,10 +122,10 @@ cdef class Base_Menu(UI_element):
     def collect_in_window(self,FitBox window):
         global should_redraw
         if self.outline.design_org.x > 0:
-            self.outline.design_org.x = min(self.outline.design_org.x, window.size.x-100)
+            self.outline.design_org.x = min(self.outline.design_org.x, window.size.x/ui_scale-100)
             should_redraw = True
         if self.outline.design_org.y > 0:
-            self.outline.design_org.y = min(self.outline.design_org.y, window.size.y-100)
+            self.outline.design_org.y = min(self.outline.design_org.y, window.size.y/ui_scale-100)
             should_redraw = True
 
 cdef class Stretching_Menu(Base_Menu):
