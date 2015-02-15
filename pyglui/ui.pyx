@@ -126,6 +126,13 @@ cdef class UI:
         self.sync()
         self.draw()
 
+    def collect_menus(self):
+        for e in self.elements:
+            try:
+                e.collect_in_window(self.window)
+            except AttributeError:
+                pass
+
     ###special methods to make UI behave like a list
     def append(self, obj):
         if not issubclass(obj.__class__,UI_element):

@@ -119,6 +119,15 @@ cdef class Base_Menu(UI_element):
                      Vec2(self.menu_bar.outline.org.x+self.menu_bar.outline.size.x-menu_offset.x,self.menu_bar.outline.org.y+self.menu_bar.outline.size.y),
                      RGBA(*color_line_default))
 
+    def collect_in_window(self,FitBox window):
+        global should_redraw
+        if self.outline.design_org.x > 0:
+            self.outline.design_org.x = min(self.outline.design_org.x, window.size.x-100)
+            should_redraw = True
+        if self.outline.design_org.y > 0:
+            self.outline.design_org.y = min(self.outline.design_org.y, window.size.y-100)
+            should_redraw = True
+
 cdef class Stretching_Menu(Base_Menu):
     '''
     A simple menu
