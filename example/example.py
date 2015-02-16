@@ -256,7 +256,7 @@ def demo():
     while not quit:
         dt,ts = time.time()-ts,time.time()
         clear_gl_screen()
-        utils.draw_polyline( [(20,20),(500,500)] )
+        # utils.draw_polyline( [(20,20),(500,500)] )
 
         # gui.scale +=.001
         # print gui.scale
@@ -267,11 +267,12 @@ def demo():
         # foo.bar += .1
         # if foo.bar >= 100:
             # foo.bar = 0
+        utils.update_named_texture(tex,a)
+        utils.draw_named_texture(tex,quad=((500.,500.),(1000.,500.),(1000.,1000.),(500.,1000.)))
+
         gui.update()
         # tex = utils.create_named_texture(a.shape)
         # a = (np.random.random_sample((1280,720,1))*100).astype(dtype=np.uint8)
-        utils.update_named_texture(tex,a)
-        utils.draw_named_texture(tex,quad=((500.,500.),(1000.,500.),(1000.,1000.),(500.,1000.)))
         # utils.draw_gl_texture(a)
         glfwSwapBuffers(window)
         glfwPollEvents()
