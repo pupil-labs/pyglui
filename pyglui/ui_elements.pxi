@@ -521,6 +521,9 @@ cdef class TextInput(UI_element):
             if k == (257,36,0,0): #Enter and key up:
                 self.finish_input()
                 return
+            if k == (256,53,0,0): #ESC and key up:
+                self.abort_input()
+                return
 
             elif k == (259,51,0,0) or k ==(259,51,2,0): #Delete and key up:
                 if self.caret > 0 and self.highlight is False:
@@ -562,6 +565,14 @@ cdef class TextInput(UI_element):
                 self.highlight = True
                 should_redraw = True
 
+            elif k == (262,124,0,1): #key left with shift:
+                if self.highlight is False:
+                    self.start_highlight_idx = min(len(self.preview),self.caret)
+                self.caret +=1
+                self.caret = min(len(self.preview),self.caret)
+                self.highlight = True
+                should_redraw = True
+
         while new_input.chars:
             c = new_input.chars.pop(0)
             self.preview = self.preview[:self.caret] + c + self.preview[self.caret:]
@@ -575,7 +586,9 @@ cdef class TextInput(UI_element):
                     self.finish_input()
                     new_input.buttons.remove(b) #avoid reselection during handle_input
                 else:
-                    self.abort_input()
+                    self.finish_input()
+                    #new_input.buttons.remove(b) #avoid reselection during handle_input
+                    #self.abort_input()
 
 
     cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
@@ -891,6 +904,7 @@ cdef class Thumb(UI_element):
 
 
     cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
+        cdef bytes c
         if not (self._read_only or parent_read_only):
             global should_redraw
 
@@ -911,26 +925,9 @@ cdef class Thumb(UI_element):
                     self.selected = False
                     should_redraw = True
 
-        cdef bytes c
-        if self.hotkey is not None:
-            for c in new_input.chars:
-                if c == self.hotkey:
-                    if self.sync_val.value == self.on_val:
-                        self.sync_val.value = self.off_val
-                        self.selected = True
-                        should_redraw = True
-                        self.hotkeyed = True
-
-                    elif self.sync_val.value == self.off_val:
-                            self.sync_val.value = self.on_val
-                            self.selected = True
-                            should_redraw = True
-                            self.hotkeyed = True
-
-                    break
-            for k in new_input.keys:
-                if k[2] == 1:  #keydown
-                    if k[0] == self.hotkey:
+            if self.hotkey is not None:
+                for c in new_input.chars:
+                    if c == self.hotkey:
                         if self.sync_val.value == self.on_val:
                             self.sync_val.value = self.off_val
                             self.selected = True
@@ -944,6 +941,73 @@ cdef class Thumb(UI_element):
                                 self.hotkeyed = True
 
                         break
+                for k in new_input.keys:
+                    if k[2] == 1:  #keydown
+                        if k[0] == self.hotkey:
+                            if self.sync_val.value == self.on_val:
+                                self.sync_val.value = self.off_val
+                                self.selected = True
+                                should_redraw = True
+                                self.hotkeyed = True
+
+                            elif self.sync_val.value == self.off_val:
+                                    self.sync_val.value = self.on_val
+                                    self.selected = True
+                                    should_redraw = True
+                                    self.hotkeyed = True
+
+                            break
+
+
+cdef class Hot_Key(UI_element):
+    '''
+    Just a hotkey. Not displayed.
+    '''
+    cdef int on_val,off_val
+    cdef Synced_Value sync_val
+    cdef public RGBA on_color,off_color
+    cdef object hotkey
+
+    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None, hotkey = None):
+        self.uid = id(self)
+        self.label = label or attribute_name
+        self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
+        self.on_val = on_val
+        self.off_val = off_val
+        self.hotkey = hotkey
+        self.outline = FitBox(Vec2(0,0),Vec2(0,0)) # we dont use it but we need to have it.
+
+
+    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None, hotkey = None):
+        pass
+
+
+    cpdef sync(self):
+        self.sync_val.sync()
+
+
+    cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
+        cdef bytes c
+        if not (self._read_only or parent_read_only):
+            if self.hotkey is not None:
+                for c in new_input.chars:
+                    if c == self.hotkey:
+                        if self.sync_val.value == self.on_val:
+                            self.sync_val.value = self.off_val
+                        elif self.sync_val.value == self.off_val:
+                                self.sync_val.value = self.on_val
+                        break
+                for k in new_input.keys:
+                    if k[2] == 1:  #keydown
+                        if k[0] == self.hotkey:
+                            if self.sync_val.value == self.on_val:
+                                self.sync_val.value = self.off_val
+                            elif self.sync_val.value == self.off_val:
+                                    self.sync_val.value = self.on_val
+                            break
+
+
+
 
 
 
