@@ -572,19 +572,17 @@ cdef class Scrolling_Menu(Base_Menu):
     property configuration:
         def __get__(self):
             if not self.element_space.has_area():
-                return {'pos':self.uncollapsed_outline.design_org[:],'size':self.uncollapsed_outline.design_size[:],'collapsed':True}
+                return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':True,'uncollapsed_pos':self.uncollapsed_outline.design_org[:],'uncollapsed_size':self.uncollapsed_outline.design_size[:]}
             else:
                 return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':False}
-
         def __set__(self,new_conf):
 
             self.outline.design_org[:] = new_conf.get('pos',self.outline.design_org[:])
             self.outline.design_size[:] = new_conf.get('size',self.outline.design_size[:])
 
             if new_conf.get('collapsed',False):
-                self.uncollapsed_outline.design_org[:] = new_conf.get('pos',self.outline.design_org[:])
-                self.uncollapsed_outline.design_size[:] = new_conf.get('size',self.outline.design_size[:])
-                self.outline.collapse()
+                self.uncollapsed_outline.design_org[:] = new_conf.get('uncollapsed_pos',self.outline.design_org[:])
+                self.uncollapsed_outline.design_size[:] = new_conf.get('uncollapsed_size',self.outline.design_size[:])
 
             self.header_pos = self.header_pos #update layout
 
