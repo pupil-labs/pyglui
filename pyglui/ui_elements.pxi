@@ -69,7 +69,7 @@ cdef class Slider(UI_element):
         self.step = abs(step)
         self.minimum = min
         if self.step:
-            self.maximum = ((max-min)/self.step)*self.step+min
+            self.maximum = (((max-min)//self.step)+1)*self.step+min
         else:
             self.maximum = max
         self.outline = FitBox(Vec2(0,0),Vec2(0,slider_outline_size_y)) # we only fix the height
