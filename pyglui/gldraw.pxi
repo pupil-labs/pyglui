@@ -118,7 +118,7 @@ cdef inline triangle_left(Vec2 org, Vec2 size):
 
 cdef inline line(Vec2 org, Vec2 end, RGBA color):
     gl.glColor4f(color.r, color.g, color.b, color.a)
-    gl.glLineWidth(1.6*ui_scale) #thinner lines sometimes dont show on certain hardware.
+    gl.glLineWidth(1.5*ui_scale) #thinner lines sometimes dont show on certain hardware.
     gl.glBegin(gl.GL_LINES)
     gl.glVertex3f(org.x, org.y,0)
     gl.glVertex3f(end.x, end.y,0)

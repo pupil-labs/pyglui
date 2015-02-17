@@ -27,7 +27,7 @@ DEF shadow_sharpness = 0.3
 DEF color_text_default = (1.,1.,1.,1.)
 DEF color_text_info = (1.,1.,1.,.6)
 DEF color_text_read_only = (.5,.5,.5,.5)
-DEF color_line_default = (1.,1.,1.,.5)
+DEF color_line_default = (1.,1.,1.,.4)
 
 # Slider - design parameters
 DEF slider_outline_size_y = 80.
@@ -90,6 +90,7 @@ DEF menu_bottom_pad = 20.
 
 DEF menu_sidebar_pad = menu_topbar_pad
 DEF menu_sidebar_min_height = 20.
+DEF menu_line = (1.,1.,1.,.8)
 
 
 
