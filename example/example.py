@@ -246,7 +246,7 @@ def demo():
     fps_g.label = "%0.0f FPS"
     fps_g.color[:] = .1,.1,.8,.9
 
-    st_graph = graph.Simple_Text()
+    st_graph = graph.Averaged_Value()
     st_graph.pos = (200,200)
     st_graph.update_rate = 5
     st_graph.label = "Slider Value: %0.0f"

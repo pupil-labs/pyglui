@@ -269,7 +269,7 @@ cdef class Line_Graph:
 
 
 
-cdef class Simple_Text:
+cdef class Averaged_Value:
     cdef fs.Context glfont
     cdef double[::1] data
     cdef basestring label
@@ -282,7 +282,7 @@ cdef class Simple_Text:
 
     def __cinit__(self, int data_points=25, int font_size=18):
         self.data = view.array(shape=(data_points,), itemsize=sizeof(double), format="d")
-        self.d_len = data_points        
+        self.d_len = data_points
         self.label = 'Title %0.2f units'
         self.glfont = fs.Context()
         self.glfont.add_font('opensans', path.join(path.dirname(__file__),'OpenSans-Regular.ttf'))
@@ -294,7 +294,7 @@ cdef class Simple_Text:
         cdef int x
         for x in range(data_points):
             self.data[x] = 0
-        self.avg = 0        
+        self.avg = 0
         self.data_source = lambda: 0
 
     property label:
