@@ -317,6 +317,12 @@ cdef class Averaged_Value:
             return self.s_size
 
 
+    def set_text_align(self,v_align='left',h_align='top'):
+        v_align = {'left':fs.FONS_ALIGN_LEFT,'center':fs.FONS_ALIGN_CENTER,'right':fs.FONS_ALIGN_RIGHT}[v_align]
+        h_align = {'top':fs.FONS_ALIGN_TOP,'middle':fs.FONS_ALIGN_MIDDLE,'bottom':fs.FONS_ALIGN_BOTTOM}[h_align]
+        self.glfont.set_align(v_align | h_align)
+
+
     def add(self,double val):
         self.s_idx = (self.s_idx +1) %self.s_size
         if self.s_idx == 0:
