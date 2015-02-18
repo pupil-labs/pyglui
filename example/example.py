@@ -11,6 +11,9 @@ logger = logging.getLogger(__name__)
 import time
 from pyglui import ui
 from pyglui.cygl.utils import init
+from pyglui.cygl.utils import RGBA
+
+import pyfontstash as fs
 
 width, height = (1280,720)
 
@@ -243,14 +246,28 @@ def demo():
     fps_g.label = "%0.0f FPS"
     fps_g.color[:] = .1,.1,.8,.9
 
+    st_graph = graph.Simple_Text()
+    st_graph.pos = (200,200)
+    st_graph.update_rate = 5
+    st_graph.label = "Slider Value: %0.0f"
+    st_graph.color[:] = 1.,0.,.6,.9
+
+
     on_resize(window,*glfwGetWindowSize(window))
     # gui.update()
     # on_resize(window,*glfwGetWindowSize(window))
 
+    # glfont = fs.Context()
+    # glfont.add_font('opensans','../pyglui/OpenSans-Regular.ttf')
+    # glfont.set_size(14)
+    # font_color = RGBA(.1,.1,.7,.9)
+    # glfont.set_color_float(*font_color)
+
+
     import numpy as np
     from cygl import utils
 
-    a = (np.random.random_sample((1280,720,3))*100).astype(dtype=np.uint8)
+    a = (np.random.random_sample((200,200,3))*200).astype(dtype=np.uint8)
     tex = utils.create_named_texture(a.shape)
     utils.update_named_texture(tex,a)
     while not quit:
@@ -264,11 +281,15 @@ def demo():
         cpu_g.draw()
         fps_g.add(1./dt)
         fps_g.draw()
+        st_graph.add(foo.bur)
+        st_graph.draw()
         # foo.bar += .1
         # if foo.bar >= 100:
             # foo.bar = 0
         utils.update_named_texture(tex,a)
-        utils.draw_named_texture(tex,quad=((500.,500.),(1000.,500.),(1000.,1000.),(500.,1000.)))
+        utils.draw_named_texture(tex,quad=((400.,400.),(600.,400.),(600.,600.),(400.,600.)))
+        # glfont.draw_text(400,390,"This is pyfontstash text.")
+        # glfont.draw_text(400,620,"The square (above) is a texture with random colors.")
 
         gui.update()
         # tex = utils.create_named_texture(a.shape)

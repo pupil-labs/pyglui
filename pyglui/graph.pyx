@@ -43,7 +43,7 @@ cdef class Bar_Graph:
     def __cinit__(self,int data_points = 25,float min_val = 0, float max_val = 100):
         self.data = view.array(shape=(data_points,), itemsize=sizeof(double), format="d")
         self.d_len = data_points
-        self.label = 'Tile %0.2f units'
+        self.label = 'Title %0.2f units'
         self.bar_width = 4
         self.min_val = min_val
         self.max_val = max_val
@@ -167,7 +167,7 @@ cdef class Line_Graph:
     def __cinit__(self,int data_points = 50,float min_val = 0, float max_val = 100):
         self.data = view.array(shape=(data_points,), itemsize=sizeof(double), format="d")
         self.d_len = data_points
-        self.label = 'Tile %0.2f units'
+        self.label = 'Title %0.2f units'
         self.bar_width = 2
         self.min_val = min_val
         self.max_val = max_val
@@ -264,6 +264,82 @@ cdef class Line_Graph:
         gl.glPopMatrix()
         self.glfont.set_color_float(self.color[:])
         self.glfont.draw_text(x +10 ,-self.data[i],bytes(self.label%self.avg))
+        gl.glPopMatrix()
+
+
+
+
+cdef class Simple_Text:
+    cdef fs.Context glfont
+    cdef double[::1] data
+    cdef basestring label
+    cdef int idx,d_len
+    cdef public float avg
+    cdef int s_idx,s_size
+    cdef int x,y
+    cdef object data_source
+    cdef public RGBA color
+
+    def __cinit__(self, int data_points=25, int font_size=18):
+        self.data = view.array(shape=(data_points,), itemsize=sizeof(double), format="d")
+        self.d_len = data_points        
+        self.label = 'Title %0.2f units'
+        self.glfont = fs.Context()
+        self.glfont.add_font('opensans', path.join(path.dirname(__file__),'OpenSans-Regular.ttf'))
+        self.glfont.set_size(font_size)
+        self.glfont.set_align(fs.FONS_ALIGN_LEFT | fs.FONS_ALIGN_MIDDLE)
+        self.color = RGBA(1.,1.,1.,1.)
+
+    def __init__(self, int data_points=25,int font_size=18):
+        cdef int x
+        for x in range(data_points):
+            self.data[x] = 0
+        self.avg = 0        
+        self.data_source = lambda: 0
+
+    property label:
+        def __get__(self):
+            return self.label
+        def __set__(self,new_label):
+            self.label = new_label
+
+    property pos:
+        def __get__(self):
+            return self.x,self.y
+        def __set__(self,val):
+            self.x,self.y = val
+
+    property update_rate:
+        def __set__(self,r):
+            self.s_size = r
+            self.s_idx = 0
+        def __get__(self):
+            return self.s_size
+
+
+    def add(self,double val):
+        self.s_idx = (self.s_idx +1) %self.s_size
+        if self.s_idx == 0:
+            self.data[self.idx] = val
+            self.idx = (self.idx +1) %self.d_len
+            #very rough avg estimation
+            self.avg += (val-self.avg)*(5./self.d_len)
+
+    def update(self):
+        cdef float val
+        self.s_idx = (self.s_idx +1) %self.s_size
+        if self.s_idx == 0:
+            val = self.data_source()
+            self.data[self.idx] = val
+            self.idx = (self.idx +1) %self.d_len
+            #very rough avg estimation
+            self.avg += (val-self.avg)*(2./self.d_len)
+
+    def draw(self):
+        gl.glMatrixMode(gl.GL_MODELVIEW)
+        gl.glPushMatrix()
+        self.glfont.set_color_float(self.color[:])
+        self.glfont.draw_text(self.x,self.y,bytes(self.label%self.avg))
         gl.glPopMatrix()
 
 
