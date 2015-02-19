@@ -468,8 +468,8 @@ cdef class TextInput(UI_element):
         self.textfield = FitBox(Vec2(x_spacer,0),Vec2(0,0))
         self.selected = False
         self.highlight = False
-        self.preview = str(self.sync_val.value)
-        self.caret = len(self.preview)
+        self.preview = str('') #only used when self.selected==True
+        self.caret = 0 #only used when self.selected==True
         self.start_char_idx = 0
         self.end_char_idx = self.caret
         self.start_highlight_idx = 0
@@ -593,7 +593,8 @@ cdef class TextInput(UI_element):
                         #new_input.buttons.remove(b)
                         self.selected = True
                         self.highlight = False
-                        self.preview = self.sync_val.value
+                        self.preview = str(self.sync_val.value)
+                        self.caret = len(self.preview)
                         should_redraw = True
 
 
@@ -604,18 +605,21 @@ cdef class TextInput(UI_element):
 
     cdef finish_input(self):
         global should_redraw
-        self.selected = False
-        self.caret = len(self.preview)
-        self.sync_val.value = self.preview
         should_redraw = True
+        self.selected = False
+        #text input should try to conserve the imput type to support numeric values
+        t =  type(self.sync_val.value)
+        try:
+            typed_val = t(self.preview)
+        except:
+            return
+        self.sync_val.value = typed_val
 
 
     cdef abort_input(self):
         global should_redraw
-        self.selected = False
-        self.preview = self.sync_val.value
-        self.caret = len(self.preview)
         should_redraw = True
+        self.selected = False
 
     cdef calculate_start_idx(self):
         # clip the preview text appropriately so that it always fits within the textfield
@@ -678,13 +682,13 @@ cdef class TextInput(UI_element):
             gl.glVertex3f(x,self.textfield.size.y,0)
             gl.glEnd()
             gl.glPopMatrix()
+
         else:
             gl.glPushMatrix()
             #then transform locally and render the UI element
             #self.textfield.sketch()
             gl.glTranslatef(self.textfield.org.x,self.textfield.org.y,0)
-            if len(self.preview) > 0:
-                glfont.draw_limited_text(x_spacer,0,self.sync_val.value,self.textfield.size.x-x_spacer)
+            glfont.draw_limited_text(x_spacer,0,str(self.sync_val.value),self.textfield.size.x-x_spacer)
             gl.glPopMatrix()
 
 

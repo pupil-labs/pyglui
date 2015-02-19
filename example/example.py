@@ -141,7 +141,7 @@ def demo():
     foo = Temp()
     foo.bar = 34
     foo.bur = 4
-    foo.mytext = 'change me!'
+    foo.mytext = 23
     foo.myswitch = 10
     foo.select = 'Tiger'
     foo.record = False
@@ -206,13 +206,14 @@ def demo():
         sm.append(ui.Slider("bar",foo))
 
         sm.append(ui.TextInput('mytext',foo))
+        sm.append(ui.TextInput('mytext',foo))
         m.append(sm)
         m.append(ui.Button("Say Hi!",print_hello))
 
-    m.elements[0].read_only = True
-    m.elements[1].read_only = True
-    m.elements[2].read_only = True
-    sm.elements[1].read_only = True
+    # m.elements[0].read_only = True
+    # m.elements[1].read_only = True
+    # m.elements[2].read_only = True
+    # sm.elements[1].read_only = True
     # sm.elements[1].read_only = True
 
     rightbar = ui.Stretching_Menu('Right Bar',(0,100),(150,-100))
