@@ -707,19 +707,17 @@ cdef class Button(UI_element):
     cdef bint selected
     cdef object function
     cdef RGBA text_color
-    cdef object call_args
 
-    def __cinit__(self,label, function,call_args=None):
+    def __cinit__(self,label, function):
         self.uid = id(self)
         self.label = label
         self.outline = FitBox(Vec2(0,0),Vec2(0,button_outline_size_y)) # we only fix the height
         self.button = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
         self.selected = False
         self.function = function
-        self.call_args = call_args
         self.text_color = RGBA(*color_text_default)
 
-    def __init__(self,label, setter,call_args=None):
+    def __init__(self,label, setter):
         pass
 
 
@@ -763,12 +761,7 @@ cdef class Button(UI_element):
                     #new_input.buttons.remove(b)
                     self.selected = False
                     should_redraw = True
-                    if isinstance(self.call_args,dict):
-                        self.function(**self.call_args)
-                    elif self.call_args  is not None:
-                        self.function(self.call_args)
-                    else:
-                        self.function()
+                    self.function()
 
 
 
