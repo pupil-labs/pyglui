@@ -1,4 +1,5 @@
 from cython cimport view
+from pyglui.ui import get_opensans_font_path,get_roboto_font_path
 from pyglui.cygl cimport glew as gl
 from pyglui.cygl.utils cimport RGBA
 from pyfontstash cimport fontstash as fs
@@ -49,7 +50,7 @@ cdef class Bar_Graph:
         self.max_val = max_val
 
         self.glfont = fs.Context()
-        self.glfont.add_font('opensans', path.join(path.dirname(__file__),'OpenSans-Regular.ttf'))
+        self.glfont.add_font('opensans', get_opensans_font_path())
         self.glfont.set_size(18)
         self.color = RGBA(.1,.1,.7,.5)
     def __init__(self,int data_points = 25,float min_val = 0, float max_val = 100):
@@ -173,7 +174,7 @@ cdef class Line_Graph:
         self.max_val = max_val
 
         self.glfont = fs.Context()
-        self.glfont.add_font('opensans', path.join(path.dirname(__file__),'OpenSans-Regular.ttf'))
+        self.glfont.add_font('opensans',get_opensans_font_path())
         self.glfont.set_size(18)
         self.glfont.set_align(fs.FONS_ALIGN_LEFT | fs.FONS_ALIGN_MIDDLE)
         self.color = RGBA(.1,.1,.7,.5)
@@ -285,7 +286,7 @@ cdef class Averaged_Value:
         self.d_len = data_points
         self.label = 'Title %0.2f units'
         self.glfont = fs.Context()
-        self.glfont.add_font('opensans', path.join(path.dirname(__file__),'OpenSans-Regular.ttf'))
+        self.glfont.add_font('opensans',get_opensans_font_path())
         self.glfont.set_size(font_size)
         self.glfont.set_align(fs.FONS_ALIGN_LEFT | fs.FONS_ALIGN_MIDDLE)
         self.color = RGBA(1.,1.,1.,1.)

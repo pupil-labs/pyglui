@@ -17,6 +17,11 @@ cdef fs.Context glfont
 cdef double ui_scale = 1.0
 cdef bint should_redraw = True
 
+def get_roboto_font_path():
+    return path.join(path.dirname(__file__),'Roboto-Regular.ttf')
+
+def get_opensans_font_path():
+    return path.join(path.dirname(__file__),'OpenSans-Regular.ttf')
 
 cdef class UI:
     '''
@@ -37,8 +42,8 @@ cdef class UI:
         #global init of gl fonts
         global glfont
         glfont = fs.Context()
-        glfont.add_font('roboto', path.join(path.dirname(__file__),'Roboto-Regular.ttf'))
-        glfont.add_font('opensans', path.join(path.dirname(__file__),'OpenSans-Regular.ttf'))
+        glfont.add_font('roboto',get_roboto_font_path() )
+        glfont.add_font('opensans',get_opensans_font_path())
 
 
     def __init__(self):
