@@ -141,7 +141,7 @@ def demo():
     foo = Temp()
     foo.bar = 34
     foo.bur = 4
-    foo.mytext = 23
+    foo.mytext = [203,12]
     foo.myswitch = 10
     foo.select = 'Tiger'
     foo.record = False
@@ -175,10 +175,10 @@ def demo():
         sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
         sm.toggle_iconified()
         sm.append(ui.Slider("bar",foo))
-        sm.append(ui.TextInput('mytext',foo,setter=printer))
+        sm.append(ui.Text_Input('mytext',foo,setter=printer))
         ssm = ui.Growing_Menu("SubSubMenu",pos=(0,0),size=(0,100))
         ssm.append(ui.Slider("bar",foo))
-        ssm.append(ui.TextInput('mytext',foo,setter=printer))
+        ssm.append(ui.Text_Input('mytext',foo,setter=printer))
         ssm.toggle_iconified()
 
         sm.append(ssm)
@@ -205,8 +205,8 @@ def demo():
         sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
         sm.append(ui.Slider("bar",foo))
 
-        sm.append(ui.TextInput('mytext',foo))
-        sm.append(ui.TextInput('mytext',foo))
+        sm.append(ui.Text_Input('mytext',foo))
+        sm.append(ui.Text_Input('mytext',foo))
         m.append(sm)
         m.append(ui.Button("Say Hi!",print_hello))
 
