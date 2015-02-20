@@ -18,9 +18,9 @@ DEF circle_button_shadow = 10
 
 DEF color_selected = (.5,.9,.9,.9)
 DEF color_on = (.5,.5,.9,.9)
-DEF color_on_read_only = (.5,.5,.9,.4)
+DEF color_on_read_only = (.5,.5,.9,.7)
 DEF color_default = (.5,.5,.5,.9)
-DEF color_default_read_only = (.5,.5,.5,.5)
+DEF color_default_read_only = (.5,.5,.5,.7)
 DEF color_shadow = (.0,.0,.0,.8)
 DEF color_shadow_read_only = (.0,.0,.0,.0)
 DEF shadow_sharpness = 0.3
