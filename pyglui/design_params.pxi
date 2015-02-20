@@ -48,8 +48,8 @@ DEF slider_line_color_highlight_read_only = (.5,.5,.9,.6)
 DEF switch_outline_size_y = 40
 DEF switch_button_size = circle_button_size
 DEF switch_button_size_selected = circle_button_size_selected
-DEF switch_button_size_on = switch_button_size
-DEF switch_button_shadow = circle_button_shadow
+DEF switch_button_size_on = switch_button_size+5
+DEF switch_button_shadow = circle_button_shadow+3
 
 # Selector - design parameters
 DEF selector_outline_size_y = 40.
