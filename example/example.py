@@ -13,7 +13,7 @@ from pyglui import ui
 from pyglui.cygl.utils import init
 from pyglui.cygl.utils import RGBA
 
-import pyfontstash as fs
+from pyglui.pyfontstash import fontstash as fs
 
 width, height = (1280,720)
 
@@ -258,11 +258,11 @@ def demo():
     # gui.update()
     # on_resize(window,*glfwGetWindowSize(window))
 
-    # glfont = fs.Context()
-    # glfont.add_font('opensans','../pyglui/OpenSans-Regular.ttf')
-    # glfont.set_size(14)
-    # font_color = RGBA(.1,.1,.7,.9)
-    # glfont.set_color_float(*font_color)
+    glfont = fs.Context()
+    glfont.add_font('opensans','../pyglui/OpenSans-Regular.ttf')
+    glfont.set_size(14)
+    font_color = .1,.1,.7,.9
+    glfont.set_color_float(font_color)
 
 
     import numpy as np
@@ -289,8 +289,8 @@ def demo():
             # foo.bar = 0
         utils.update_named_texture(tex,a)
         utils.draw_named_texture(tex,quad=((400.,400.),(600.,400.),(600.,600.),(400.,600.)))
-        # glfont.draw_text(400,390,"This is pyfontstash text.")
-        # glfont.draw_text(400,620,"The square (above) is a texture with random colors.")
+        glfont.draw_text(400,390,"This is pyfontstash text.")
+        glfont.draw_text(400,620,"The square (above) is a texture with random colors.")
 
         gui.update()
         # tex = utils.create_named_texture(a.shape)
