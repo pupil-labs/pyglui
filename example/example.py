@@ -266,7 +266,7 @@ def demo():
 
 
     import numpy as np
-    from cygl import utils
+    from pyglui.cygl import utils
 
     a = (np.random.random_sample((200,200,3))*200).astype(dtype=np.uint8)
     tex = utils.create_named_texture(a.shape)
