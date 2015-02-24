@@ -12,7 +12,7 @@ includes = ['pyglui/cygl/','.']
 glew_binaries =[]
 lib_dir = []
 if platform.system() == 'Darwin':
-    glew_header = '/usr/local/Cellar/glew/1.10.0/include/GL/glew.h'
+    glew_header = '/usr/local/Cellar/glew/1.11.0/include/GL/glew.h'
     includes += ['/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/']
     link_args = []
     libs = ['GLEW']
@@ -34,7 +34,7 @@ elif platform.system() == 'Windows':
     link_args = []
     gl_compile_args = [] #['/DGL_GLEXT_PROTOTYPES']
     extra_compile_args = ["-O2"]
-    fontstash_compile_args = extra_compile_args + ['/DFONTSTASH_IMPLEMENTATION','/DGLFONTSTASH_IMPLEMENTATION'] 
+    fontstash_compile_args = extra_compile_args + ['/DFONTSTASH_IMPLEMENTATION','/DGLFONTSTASH_IMPLEMENTATION']
     glew_binaries = [('', ['pyglui/cygl/win_glew/glew32.dll'])]
 else:
     raise Exception('Platform build not implemented.')
