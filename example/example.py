@@ -1,7 +1,6 @@
 
 import logging
 from glfw import *
-import OpenGL
 from OpenGL.GL import *
 
 import numpy as np
