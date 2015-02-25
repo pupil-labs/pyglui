@@ -106,6 +106,7 @@ cdef class Slider(UI_element):
 
         # map slider value
         self.slider_pos.x = clampmap(self.sync_val.value,self.minimum,self.maximum,0,self.field.size.x)
+        self.slider_pos.y = slider_handle_org_y * ui_scale
         #self.outline.sketch()
         #self.field.sketch()
 
@@ -146,22 +147,22 @@ cdef class Slider(UI_element):
         glfont.draw_limited_text(x_spacer,0,self.label,self.field.size.x-3*x_spacer-used_x)
         glfont.pop_state()
 
-        line(Vec2(0.,slider_handle_org_y),Vec2(self.field.size.x, slider_handle_org_y),self.line_default_color)
-        line(Vec2(0.,slider_handle_org_y),Vec2(self.slider_pos.x,slider_handle_org_y),self.line_highlight_color)
+        line(Vec2(0.,self.slider_pos.y),Vec2(self.field.size.x, self.slider_pos.y),self.line_default_color)
+        line(Vec2(0.,self.slider_pos.y),self.slider_pos,self.line_highlight_color)
 
         cdef float step_pixel_size,x
         if self.steps>1:
             step_pixel_size = lmap(self.minimum+self.step,self.minimum,self.maximum,0,self.field.size.x)
             if step_pixel_size >= slider_button_size*ui_scale:
-                step_marks = [(x*step_pixel_size,slider_handle_org_y) for x in range(self.steps+1)]
+                step_marks = [(x*step_pixel_size,self.slider_pos.y) for x in range(self.steps+1)]
                 utils.draw_points(step_marks,size=slider_step_mark_size*ui_scale, color=self.step_color)
 
         if self.selected:
-            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=(slider_button_size_selected+slider_button_shadow)*ui_scale, color=self.button_shadow_color,sharpness=shadow_sharpness)
-            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size_selected*ui_scale, color=self.button_selected_color)
+            utils.draw_points((self.slider_pos,),size=(slider_button_size_selected+slider_button_shadow)*ui_scale, color=self.button_shadow_color,sharpness=shadow_sharpness)
+            utils.draw_points((self.slider_pos,),size=slider_button_size_selected*ui_scale, color=self.button_selected_color)
         else:
-            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=(slider_button_size+slider_button_shadow)+ui_scale, color=self.button_shadow_color,sharpness=shadow_sharpness)
-            utils.draw_points(((self.slider_pos.x,slider_handle_org_y),),size=slider_button_size*ui_scale, color=self.button_color)
+            utils.draw_points((self.slider_pos,),size=(slider_button_size+slider_button_shadow)+ui_scale, color=self.button_shadow_color,sharpness=shadow_sharpness)
+            utils.draw_points((self.slider_pos,),size=slider_button_size*ui_scale, color=self.button_color)
 
         gl.glPopMatrix()
 
