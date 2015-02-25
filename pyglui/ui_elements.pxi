@@ -351,7 +351,7 @@ cdef class Selector(UI_element):
             #but for now we just add the new object to the selection
             self.selection.append(new_value)
             self.selection_labels.append(str(new_value))
-            self.selection_idx = len(self.selection_labels)-1
+        self.selection_idx = self.selection.index(new_value)
 
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
@@ -431,15 +431,16 @@ cdef class Selector(UI_element):
 
         self.sync_val.value = self.selection[self.selection_idx]
 
+        #Sometimes the synced values setter rejects the set value or the getter return val is static.
+        #for these ceased we need to check the value ourselves to know what the newly set value is.
+        self._on_change(self.sync_val.value)
+
+
         #make the outline small again
         cdef h = line_height
         h+= self.field.design_org.y - self.field.design_size.y #double neg
         h+= self.select_field.design_org.y - self.select_field.design_size.y #double neg
         self.outline.design_size.y = h
-
-        #we need to bootstrap the computation of the item height.
-        #This is ok because we know the size will not be influcend by partent context.
-        #self.outline.size.y = h*ui_scale
 
         self.selected = False
 
