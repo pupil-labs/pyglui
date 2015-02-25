@@ -895,7 +895,10 @@ cdef class Thumb(UI_element):
         glfont.set_color_float((0,0,0,1))
         glfont.set_blur(10.5)
         glfont.draw_text(self.button.center[0]+self.button.size.x/2.,self.button.center[1],self._status_text)
-        glfont.set_color_float(self.on_color[:])
+        if self.sync_val.value == self.on_val:
+            glfont.set_color_float(self.on_color[:])
+        else:
+            glfont.set_color_float(self.off_color[:])
         glfont.set_blur(.1)
         glfont.draw_text(self.button.center[0]+self.button.size.x/2.,self.button.center[1],self._status_text)
         glfont.pop_state()
