@@ -30,9 +30,9 @@ DEF color_text_read_only = (.5,.5,.5,.5)
 DEF color_line_default = (1.,1.,1.,.4)
 
 # Slider - design parameters
-DEF slider_outline_size_y = 80.
+DEF slider_outline_size_y = 60.
 DEF slider_label_org_y = 20.
-DEF slider_handle_org_y = 40.
+DEF slider_handle_org_y = 35.
 DEF slider_button_size = circle_button_size
 DEF slider_button_size_read_only = 15.
 DEF slider_button_size_selected = circle_button_size_selected
