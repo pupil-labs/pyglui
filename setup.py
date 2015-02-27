@@ -12,7 +12,10 @@ includes = ['pyglui/cygl/','.']
 glew_binaries =[]
 lib_dir = []
 if platform.system() == 'Darwin':
-    glew_header = '/usr/local/Cellar/glew/1.11.0/include/GL/glew.h'
+    # find glew irrespective of version
+    for root, dirs, files in os.walk('/usr/local/Cellar/glew'):
+        if 'glew.h' in files:
+            glew_header = os.path.join(root,'glew.h')
     includes += ['/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/']
     link_args = []
     libs = ['GLEW']
