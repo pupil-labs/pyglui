@@ -90,7 +90,7 @@ cdef class Base_Menu(UI_element):
 
         if self.resize_corner is not None:
             self.resize_corner.outline.compute(self.outline)
-            self.resize_corner.draw(self.outline)
+            tripple_d(self.resize_corner.outline.org,self.resize_corner.outline.size)
 
         if self.menu_bar is not None:
             self.menu_bar.outline.compute(self.outline)

@@ -47,6 +47,24 @@ cdef inline tripple_h(Vec2 org, Vec2 size):
 
     gl.glEnd()
 
+cdef inline tripple_d(Vec2 org, Vec2 size):
+    cdef Vec2 o = org,s=size-Vec2(9*ui_scale,9*ui_scale)
+    gl.glColor4f(1,1,1,.5)
+    gl.glLineWidth(1.6*ui_scale)
+    gl.glBegin(gl.GL_LINES)
+
+
+    gl.glVertex3f(o.x,o.y+s.y,0)
+    gl.glVertex3f(o.x + s.x,o.y,0)
+
+    gl.glVertex3f(o.x + s.x*.0,o.y+s.y*.33,0)
+    gl.glVertex3f(o.x + s.x*.33,o.y+s.y*0,0)
+
+    gl.glVertex3f(o.x + s.x*.66,o.y+s.y*1.,0)
+    gl.glVertex3f(o.x + s.x*1.,o.y+s.y*.66,0)
+
+    gl.glEnd()
+
 cdef inline triangle_h(Vec2 org, Vec2 size, RGBA color):
     gl.glColor4f(color.r,color.g,color.b,color.a)
 
