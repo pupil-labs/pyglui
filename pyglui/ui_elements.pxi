@@ -455,13 +455,13 @@ cdef class Text_Input(UI_element):
     Text input field.
     '''
     cdef FitBox field, textfield
-    cdef bint selected,highlight
+    cdef bint selected,highlight,flexible_typing
     cdef Synced_Value sync_val
     cdef bytes preview
     cdef int caret,start_char_idx,end_char_idx,start_highlight_idx
     cdef RGBA text_color, text_input_highlight_color, text_input_line_highlight_color
 
-    def __cinit__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
+    def __cinit__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None,bint flexible_typing=False):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
@@ -478,9 +478,10 @@ cdef class Text_Input(UI_element):
         self.text_color = RGBA(*color_text_default)
         self.text_input_highlight_color = RGBA(*text_input_highlight_color)
         self.text_input_line_highlight_color = RGBA(*text_input_line_highlight_color)
+        self.flexible_typing = flexible_typing
 
 
-    def __init__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
+    def __init__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None,bint flexible_typing=False):
         pass
 
 
@@ -611,11 +612,16 @@ cdef class Text_Input(UI_element):
         self.selected = False
         #text input should try to conserve the imput type to support numeric values
         t =  type(self.sync_val.value)
-        try:
-            typed_val = t(self.preview)
-        except:
-            return
-        self.sync_val.value = typed_val
+        if t in (dict,list,int,float,tuple):
+            try:
+                typed_val = eval(self.preview)
+            except:
+                return
+        elif t == str:
+            typed_val = self.preview
+
+        if self.flexible_typing or type(typed_val) == t:
+            self.sync_val.value = typed_val
 
 
     cdef abort_input(self):
