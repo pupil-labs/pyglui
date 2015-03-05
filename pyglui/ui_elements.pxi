@@ -540,19 +540,19 @@ cdef class Text_Input(UI_element):
                 self.caret = max(0,self.caret)
                 should_redraw = True
 
-            elif k[0] == 263 and k[2]==0 and k[3]==0: #key left:
+            elif k[0] == 263 and k[2] !=1 and k[3]==0: #key left:
                 self.caret -=1
                 self.caret = max(0,self.caret)
                 self.highlight=False
                 should_redraw = True
 
-            elif k[0] == 262 and k[2]==0 and k[3]==0: #key right
+            elif k[0] == 262 and k[2] !=1 and k[3]==0: #key right
                 self.caret +=1
                 self.caret = min(len(self.preview),self.caret)
                 self.highlight=False
                 should_redraw = True
 
-            elif  k[0] == 263 and k[2]==0 and k[3]==1: #key left with shift:
+            elif  k[0] == 263 and k[2] !=1 and k[3]==1: #key left with shift:
                 if self.highlight is False:
                     self.start_highlight_idx = max(0,self.caret)
                 self.caret -=1
@@ -560,7 +560,7 @@ cdef class Text_Input(UI_element):
                 self.highlight = True
                 should_redraw = True
 
-            elif k[0] == 262 and k[2]==0 and k[3]==1: #key left with shift:
+            elif k[0] == 262 and k[2] !=1 and k[3]==1: #key left with shift:
                 if self.highlight is False:
                     self.start_highlight_idx = min(len(self.preview),self.caret)
                 self.caret +=1
