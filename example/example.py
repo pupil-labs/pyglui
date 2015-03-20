@@ -103,12 +103,6 @@ def demo():
 
     # get glfw started
     glfwInit()
-    version = 2,1
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, version[0])
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, version[1])
-    # glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1)
-    # glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE)
-
     window = glfwCreateWindow(width, height, "pyglui demo", None, None)
     if not window:
         exit()
@@ -124,14 +118,10 @@ def demo():
     glfwSetCursorPosCallback(window,on_pos)
     glfwSetScrollCallback(window,on_scroll)
 
-
-    glfwSwapInterval(1)
     glfwMakeContextCurrent(window)
     init()
     basic_gl_setup()
 
-    print('GL:',glGetString(GL_VERSION))
-    print('GLFW3:',glfwGetVersionString())
     class Temp(object):
         """Temp class to make objects"""
         def __init__(self):
@@ -168,52 +158,31 @@ def demo():
     gui.scale = 1.0
     sidebar = ui.Scrolling_Menu("MySideBar",pos=(-300,0),size=(0,0),header_pos='left')
 
-    for x in range(10):
-        sidebar.append(ui.Slider("one",d,label="bar %s"%x))
-        sidebar.append(ui.Slider("bur",foo,label="bur %s"%x))
-        sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
-        sm.toggle_iconified()
-        sm.append(ui.Slider("bar",foo))
-        sm.append(ui.Text_Input('mytext',foo,setter=printer))
-        ssm = ui.Growing_Menu("SubSubMenu",pos=(0,0),size=(0,100))
-        ssm.append(ui.Slider("bar",foo))
-        ssm.append(ui.Text_Input('mytext',foo,setter=printer))
-        ssm.toggle_iconified()
-
-        sm.append(ssm)
-
-        sidebar.append(sm)
-        sm.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena']) )
-
-        sm.append(ui.Button("Say Hi!",print_hello))
-        sm.append(ui.Button("Say Hi!",print_hello))
-        sm.append(ui.Button("Say Hi!",print_hello))
+    sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
+    sm.append(ui.Slider("bar",foo))
+    sm.append(ui.Text_Input('mytext',foo,setter=printer))
+    ssm = ui.Growing_Menu("SubSubMenu",pos=(0,0),size=(0,100))
+    ssm.append(ui.Slider("bar",foo))
+    ssm.append(ui.Text_Input('mytext',foo,setter=printer))
+    sm.append(ssm)
+    sidebar.append(sm)
+    sm.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena']) )
+    sm.append(ui.Button("Say Hi!",print_hello))
     gui.append(sidebar)
 
 
     m = ui.Scrolling_Menu("MyMenu",pos=(250,30),size=(300,500),header_pos='top')
-    for x in range(1):
-        m.append(ui.Info_Text("This is my multiline info text. I wonder if multilines break as designed... How does it look? Info Text with long label text to test multiline break handling." ))
-        m.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
-        m.append(ui.Slider("bur",foo,step=50,min=1,max=1005, label="Slider label with long label text to test overflow handling"))
-        m.append(ui.Button("Say Hi!",print_hello))
-        m.append(ui.Button("Say Hi!",print_hello))
-        m.append(ui.Switch("myswitch",foo,on_val=1000,off_val=10,label="Switch Me"))
+    m.append(ui.Info_Text("This is my multiline info text. I wonder if multilines break as designed... How does it look? Info Text with long label text to test multiline break handling." ))
+    m.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
+    m.append(ui.Slider("bur",foo,step=50,min=1,max=1005, label="Slider label with long label text to test overflow handling"))
+    m.append(ui.Button("Say Hi!",print_hello))
+    m.append(ui.Switch("myswitch",foo,on_val=1000,off_val=10,label="Switch Me"))
+    sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
+    sm.append(ui.Slider("bar",foo))
+    sm.append(ui.Text_Input('mytext',foo))
+    m.append(sm)
+    m.append(ui.Button("Say Hi!",print_hello))
 
-        m.append(ui.Button("Say Hi!",print_hello))
-        sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
-        sm.append(ui.Slider("bar",foo))
-
-        sm.append(ui.Text_Input('mytext',foo))
-        sm.append(ui.Text_Input('mytext',foo))
-        m.append(sm)
-        m.append(ui.Button("Say Hi!",print_hello))
-
-    # m.elements[0].read_only = True
-    # m.elements[1].read_only = True
-    # m.elements[2].read_only = True
-    # sm.elements[1].read_only = True
-    # sm.elements[1].read_only = True
 
     rightbar = ui.Stretching_Menu('Right Bar',(0,100),(150,-100))
     rightbar.append(ui.Thumb("record",foo,label="Record") )
@@ -222,9 +191,6 @@ def demo():
     rightbar.append(ui.Thumb("test",foo,label="Test") )
     gui.append(rightbar)
     gui.append(m)
-
-    m.color.a = 0
-
 
     import os
     import psutil
@@ -254,50 +220,23 @@ def demo():
 
 
     on_resize(window,*glfwGetWindowSize(window))
-    # gui.update()
-    # on_resize(window,*glfwGetWindowSize(window))
-
-    glfont = fs.Context()
-    glfont.add_font('opensans','../pyglui/OpenSans-Regular.ttf')
-    glfont.set_size(14)
-    font_color = .1,.1,.7,.9
-    glfont.set_color_float(font_color)
 
 
-    import numpy as np
-    from pyglui.cygl import utils
-
-    a = (np.random.random_sample((200,200,3))*200).astype(dtype=np.uint8)
-    tex = utils.create_named_texture(a.shape)
-    utils.update_named_texture(tex,a)
     while not quit:
         dt,ts = time.time()-ts,time.time()
         clear_gl_screen()
-        # utils.draw_polyline( [(20,20),(500,500)] )
 
-        # gui.scale +=.001
-        # print gui.scale
         cpu_g.update()
         cpu_g.draw()
         fps_g.add(1./dt)
         fps_g.draw()
         st_graph.add(foo.bur)
         st_graph.draw()
-        # foo.bar += .1
-        # if foo.bar >= 100:
-            # foo.bar = 0
-        utils.update_named_texture(tex,a)
-        utils.draw_named_texture(tex,quad=((400.,400.),(600.,400.),(600.,600.),(400.,600.)))
-        glfont.draw_text(400,390,"This is pyfontstash text.")
-        glfont.draw_text(400,620,"The square (above) is a texture with random colors.")
 
         gui.update()
-        # tex = utils.create_named_texture(a.shape)
-        # a = (np.random.random_sample((1280,720,1))*100).astype(dtype=np.uint8)
-        # utils.draw_gl_texture(a)
+
         glfwSwapBuffers(window)
         glfwPollEvents()
-        # time.sleep(.03)
 
     glfwDestroyWindow(window)
     glfwTerminate()
