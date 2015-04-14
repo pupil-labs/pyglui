@@ -289,8 +289,12 @@ cdef class Growing_Menu(Base_Menu):
 
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
+        self.outline.compute(parent)
+        self.element_space.compute(self.outline)
+
         #here we compute the requred design height of this menu.
         self.outline.design_size.y  = self.height/ui_scale
+        #now we correct for any changes induced by the content.
         self.outline.compute(parent)
         self.element_space.compute(self.outline)
 
@@ -332,6 +336,8 @@ cdef class Growing_Menu(Base_Menu):
                 #elemnt space is 0
                 pass
             else:
+                for e in self.elements:
+                    e.precompute(self.element_space)
                 height += sum([<float>e.height for e in self.elements])
             return height
 
