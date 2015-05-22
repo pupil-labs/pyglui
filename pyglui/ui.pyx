@@ -223,11 +223,7 @@ cdef class Synced_Value:
                     raise Exception("Dict: '%s' has no entry '%s'"%(self.attribute_context,self.attribute_name))
             else:
                 try:
-                    _ = self.attribute_context.__dict__
-                except AttributeError:
-                    raise Exception('"%s" is not an instance of a newstyle class (does not have "__dict__" for member access). Please use a new style class OR a dict OR getter/setter.'%self.attribute_context)
-                try:
-                    _ = self.attribute_context.__dict__[self.attribute_name]
+                    _ = getattr(self.attribute_context,self.attribute_name)
                 except KeyError:
                     raise Exception("'%s' has no attribute '%s'"%(self.attribute_context,self.attribute_name))
         self.sync()
@@ -251,12 +247,11 @@ cdef class Synced_Value:
                 if self.on_change is not None:
                     self.on_change(self._value)
 
-        elif self._value != self.attribute_context.__dict__[self.attribute_name]:
-            self._value = self.attribute_context.__dict__[self.attribute_name]
+        elif self._value != getattr(self.attribute_context,self.attribute_name):
+            self._value = getattr(self.attribute_context,self.attribute_name)
             should_redraw = True
             if self.on_change is not None:
                 self.on_change(self._value)
-
 
     property value:
         def __get__(self):
@@ -267,7 +262,7 @@ cdef class Synced_Value:
             elif self.use_dict:
                 self.attribute_context[self.attribute_name] = new_val
             else:
-                self.attribute_context.__dict__[self.attribute_name] = new_val
+                setattr(self.attribute_context,self.attribute_name,new_val)
 
 
 cdef class Input:
