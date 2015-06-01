@@ -63,6 +63,24 @@ cdef class Base_Menu(UI_element):
         return True
 
 
+    def get_submenu_config(self):
+        '''
+        Growing menus are sometimes emebedded in Other menues. We load their configurations recursively.
+        '''
+        cdef dict submenus = {}
+        for e in self.elements:
+            if isinstance(e,Growing_Menu):
+                submenus[e.label] = e.configuration
+        return submenus
+
+    def set_submenu_config(self,dict submenus):
+        '''
+        Growing menus are sometimes emebedded in Other menues. We save their configurations recursively.
+        '''
+        for e in self.elements:
+            if isinstance(e,Growing_Menu):
+                e.configuration = submenus.get(e.label,{})
+
 
     cdef draw_menu(self,bint nested):
         #draw translucent background
@@ -133,6 +151,8 @@ cdef class Base_Menu(UI_element):
         if self.outline.design_org.y < 0:
             self.outline.design_org.y = min(self.outline.design_org.y, -1* window.size.y/ui_scale-100)
             should_redraw = True
+
+
 cdef class Stretching_Menu(Base_Menu):
     '''
     A simple menu
@@ -183,12 +203,14 @@ cdef class Stretching_Menu(Base_Menu):
 
     property configuration:
         def __get__(self):
-            return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':self.collapsed}
+            cdef dict submenus = self.get_submenu_config()
+            return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':self.collapsed,'submenus':submenus}
 
         def __set__(self,new_conf):
             self.outline.design_org[:] = new_conf.get('pos',self.outline.design_org[:])
             self.outline.design_size[:] = new_conf.get('size',self.outline.design_size[:])
             self.collapsed = new_conf.get('collapsed',self.collapsed)
+            self.set_submenu_config(new_conf.get('submenus',{}))
 
 
 cdef class Growing_Menu(Base_Menu):
@@ -349,7 +371,8 @@ cdef class Growing_Menu(Base_Menu):
 
     property configuration:
         def __get__(self):
-            return {'pos':self.outline.design_org[:],'size':[self.outline.design_size[0],0],'collapsed':self.collapsed}
+            cdef dict submenus = self.get_submenu_config()
+            return {'pos':self.outline.design_org[:],'size':[self.outline.design_size[0],0],'collapsed':self.collapsed,'submenus':submenus}
 
         def __set__(self,new_conf):
             #load from configutation if avaible, else keep old setting
@@ -357,6 +380,9 @@ cdef class Growing_Menu(Base_Menu):
             self.outline.design_size[:] = new_conf.get('size',self.outline.design_size[:])
             self.collapsed = new_conf.get('collapsed',self.collapsed)
             self.header_pos = self.header_pos #update layout
+            self.set_submenu_config(new_conf.get('submenus',{}))
+
+
 
 
 cdef class Scrolling_Menu(Base_Menu):
@@ -582,10 +608,11 @@ cdef class Scrolling_Menu(Base_Menu):
 
     property configuration:
         def __get__(self):
+            cdef dict submenus = self.get_submenu_config()
             if not self.element_space.has_area():
-                return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':True,'uncollapsed_pos':self.uncollapsed_outline.design_org[:],'uncollapsed_size':self.uncollapsed_outline.design_size[:]}
+                return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':True,'uncollapsed_pos':self.uncollapsed_outline.design_org[:],'uncollapsed_size':self.uncollapsed_outline.design_size[:],'submenus':submenus}
             else:
-                return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':False}
+                return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':False,'submenus':submenus}
         def __set__(self,new_conf):
 
             self.outline.design_org[:] = new_conf.get('pos',self.outline.design_org[:])
@@ -596,4 +623,6 @@ cdef class Scrolling_Menu(Base_Menu):
                 self.uncollapsed_outline.design_size[:] = new_conf.get('uncollapsed_size',self.outline.design_size[:])
 
             self.header_pos = self.header_pos #update layout
+            self.set_submenu_config(new_conf.get('submenus',{}))
+
 
