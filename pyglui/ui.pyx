@@ -159,6 +159,38 @@ cdef class UI:
         global should_redraw
         should_redraw = True
 
+
+    #identical to base_menu method
+    cdef get_submenu_config(self):
+        '''
+        Growing menus are sometimes emebedded in Other menues. We load their configurations recursively.
+        '''
+        cdef dict submenus = {}
+        for e in self.elements:
+            if isinstance(e,(Growing_Menu,Scrolling_Menu,Stretching_Menu)):
+                submenus[e.label] = submenus.get(e.label,[]) + [e.configuration] #we could have two submenues with same label so we use a list for each submenu label cotaining the conf dicts for each menu
+        return submenus
+
+    #identical to base_menu method
+    cdef set_submenu_config(self,dict submenus):
+        '''
+        Growing menus are sometimes emebedded in Other menues. We save their configurations recursively.
+        '''
+        if submenus:
+            for e in self.elements:
+                if isinstance(e,(Growing_Menu,Scrolling_Menu,Stretching_Menu)):
+                    e.configuration = submenus.get(e.label,[{}]).pop(0) #pop of the first menu conf dict in the list.
+
+    property configuration:
+        def __get__(self):
+            cdef dict submenus = self.get_submenu_config()
+            return {'submenus':submenus}
+
+        def __set__(self,new_conf):
+            self.set_submenu_config(new_conf.get('submenus',{}))
+
+
+
     def __len__ (self):
         return len(self.elements)
 

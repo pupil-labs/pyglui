@@ -63,23 +63,24 @@ cdef class Base_Menu(UI_element):
         return True
 
 
-    def get_submenu_config(self):
+    cdef get_submenu_config(self):
         '''
         Growing menus are sometimes emebedded in Other menues. We load their configurations recursively.
         '''
         cdef dict submenus = {}
         for e in self.elements:
-            if isinstance(e,Growing_Menu):
-                submenus[e.label] = e.configuration
+            if isinstance(e,(Growing_Menu,Scrolling_Menu,Stretching_Menu)):
+                submenus[e.label] = submenus.get(e.label,[]) + [e.configuration] #we could have two submenues with same label so we use a list for each submenu label cotaining the conf dicts for each menu
         return submenus
 
-    def set_submenu_config(self,dict submenus):
+    cdef set_submenu_config(self,dict submenus):
         '''
         Growing menus are sometimes emebedded in Other menues. We save their configurations recursively.
         '''
-        for e in self.elements:
-            if isinstance(e,Growing_Menu):
-                e.configuration = submenus.get(e.label,{})
+        if submenus:
+            for e in self.elements:
+                if isinstance(e,(Growing_Menu,Scrolling_Menu,Stretching_Menu)):
+                    e.configuration = submenus.get(e.label,[{}]).pop(0) #pop of the first menu conf dict in the list.
 
 
     cdef draw_menu(self,bint nested):
@@ -610,9 +611,15 @@ cdef class Scrolling_Menu(Base_Menu):
         def __get__(self):
             cdef dict submenus = self.get_submenu_config()
             if not self.element_space.has_area():
-                return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':True,'uncollapsed_pos':self.uncollapsed_outline.design_org[:],'uncollapsed_size':self.uncollapsed_outline.design_size[:],'submenus':submenus}
+                return {'pos':self.outline.design_org[:],
+                        'size':self.outline.design_size[:],
+                        'scrollstate':self.scrollstate[:],
+                        'collapsed':True,
+                        'uncollapsed_pos':self.uncollapsed_outline.design_org[:],
+                        'uncollapsed_size':self.uncollapsed_outline.design_size[:],
+                        'submenus':submenus}
             else:
-                return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':False,'submenus':submenus}
+                return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':False,'submenus':submenus,'scrollstate':self.scrollstate[:]}
         def __set__(self,new_conf):
 
             self.outline.design_org[:] = new_conf.get('pos',self.outline.design_org[:])
@@ -623,6 +630,7 @@ cdef class Scrolling_Menu(Base_Menu):
                 self.uncollapsed_outline.design_size[:] = new_conf.get('uncollapsed_size',self.outline.design_size[:])
 
             self.header_pos = self.header_pos #update layout
+            self.scrollstate[:] = new_conf.get('scrollstate',(0,0))
             self.set_submenu_config(new_conf.get('submenus',{}))
 
 
