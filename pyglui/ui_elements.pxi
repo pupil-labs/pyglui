@@ -612,7 +612,7 @@ cdef class Text_Input(UI_element):
         self.selected = False
         #text input should try to conserve the imput type to support numeric values
         t =  type(self.sync_val.value)
-        if t in (dict,list,int,float,tuple,bool):
+        if t in (dict,list,set,int,float,tuple,bool):
             try:
                 typed_val = eval(self.preview)
             except:
@@ -623,6 +623,8 @@ cdef class Text_Input(UI_element):
             raise NotImplementedError("This type is not implmented")
         if self.flexible_typing or type(typed_val) == t:
             self.sync_val.value = typed_val
+        elif t == float and type(typed_val) == int:
+            self.sync_val.value = float(typed_val)
 
 
     cdef abort_input(self):
