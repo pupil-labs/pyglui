@@ -367,8 +367,18 @@ cdef class Draggable:
         self.outline.compute(parent_size)
         self.outline.sketch()
 
+
+    cpdef pre_handle_input(self,Input new_input):
+        # we need to check for new clicks as touch pads can isse
+        # a button down that is not follow by a button up
+        for b in new_input.buttons:
+            if b[1] == 1:
+                if not self.outline.mouse_over(new_input.m):
+                    self.selected = False
+
     cdef handle_input(self,Input new_input, bint visible):
         global should_redraw
+
         if self.selected and new_input.dm:
             self.value -= self.drag_accumulator
             self.drag_accumulator = (new_input.m-self.touch_point)
@@ -414,6 +424,9 @@ cdef class Draggable:
                 self.selected = False
                 if self.click_cb and not self.dragged:
                     self.click_cb()
+
+        if self.selected:
+            new_input.active_ui_elements.append(self)
 
     cdef sync(self):
         pass
