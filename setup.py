@@ -1,12 +1,13 @@
 import os, platform
 from stat import ST_MTIME
 
-from distutils.core import setup
-from distutils.extension import Extension
+#from distutils.core import setup
+#from distutils.extension import Extension
 from Cython.Build import cythonize
 
 from pyglui.cygl.glew_pxd import generate_pxd
 
+from setuptools import setup, Extension, Command
 
 includes = ['pyglui/cygl/','.']
 glew_binaries =[]
