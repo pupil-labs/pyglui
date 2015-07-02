@@ -184,6 +184,10 @@ cdef fbo_tex_id create_ui_texture(Vec2 tex_size):
 
     return ui_layer
 
+cdef destroy_ui_texture(fbo_tex_id ui_layer):
+    gl.glDeleteTextures(1,&ui_layer.tex_id)
+    gl.glDeleteFramebuffers(1,&ui_layer.fbo_id)
+
 cdef resize_ui_texture(fbo_tex_id ui_layer, Vec2 tex_size):
     gl.glBindTexture(gl.GL_TEXTURE_2D, ui_layer.tex_id)
     gl.glTexImage2D(gl.GL_TEXTURE_2D, 0,gl.GL_RGBA, int(tex_size.x),
