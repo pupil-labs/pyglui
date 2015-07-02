@@ -215,7 +215,7 @@ cdef class Switch(UI_element):
         self.off_val = off_val
         self.outline = FitBox(Vec2(0,0),Vec2(0,switch_outline_size_y)) # we only fix the height
         self.field = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
-        self.button = FitBox(Vec2(-switch_button_size-x_spacer,0),Vec2(switch_button_size-x_spacer,switch_button_size-x_spacer))
+        self.button = FitBox(Vec2(-switch_button_size-x_spacer,0),Vec2(switch_button_size,switch_button_size))
         self.selected = False
         # rendering variables
         self.text_color = RGBA(*color_text_default)
