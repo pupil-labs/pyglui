@@ -182,7 +182,7 @@ cdef class Slider(UI_element):
 
                 should_redraw = True
 
-            for b in new_input.buttons:
+            for b in new_input.buttons[:]:#list copy for remove to work
                 if b[1] == 1 and visible:
                     if mouse_over_center(self.slider_pos+self.field.org,self.field.size.y,self.field.size.y,new_input.m):
                         new_input.buttons.remove(b) # the slider should catch the event (unlike other elements)
@@ -282,16 +282,13 @@ cdef class Switch(UI_element):
             for b in new_input.buttons:
                 if visible and self.button.mouse_over(new_input.m):
                     if b[1] == 1:
-                        #new_input.buttons.remove(b)
                         self.selected = True
                         should_redraw = True
                 if self.selected and b[1] == 0 and (self.sync_val.value == self.on_val):
-                    #new_input.buttons.remove(b)
                     self.sync_val.value = self.off_val
                     self.selected = False
                     should_redraw = True
                 if self.selected and b[1] == 0 and (self.sync_val.value == self.off_val):
-                    #new_input.buttons.remove(b)
                     self.sync_val.value = self.on_val
                     self.selected = False
                     should_redraw = True
@@ -407,7 +404,6 @@ cdef class Selector(UI_element):
 
             for b in new_input.buttons:
                 if visible and self.select_field.mouse_over(new_input.m):
-                    #new_input.buttons.remove(b)
                     if b[1] == 0:
                         should_redraw = True
                         if not self.selected:
@@ -455,13 +451,13 @@ cdef class Text_Input(UI_element):
     Text input field.
     '''
     cdef FitBox field, textfield
-    cdef bint selected,highlight,flexible_typing
+    cdef bint selected,highlight,
     cdef Synced_Value sync_val
     cdef bytes preview
     cdef int caret,start_char_idx,end_char_idx,start_highlight_idx
     cdef RGBA text_color, text_input_highlight_color, text_input_line_highlight_color
-
-    def __cinit__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None,bint flexible_typing=False):
+    cdef object data_type
+    def __cinit__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
@@ -478,10 +474,9 @@ cdef class Text_Input(UI_element):
         self.text_color = RGBA(*color_text_default)
         self.text_input_highlight_color = RGBA(*text_input_highlight_color)
         self.text_input_line_highlight_color = RGBA(*text_input_line_highlight_color)
-        self.flexible_typing = flexible_typing
+        self.data_type = type(self.sync_val.value)
 
-
-    def __init__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None,bint flexible_typing=False):
+    def __init__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
         pass
 
 
@@ -576,15 +571,13 @@ cdef class Text_Input(UI_element):
             self.highlight = False
             should_redraw = True
 
-        for b in new_input.buttons:
+        for b in new_input.buttons[:]:#copy for remove to work
             if b[1] == 1:
                 if self.textfield.mouse_over(new_input.m):
                     self.finish_input()
                     new_input.buttons.remove(b) #avoid reselection during handle_input
                 else:
                     self.finish_input()
-                    #new_input.buttons.remove(b) #avoid reselection during handle_input
-                    #self.abort_input()
 
 
     cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
@@ -593,7 +586,6 @@ cdef class Text_Input(UI_element):
             for b in new_input.buttons:
                 if b[1] == 1 and visible:
                     if self.textfield.mouse_over(new_input.m):
-                        #new_input.buttons.remove(b)
                         self.selected = True
                         self.highlight = False
                         self.preview = str(self.sync_val.value)
@@ -610,21 +602,16 @@ cdef class Text_Input(UI_element):
         global should_redraw
         should_redraw = True
         self.selected = False
-        #text input should try to conserve the imput type to support numeric values
-        t =  type(self.sync_val.value)
-        if t in (dict,list,set,int,float,tuple,bool):
-            try:
-                typed_val = eval(self.preview)
-            except:
-                return
-        elif t == str:
+        # turn string back into the data_type of the value
+        if self.data_type == str:
             typed_val = self.preview
         else:
-            raise NotImplementedError("This type is not implmented")
-        if self.flexible_typing or type(typed_val) == t:
-            self.sync_val.value = typed_val
-        elif t == float and type(typed_val) == int:
-            self.sync_val.value = float(typed_val)
+            try:
+                typed_val = self.data_type(eval(self.preview))
+            except:
+                #failed to convert. Ignore user input.
+                return
+        self.sync_val.value = typed_val
 
 
     cdef abort_input(self):
@@ -765,11 +752,9 @@ cdef class Button(UI_element):
             for b in new_input.buttons:
                 if  visible and self.button.mouse_over(new_input.m):
                     if b[1] == 1:
-                        #new_input.buttons.remove(b)
                         self.selected = True
                         should_redraw = True
                 if self.selected and b[1] == 0:
-                    #new_input.buttons.remove(b)
                     self.selected = False
                     should_redraw = True
                     self.function()
@@ -923,16 +908,13 @@ cdef class Thumb(UI_element):
             for b in new_input.buttons:
                 if visible and self.button.mouse_over(new_input.m):
                     if b[1] in (1,2):
-                        #new_input.buttons.remove(b)
                         self.selected = True
                         should_redraw = True
                 if self.selected and b[1] in (1,2) and (self.sync_val.value == self.on_val):
-                    #new_input.buttons.remove(b)
                     self.sync_val.value = self.off_val
                     self.selected = False
                     should_redraw = True
                 if self.selected and b[1] in (1,2) and (self.sync_val.value == self.off_val):
-                    #new_input.buttons.remove(b)
                     self.sync_val.value = self.on_val
                     self.selected = False
                     should_redraw = True
