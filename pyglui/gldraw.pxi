@@ -143,9 +143,9 @@ cdef inline line(Vec2 org, Vec2 end, RGBA color):
     gl.glEnd()
 
 
-
 ### OpenGL funtions for rendering to texture.
 ### Using this saves us considerable cpu/gpu time when the UI remains static.
+### An almost identical implementation can be found in cylg.utils
 ctypedef struct fbo_tex_id:
     gl.GLuint fbo_id
     gl.GLuint tex_id
@@ -231,7 +231,6 @@ cdef draw_ui_texture(fbo_tex_id ui_layer):
     gl.glPushMatrix()
     gl.glLoadIdentity()
 
-    gl.glEnable(gl.GL_TEXTURE_2D)
     gl.glColor4f(1.0,1.0,1.0,1.0)
     # Draw textured Quad.
     gl.glBegin(gl.GL_QUADS)
@@ -244,7 +243,6 @@ cdef draw_ui_texture(fbo_tex_id ui_layer):
     gl.glTexCoord2f(0.0, 0.0)
     gl.glVertex2f(0,1)
     gl.glEnd()
-    gl.glDisable(gl.GL_TEXTURE_2D)
 
     #pop coord systems
     gl.glMatrixMode(gl.GL_PROJECTION)
@@ -255,4 +253,7 @@ cdef draw_ui_texture(fbo_tex_id ui_layer):
     gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
     gl.glDisable(gl.GL_TEXTURE_2D)
     gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+
+
+
 
