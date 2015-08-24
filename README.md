@@ -20,6 +20,8 @@ Cython powered OpenGL gui.
 * clone with `--recursive` flag
 * `python setup.py install`
 
+(for Windows Microsoft Visual Studio 2008 is required)
+
 ## Demo
 * `cd /example`
 * `python example.py` 

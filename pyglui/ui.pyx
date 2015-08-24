@@ -49,6 +49,12 @@ cdef class UI:
     def __init__(self):
         pass
 
+    def terminate(self):
+        global glfont
+        glfont = None
+        destroy_ui_texture(self.ui_layer)
+        self.elements = []
+
     def update_mouse(self,mx,my):
         if self.window.mouse_over(Vec2(mx,my)):
             self.new_input.dm.x,self.new_input.dm.y = mx-self.new_input.m.x, my-self.new_input.m.y
@@ -370,11 +376,12 @@ cdef class Draggable:
 
     cpdef pre_handle_input(self,Input new_input):
         # we need to check for new clicks as touch pads can isse
-        # a button down that is not follow by a button up
+        # a button down that is not follow by a button up.
         for b in new_input.buttons:
             if b[1] == 1:
                 if not self.outline.mouse_over(new_input.m):
                     self.selected = False
+
 
     cdef handle_input(self,Input new_input, bint visible):
         global should_redraw
@@ -410,16 +417,16 @@ cdef class Draggable:
 
             should_redraw = True
 
-        for b in new_input.buttons:
+        for b in new_input.buttons[:]:#we need to make a copy for remove to work as desired
             if b[1] == 1 and visible:
                 if self.outline.mouse_over(new_input.m):
                     self.selected = True
                     self.dragged  = False
-                    if self.catch_input:
-                        new_input.buttons.remove(b)
                     self.touch_point.x = new_input.m.x
                     self.touch_point.y = new_input.m.y
                     self.drag_accumulator = Vec2(0,0)
+                    if self.catch_input:
+                        new_input.buttons.remove(b)
             if self.selected and b[1] == 0:
                 self.selected = False
                 if self.click_cb and not self.dragged:

@@ -30,6 +30,7 @@
 # ----------------
 # changes by moritz kassner:
 # small bugfixes, changed binary loading routine.
+# Upgrade to 3.1.x api.
 # -----------------------------------------------------------------------------
 
 import sys,os
@@ -43,11 +44,14 @@ del platform
 
 
 if getattr(sys, 'frozen', False):
-    # we are running in a |PyInstaller| bundle using the local version
+    # we are running in a |PyInstaller| bundle using a local version
+    # you will need to add glfw.so/dylib in your spec file.
     if os_name == "Linux":
         filename = 'libglfw.so'
     elif os_name == "Darwin":
         filename = 'libglfw3.dylib'
+    elif os_name == "Windows":
+        filename = 'glfw3.dll'
     else:
         filename = 'libglfw.dll'
     dll_path = os.path.join(sys._MEIPASS,filename)
@@ -58,16 +62,21 @@ else:
         dll_path = find_library('glfw')
     elif os_name == "Darwin":
         dll_path = find_library('glfw3')
+    elif os_name == "Windows":
+        dll_path = os.path.join(os.path.dirname(os.path.abspath(os.path.curdir)), 'shared_modules', 'external', 'glfw3')
+    # otherwise make sure that 'glfw3.dll' (http://www.glfw.org) is in Win-PATH-Variable (e.g. "C:\Windows\system32\glfw3.dll")
+    # precompiled glfw3.dll needs to fit MSC Version and x86/x86_64 architecture (e.g MSC v. 1500 - 64bit == VS2008 + x86_64)
     else:
         dll_path = find_library('glfw')
     if not dll_path:
         raise RuntimeError, 'GLFW library not found'
 
+# if ctypes.CDLL('glfw3.dll') fails with "[Error 193] %1 is not a valid Win32 application", then a wrong compiled lib was possibly used
 _glfw = ctypes.CDLL(dll_path)
 
 # --- Version -----------------------------------------------------------------
 GLFW_VERSION_MAJOR      = 3
-GLFW_VERSION_MINOR      = 0
+GLFW_VERSION_MINOR      = 1
 GLFW_VERSION_REVISION   = 1
 __version__ = GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR, GLFW_VERSION_REVISION
 
@@ -356,6 +365,7 @@ scrollfun          = CFUNCTYPE(None, POINTER(GLFWwindow), c_double, c_double)
 keyfun             = CFUNCTYPE(None, POINTER(GLFWwindow), c_int, c_int, c_int, c_int)
 charfun            = CFUNCTYPE(None, POINTER(GLFWwindow), c_uint)
 monitorfun         = CFUNCTYPE(None, POINTER(GLFWmonitor), c_int)
+dropfun            = CFUNCTYPE(None, POINTER(GLFWmonitor), c_int, POINTER(c_char_p))
 
 # --- Init --------------------------------------------------------------------
 # glfwInit                        = _glfw.glfwInit
@@ -497,12 +507,17 @@ def glfwCreateWindow(width=640, height=480, title="GLFW Window", monitor=None, s
                                 'mousebuttonfun'     : None,
                                 'cursorposfun'       : None,
                                 'cursorenterfun'     : None,
-                                'scrollfun'          : None }
+                                'scrollfun'          : None,
+                                'dropfun'            : None,}
     return window
 
 def glfwDestroyWindow(window):
     index = __windows__.index(window)
+    #glfw 3.1 appears to require to the context to be destroyed to be current.
+    current = glfwGetCurrentContext()
+    glfwMakeContextCurrent(window)
     _glfw.glfwDestroyWindow(window)
+    glfwMakeContextCurrent(current)
     # We do not delete window from the list (or it would impact windows numbering)
     # del __windows__[index]
     del __c_callbacks__[index]
@@ -633,3 +648,4 @@ exec __callback__('Char')
 exec __callback__('MouseButton')
 exec __callback__('CursorPos')
 exec __callback__('Scroll')
+exec __callback__('Drop')
