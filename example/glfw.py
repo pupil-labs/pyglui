@@ -64,11 +64,14 @@ else:
         dll_path = find_library('glfw3')
     elif os_name == "Windows":
         dll_path = os.path.join(os.path.dirname(os.path.abspath(os.path.curdir)), 'shared_modules', 'external', 'glfw3')
+    # otherwise make sure that 'glfw3.dll' (http://www.glfw.org) is in Win-PATH-Variable (e.g. "C:\Windows\system32\glfw3.dll")
+    # precompiled glfw3.dll needs to fit MSC Version and x86/x86_64 architecture (e.g MSC v. 1500 - 64bit == VS2008 + x86_64)
     else:
         dll_path = find_library('glfw')
     if not dll_path:
         raise RuntimeError, 'GLFW library not found'
 
+# if ctypes.CDLL('glfw3.dll') fails with "[Error 193] %1 is not a valid Win32 application", then a wrong compiled lib was possibly used
 _glfw = ctypes.CDLL(dll_path)
 
 # --- Version -----------------------------------------------------------------
