@@ -202,7 +202,7 @@ def demo():
     print graph.__version__
     cpu_g = graph.Line_Graph()
     cpu_g.pos = (50,100)
-    cpu_g.update_fn = ps.get_cpu_percent
+    cpu_g.update_fn = ps.cpu_percent
     cpu_g.update_rate = 5
     cpu_g.label = 'CPU %0.1f'
 
