@@ -17,8 +17,12 @@ Cython powered OpenGL gui.
 
 ## Install
 * install `glew` (instructions can be found [here](https://github.com/pupil-labs/cygl/blob/master/README.md))
-* clone with `--recursive` flag
-* `python setup.py install`
+```shell
+cd ~/
+git clone http://github.com/pupil-labs/pyglui --recursive
+cd pyglui
+sudo python setup.py install
+```
 
 (for Windows Microsoft Visual Studio 2008 is required)
 
