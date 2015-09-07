@@ -27,6 +27,7 @@ sudo python setup.py install
 (for Windows Microsoft Visual Studio 2008 is required)
 
 ## Demo
+* `pip install psutil` (psutil is used in the demo to show cpu load)
 * `cd /example`
 * `python example.py` 
 
