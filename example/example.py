@@ -8,13 +8,18 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 import time
+import uvc
 from pyglui import ui
 from pyglui.cygl.utils import init
 from pyglui.cygl.utils import RGBA
-
+from pyglui.cygl.utils import create_named_texture, destroy_named_texture, update_named_texture, draw_named_texture
+from pyglui.cygl.utils import create_named_yuv422_texture, update_named_yuv422_texture, draw_named_yuv422_texture
 from pyglui.pyfontstash import fontstash as fs
+from pyglui.cygl.shader import Shader
+
 
 width, height = (1280,720)
+
 
 
 def basic_gl_setup():
@@ -103,6 +108,7 @@ def demo():
 
     # get glfw started
     glfwInit()
+
     window = glfwCreateWindow(width, height, "pyglui demo", None, None)
     if not window:
         exit()
@@ -121,6 +127,8 @@ def demo():
     glfwMakeContextCurrent(window)
     init()
     basic_gl_setup()
+
+    print glGetString(GL_VERSION)
 
     class Temp(object):
         """Temp class to make objects"""
@@ -158,39 +166,39 @@ def demo():
     gui.scale = 1.0
     sidebar = ui.Scrolling_Menu("MySideBar",pos=(-300,0),size=(0,0),header_pos='left')
 
-    sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
-    sm.append(ui.Slider("bar",foo))
-    sm.append(ui.Text_Input('mytext',foo,setter=printer))
-    ssm = ui.Growing_Menu("SubSubMenu",pos=(0,0),size=(0,100))
-    ssm.append(ui.Slider("bar",foo))
-    ssm.append(ui.Text_Input('mytext',foo,setter=printer))
-    sm.append(ssm)
-    sidebar.append(sm)
-    sm.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena']) )
-    sm.append(ui.Button("Say Hi!",print_hello))
-    gui.append(sidebar)
+    # sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
+    # sm.append(ui.Slider("bar",foo))
+    # sm.append(ui.Text_Input('mytext',foo,setter=printer))
+    # ssm = ui.Growing_Menu("SubSubMenu",pos=(0,0),size=(0,100))
+    # ssm.append(ui.Slider("bar",foo))
+    # ssm.append(ui.Text_Input('mytext',foo,setter=printer))
+    # sm.append(ssm)
+    # sidebar.append(sm)
+    # sm.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena']) )
+    # sm.append(ui.Button("Say Hi!",print_hello))
+    # gui.append(sidebar)
 
 
-    m = ui.Scrolling_Menu("MyMenu",pos=(250,30),size=(300,500),header_pos='top')
-    m.append(ui.Info_Text("This is my multiline info text. I wonder if multilines break as designed... How does it look? Info Text with long label text to test multiline break handling." ))
-    m.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
-    m.append(ui.Slider("bur",foo,step=50,min=1,max=1005, label="Slider label with long label text to test overflow handling"))
-    m.append(ui.Button("Say Hi!",print_hello))
-    m.append(ui.Switch("myswitch",foo,on_val=1000,off_val=10,label="Switch Me"))
-    sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
-    sm.append(ui.Slider("bar",foo))
-    sm.append(ui.Text_Input('mytext',foo))
-    m.append(sm)
-    m.append(ui.Button("Say Hi!",print_hello))
+    # m = ui.Scrolling_Menu("MyMenu",pos=(250,30),size=(300,500),header_pos='top')
+    # m.append(ui.Info_Text("This is my multiline info text. I wonder if multilines break as designed... How does it look? Info Text with long label text to test multiline break handling." ))
+    # m.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
+    # m.append(ui.Slider("bur",foo,step=50,min=1,max=1005, label="Slider label with long label text to test overflow handling"))
+    # m.append(ui.Button("Say Hi!",print_hello))
+    # m.append(ui.Switch("myswitch",foo,on_val=1000,off_val=10,label="Switch Me"))
+    # sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
+    # sm.append(ui.Slider("bar",foo))
+    # sm.append(ui.Text_Input('mytext',foo))
+    # m.append(sm)
+    # m.append(ui.Button("Say Hi!",print_hello))
 
 
-    rightbar = ui.Stretching_Menu('Right Bar',(0,100),(150,-100))
-    rightbar.append(ui.Thumb("record",foo,label="Record") )
-    rightbar.append(ui.Thumb("calibrate",foo,label="Calibrate") )
-    rightbar.append(ui.Thumb("stream",foo,label="Stream") )
-    rightbar.append(ui.Thumb("test",foo,label="Test") )
-    gui.append(rightbar)
-    gui.append(m)
+    # rightbar = ui.Stretching_Menu('Right Bar',(0,100),(150,-100))
+    # rightbar.append(ui.Thumb("record",foo,label="Record") )
+    # rightbar.append(ui.Thumb("calibrate",foo,label="Calibrate") )
+    # rightbar.append(ui.Thumb("stream",foo,label="Stream") )
+    # rightbar.append(ui.Thumb("test",foo,label="Test") )
+    # gui.append(rightbar)
+    # gui.append(m)
 
     import os
     import psutil
@@ -222,16 +230,77 @@ def demo():
     on_resize(window,*glfwGetWindowSize(window))
 
 
+
+    dev_list =  uvc.device_list()
+    print dev_list
+    if not dev_list:
+        return
+    cap = uvc.Capture(dev_list[0]['uid'])
+    cap.frame_size = 1280,720
+    frame = cap.get_frame_robust()
+    print frame.timestamp
+
+
+    rgb_tex = create_named_texture(frame.img.shape)
+    yuv_tex  = create_named_yuv422_texture( (frame.width, frame.height ) )
+
+    VERT_SHADER = """
+        #version 120
+
+        void main () {
+               gl_Position = gl_ModelViewProjectionMatrix*vec4(gl_Vertex.xyz,1.);
+               gl_TexCoord[0] = gl_MultiTexCoord0;
+        }
+        """
+
+    FRAG_SHADER = """
+        #version 120
+
+        uniform sampler2D texture;
+       // uniform int width;
+        //uniform int height;
+
+        void main()
+        {
+            vec2 texCoord;
+            texCoord.x = gl_TexCoord[0].s;
+            texCoord.y = gl_TexCoord[0].t;
+
+            vec3 color = texture2D( texture, texCoord).rrr;
+            gl_FragColor = vec4(color, 1.0);
+        }
+        """
+
+    simple_yuv422_shader = Shader(VERT_SHADER, FRAG_SHADER, "")
+
     while not quit:
         dt,ts = time.time()-ts,time.time()
         clear_gl_screen()
+
+        frame = cap.get_frame_robust()
+        y,u,v = frame.yuv422
+        v /=2
+        update_named_texture(rgb_tex, frame.yuv420[1])
+        draw_named_texture( rgb_tex, quad  =((0.,0.),(1280./2,0.),(1280./2,720./2),(0.,720./2)))
+
+        #print frame.yuv_subsampling
+
+        update_named_yuv422_texture( yuv_tex, frame.yuv_buffer, 1280*2, 720 )
+
+       # simple_yuv422_shader.bind()
+
+       # simple_yuv422_shader.uniform1i("texture", 0)
+
+        draw_named_yuv422_texture( yuv_tex,  quad  =((700 + 0.,0.),(700 +1280./2,0.),(700 +1280./2,720./2),(700 +0.,720./2)))
+
+       # simple_yuv422_shader.unbind()
 
         cpu_g.update()
         cpu_g.draw()
         fps_g.add(1./dt)
         fps_g.draw()
-        st_graph.add(foo.bur)
-        st_graph.draw()
+       # st_graph.add(foo.bur)
+        #st_graph.draw()
 
         gui.update()
 
