@@ -65,7 +65,6 @@ def demo():
         w = max(w,1)
         hdpi_factor = glfwGetFramebufferSize(window)[0]/glfwGetWindowSize(window)[0]
         w,h = w*hdpi_factor,h*hdpi_factor
-        gui.update_window(w,h)
         active_window = glfwGetCurrentContext()
         glfwMakeContextCurrent(window)
         # norm_size = normalize((w,h),glfwGetWindowSize(window))
@@ -78,27 +77,11 @@ def demo():
         pass
 
     def on_key(window, key, scancode, action, mods):
-        gui.update_key(key,scancode,action,mods)
 
         if action == GLFW_PRESS:
             if key == GLFW_KEY_ESCAPE:
                 on_close(window)
 
-    def on_char(window,char):
-        gui.update_char(char)
-
-    def on_button(window,button, action, mods):
-        gui.update_button(button,action,mods)
-        # pos = normalize(pos,glfwGetWindowSize(window))
-        # pos = denormalize(pos,(frame.img.shape[1],frame.img.shape[0]) ) # Position in img pixels
-
-    def on_pos(window,x, y):
-        hdpi_factor = float(glfwGetFramebufferSize(window)[0]/glfwGetWindowSize(window)[0])
-        x,y = x*hdpi_factor,y*hdpi_factor
-        gui.update_mouse(x,y)
-
-    def on_scroll(window,x,y):
-        gui.update_scroll(x,y)
 
     def on_close(window):
         global quit
@@ -119,10 +102,6 @@ def demo():
     glfwSetWindowCloseCallback(window,on_close)
     glfwSetWindowIconifyCallback(window,on_iconify)
     glfwSetKeyCallback(window,on_key)
-    glfwSetCharCallback(window,on_char)
-    glfwSetMouseButtonCallback(window,on_button)
-    glfwSetCursorPosCallback(window,on_pos)
-    glfwSetScrollCallback(window,on_scroll)
 
     glfwMakeContextCurrent(window)
     init()
@@ -162,43 +141,6 @@ def demo():
 
 
     print "pyglui version: %s" %(ui.__version__)
-    gui = ui.UI()
-    gui.scale = 1.0
-    sidebar = ui.Scrolling_Menu("MySideBar",pos=(-300,0),size=(0,0),header_pos='left')
-
-    # sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
-    # sm.append(ui.Slider("bar",foo))
-    # sm.append(ui.Text_Input('mytext',foo,setter=printer))
-    # ssm = ui.Growing_Menu("SubSubMenu",pos=(0,0),size=(0,100))
-    # ssm.append(ui.Slider("bar",foo))
-    # ssm.append(ui.Text_Input('mytext',foo,setter=printer))
-    # sm.append(ssm)
-    # sidebar.append(sm)
-    # sm.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena']) )
-    # sm.append(ui.Button("Say Hi!",print_hello))
-    # gui.append(sidebar)
-
-
-    # m = ui.Scrolling_Menu("MyMenu",pos=(250,30),size=(300,500),header_pos='top')
-    # m.append(ui.Info_Text("This is my multiline info text. I wonder if multilines break as designed... How does it look? Info Text with long label text to test multiline break handling." ))
-    # m.append(ui.Selector('select',foo,selection=['Tiger','Lion','Cougar','Hyena'],setter=printer) )
-    # m.append(ui.Slider("bur",foo,step=50,min=1,max=1005, label="Slider label with long label text to test overflow handling"))
-    # m.append(ui.Button("Say Hi!",print_hello))
-    # m.append(ui.Switch("myswitch",foo,on_val=1000,off_val=10,label="Switch Me"))
-    # sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
-    # sm.append(ui.Slider("bar",foo))
-    # sm.append(ui.Text_Input('mytext',foo))
-    # m.append(sm)
-    # m.append(ui.Button("Say Hi!",print_hello))
-
-
-    # rightbar = ui.Stretching_Menu('Right Bar',(0,100),(150,-100))
-    # rightbar.append(ui.Thumb("record",foo,label="Record") )
-    # rightbar.append(ui.Thumb("calibrate",foo,label="Calibrate") )
-    # rightbar.append(ui.Thumb("stream",foo,label="Stream") )
-    # rightbar.append(ui.Thumb("test",foo,label="Test") )
-    # gui.append(rightbar)
-    # gui.append(m)
 
     import os
     import psutil
@@ -220,16 +162,7 @@ def demo():
     fps_g.label = "%0.0f FPS"
     fps_g.color[:] = .1,.1,.8,.9
 
-    st_graph = graph.Averaged_Value()
-    st_graph.pos = (200,200)
-    st_graph.update_rate = 5
-    st_graph.label = "Slider Value: %0.0f"
-    st_graph.color[:] = 1.,0.,.6,.9
-
-
     on_resize(window,*glfwGetWindowSize(window))
-
-
 
     dev_list =  uvc.device_list()
     print dev_list
@@ -238,71 +171,29 @@ def demo():
     cap = uvc.Capture(dev_list[0]['uid'])
     cap.frame_size = 1280,720
     frame = cap.get_frame_robust()
-    print frame.timestamp
-
 
     rgb_tex = create_named_texture(frame.img.shape)
     yuv_tex  = create_named_yuv422_texture( (frame.width, frame.height ) )
 
-    VERT_SHADER = """
-        #version 120
 
-        void main () {
-               gl_Position = gl_ModelViewProjectionMatrix*vec4(gl_Vertex.xyz,1.);
-               gl_TexCoord[0] = gl_MultiTexCoord0;
-        }
-        """
-
-    FRAG_SHADER = """
-        #version 120
-
-        uniform sampler2D texture;
-       // uniform int width;
-        //uniform int height;
-
-        void main()
-        {
-            vec2 texCoord;
-            texCoord.x = gl_TexCoord[0].s;
-            texCoord.y = gl_TexCoord[0].t;
-
-            vec3 color = texture2D( texture, texCoord).rrr;
-            gl_FragColor = vec4(color, 1.0);
-        }
-        """
-
-    simple_yuv422_shader = Shader(VERT_SHADER, FRAG_SHADER, "")
 
     while not quit:
         dt,ts = time.time()-ts,time.time()
         clear_gl_screen()
 
         frame = cap.get_frame_robust()
-        y,u,v = frame.yuv422
-        v /=2
-        update_named_texture(rgb_tex, frame.yuv420[1])
+        #draw rgb image
+        update_named_texture(rgb_tex, frame.img)
         draw_named_texture( rgb_tex, quad  =((0.,0.),(1280./2,0.),(1280./2,720./2),(0.,720./2)))
 
-        #print frame.yuv_subsampling
-
-        update_named_yuv422_texture( yuv_tex, frame.yuv_buffer, 1280*2, 720 )
-
-       # simple_yuv422_shader.bind()
-
-       # simple_yuv422_shader.uniform1i("texture", 0)
-
+        #draw yuv422 image
+        update_named_yuv422_texture( yuv_tex, frame.yuv_buffer, frame.width, frame.height )
         draw_named_yuv422_texture( yuv_tex,  quad  =((700 + 0.,0.),(700 +1280./2,0.),(700 +1280./2,720./2),(700 +0.,720./2)))
-
-       # simple_yuv422_shader.unbind()
 
         cpu_g.update()
         cpu_g.draw()
         fps_g.add(1./dt)
         fps_g.draw()
-       # st_graph.add(foo.bur)
-        #st_graph.draw()
-
-        gui.update()
 
         glfwSwapBuffers(window)
         glfwPollEvents()
