@@ -13,7 +13,7 @@ from pyglui import ui
 from pyglui.cygl.utils import init
 from pyglui.cygl.utils import RGBA
 from pyglui.cygl.utils import create_named_texture, destroy_named_texture, update_named_texture, draw_named_texture
-from pyglui.cygl.utils import create_named_yuv422_texture, update_named_yuv422_texture, draw_named_yuv422_texture
+from pyglui.cygl.utils import update_named_texture_yuv422, draw_named_texture_yuv422
 from pyglui.pyfontstash import fontstash as fs
 from pyglui.cygl.shader import Shader
 
@@ -169,11 +169,11 @@ def demo():
     if not dev_list:
         return
     cap = uvc.Capture(dev_list[0]['uid'])
-    cap.frame_size = 1280,720
+    cap.frame_size = 1920,1080
     frame = cap.get_frame_robust()
 
-    rgb_tex = create_named_texture(frame.img.shape)
-    yuv_tex  = create_named_yuv422_texture( (frame.width, frame.height ) )
+    rgb_tex = create_named_texture()
+    yuv_tex  = create_named_texture()
 
 
 
@@ -187,8 +187,8 @@ def demo():
         draw_named_texture( rgb_tex, quad  =((0.,0.),(1280./2,0.),(1280./2,720./2),(0.,720./2)))
 
         #draw yuv422 image
-        update_named_yuv422_texture( yuv_tex, frame.yuv_buffer, frame.width, frame.height )
-        draw_named_yuv422_texture( yuv_tex,  quad  =((700 + 0.,0.),(700 +1280./2,0.),(700 +1280./2,720./2),(700 +0.,720./2)))
+        update_named_texture_yuv422( yuv_tex, frame.yuv_buffer, frame.width, frame.height )
+        draw_named_texture_yuv422( yuv_tex,  quad  =((700 + 0.,0.),(700 +1280./2,0.),(700 +1280./2,720./2),(700 +0.,720./2)))
 
         cpu_g.update()
         cpu_g.draw()
