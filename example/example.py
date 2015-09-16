@@ -168,9 +168,9 @@ def demo():
         clear_gl_screen()
 
 
-        draw_concentric_circles( (500,250), 11, 6 , 1.0 )
-        draw_concentric_circles( (600,250), 11, 7 , 1.0 )
-        draw_concentric_circles( (700,250), 11, 8 , 0.1 )
+        draw_concentric_circles( (500,250), 200, 6 , 1.0 )
+        draw_concentric_circles( (600,250), 200, 7 , 1.0 )
+        draw_concentric_circles( (700,250), 200, 8 , 0.1 )
 
 
 
