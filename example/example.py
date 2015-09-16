@@ -163,79 +163,14 @@ def demo():
 
     on_resize(window,*glfwGetWindowSize(window))
 
-
-    VERT_SHADER = """
-    #version 120
-    #extension GL_EXT_gpu_shader4 : require
-    varying vec2 texCoord;
-
-    uniform vec2 centerPosition; // position in screen coordinates
-    uniform float radii = 10; // radii of each circle
-    uniform int circleAmount = 4;
-
-    void main () {
-            const vec2 quadVertices[6] = vec2[6](
-                    vec2(-0.5, -0.5),
-                    vec2(-0.5, 0.5),
-                    vec2(0.5, -0.5),
-                    vec2(-0.5, 0.5),
-                    vec2(0.5, 0.5) ,
-                    vec2(0.5, -0.5));
-
-            const vec2 quadTexCoords[6] = vec2[6](
-                    vec2(0, 0),
-                    vec2(0, 1),
-                    vec2(1, 0),
-                    vec2(0, 1),
-                    vec2(1, 1) ,
-                    vec2(1, 0));
-
-           float quadSize = radii * circleAmount * 2;
-
-           gl_Position =  gl_ModelViewProjectionMatrix * vec4( centerPosition + quadSize *  quadVertices[gl_VertexID], 0.0, 1.0);
-           texCoord = quadTexCoords[gl_VertexID];
-           }
-    """
-
-    FRAG_SHADER = """
-    #version 120
-    varying vec2 texCoord;
-    uniform vec2 centerPosition; // position in screen coordinates
-    uniform float radii = 10; // radii of each circle
-    uniform int circleAmount = 4;
-
-    uniform float alpha;
-    void main()
-    {
-        float dist = distance(texCoord , vec2(0.5,0.5));
-
-        int colorIndex = int( floor( mod(dist/0.1, 2)));
-        const float colors[2] =  float[2](1.0f, 0.0f);
-
-        vec3 color = vec3(colors[colorIndex]);
-
-        gl_FragColor = vec4(color,alpha);
-    }
-    """
-
-    GEOM_SHADER = """"""
-    #shader link and compile
-    simple_concentric_circle_shader = Shader(VERT_SHADER,FRAG_SHADER,GEOM_SHADER)
-    simple_concentric_circle_shader.bind()
-    simple_concentric_circle_shader.uniform1f('alpha', 1)
-    simple_concentric_circle_shader.uniform1f('radii', 10)
-    simple_concentric_circle_shader.uniform1i('circleAmount', 5)
-    simple_concentric_circle_shader.uniformf('centerPosition', (500,500) )
-    simple_concentric_circle_shader.unbind()
-
     while not quit:
         dt,ts = time.time()-ts,time.time()
         clear_gl_screen()
 
 
-        simple_concentric_circle_shader.bind();
-        draw_concentric_circles(  )
-        simple_concentric_circle_shader.unbind()
+        draw_concentric_circles( (500,250), 11, 6 , 1.0 )
+        draw_concentric_circles( (600,250), 11, 7 , 1.0 )
+        draw_concentric_circles( (700,250), 11, 8 , 0.1 )
 
 
 
