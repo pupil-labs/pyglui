@@ -31,5 +31,14 @@ sudo python setup.py install
 * `cd /example`
 * `python example.py` 
 
+
+## Update
+Since we use submodules please do get and install updates:
+```shell
+git pull --recurse-submodules
+git submodule update --recursive
+python setup.py install
+```
+
 ![](https://raw.github.com/wiki/pupil-labs/pyglui/media/demo_screenshot_20141221.png)
 *Demo screenshot as of 2014-12-05*
