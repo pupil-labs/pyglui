@@ -11,6 +11,8 @@ from pyglui.cygl.glew_pxd import generate_pxd
 includes = ['pyglui/cygl/','.']
 glew_binaries =[]
 lib_dir = []
+fontstash_compile_args = ['-D FONTSTASH_IMPLEMENTATION','-D GLFONTSTASH_IMPLEMENTATION']
+
 if platform.system() == 'Darwin':
     # find glew irrespective of version
     for root, dirs, files in os.walk('/usr/local/Cellar/glew'):
@@ -21,14 +23,12 @@ if platform.system() == 'Darwin':
     libs = ['GLEW']
     libglew = [] #we are using the dylib
     extra_compile_args = ["-Wno-strict-aliasing", "-O2"]
-    fontstash_compile_args = extra_compile_args + ['-D FONTSTASH_IMPLEMENTATION','-D GLFONTSTASH_IMPLEMENTATION']
 elif platform.system() == 'Linux':
     glew_header = '/usr/include/GL/glew.h'
     includes += ['/usr/include/GL']
     libs = ['GLEW','GL'] #GL needed for fonstash
     link_args = []
     extra_compile_args = ["-Wno-strict-aliasing", "-O2"]
-    fontstash_compile_args = extra_compile_args + ['-D FONTSTASH_IMPLEMENTATION','-D GLFONTSTASH_IMPLEMENTATION']
 elif platform.system() == 'Windows':
     glew_header = 'pyglui/cygl/win_glew/gl/glew.h'
     includes = ['pyglui/cygl/', 'pyglui/cygl/win_glew']
@@ -37,7 +37,7 @@ elif platform.system() == 'Windows':
     link_args = []
     gl_compile_args = [] #['/DGL_GLEXT_PROTOTYPES']
     extra_compile_args = ["-O2"]
-    fontstash_compile_args = extra_compile_args + ['/DFONTSTASH_IMPLEMENTATION','/DGLFONTSTASH_IMPLEMENTATION']
+    fontstash_compile_args = ['/DFONTSTASH_IMPLEMENTATION','/DGLFONTSTASH_IMPLEMENTATION']
     glew_binaries = [('', ['pyglui/cygl/win_glew/glew32.dll'])]
 else:
     raise Exception('Platform build not implemented.')
@@ -73,7 +73,7 @@ extensions = [
 				libraries = libs,
 				library_dirs = lib_dir,
 				extra_link_args=link_args,
-				extra_compile_args=[]),
+				extra_compile_args=extra_compile_args),
 
 	Extension(	name="pyglui.cygl.shader",
 				sources=['pyglui/cygl/shader.pyx'],
@@ -89,7 +89,7 @@ extensions = [
 				libraries = libs,
 				library_dirs = lib_dir,
 				extra_link_args=link_args,
-				extra_compile_args=fontstash_compile_args)
+				extra_compile_args=extra_compile_args+fontstash_compile_args)
 ]
 
 from pyglui import __version__ as pyglui_version
