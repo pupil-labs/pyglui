@@ -1,9 +1,11 @@
 import os, platform
 from stat import ST_MTIME
 
-#from distutils.core import setup
-#from distutils.extension import Extension
-from setuptools import setup, Extension
+if platform.system() == 'Windows':
+    from setuptools import setup, Extension
+else:
+    from distutils.core import setup
+    from distutils.extension import Extension
 
 from Cython.Build import cythonize
 
