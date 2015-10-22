@@ -659,6 +659,9 @@ cdef class Vec2:
         self.y -= other.y
         return self
 
+    def __len__(self):
+        return 2
+
     def __str__(self):
         return 'x: %s y: %s'%(self.x,self.y)
 
