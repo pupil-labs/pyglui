@@ -12,6 +12,7 @@ include 'helpers.pxi'
 include 'design_params.pxi'
 
 from os import path
+from time import time
 #global cdefs
 cdef fs.Context glfont
 cdef double ui_scale = 1.0
