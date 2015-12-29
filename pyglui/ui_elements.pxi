@@ -519,6 +519,7 @@ cdef class Text_Input(UI_element):
         global should_redraw
         while new_input.keys:
             k = new_input.keys.pop(0)
+            # keymaps can be found in glfw.py
             if k[0] == 257 and k[2]==0: #Enter and key up:
                 self.finish_input()
                 return
@@ -568,9 +569,16 @@ cdef class Text_Input(UI_element):
 
         while new_input.chars:
             c = new_input.chars.pop(0)
-            self.preview = self.preview[:self.caret] + c + self.preview[self.caret:]
-            self.caret +=1
-            self.highlight = False
+            if self.highlight:
+                # new char overwrites all highlighted chars
+                self.preview = self.preview[:min(self.start_highlight_idx,self.caret)] + c + self.preview[max(self.start_highlight_idx,self.caret):]
+                self.caret = min(self.start_highlight_idx+1,self.caret+1)
+                self.caret = max(1,self.caret)
+                self.highlight = False
+            else:
+                self.preview = self.preview[:self.caret] + c + self.preview[self.caret:]
+                self.caret +=1
+
             self.update_input_val() #update with new keys rather than on click. 
             should_redraw = True
 
