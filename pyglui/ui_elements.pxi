@@ -518,16 +518,17 @@ cdef class Text_Input(UI_element):
     cpdef pre_handle_input(self,Input new_input):
         global should_redraw
         while new_input.keys:
-            k = new_input.keys.pop(0)
-            # keymaps can be found in glfw.py
-            if k[0] == 257 and k[2]==0: #Enter and key up:
+            key,scancode,action,mods = new_input.keys.pop(0)
+            # See file glfw.py
+            # for key,scancode,action,mods definitions
+            if key == 257 and action == 0: #Enter and key press
                 self.finish_input()
                 return
-            if  k[0] == 256 and k[2]==0: #ESC and key up:
+            if  key == 256 and action == 0: #ESC and key press
                 self.abort_input()
                 return
 
-            elif k[0] == 259 and k[2] !=1: #Delete and key up:
+            elif key == 259 and action != 1: #Delete and key not released (key repeat)
                 if self.caret > 0 and self.highlight is False:
                     self.preview = self.preview[:self.caret-1] + self.preview[self.caret:]
                     self.caret -=1
@@ -539,19 +540,19 @@ cdef class Text_Input(UI_element):
                 self.caret = max(0,self.caret)
                 should_redraw = True
 
-            elif k[0] == 263 and k[2] !=1 and k[3]==0: #key left:
+            elif key == 263 and action != 1 and mods == 0: #key left and key not released without mod keys
                 self.caret -=1
                 self.caret = max(0,self.caret)
                 self.highlight=False
                 should_redraw = True
 
-            elif k[0] == 262 and k[2] !=1 and k[3]==0: #key right
+            elif key == 262 and action != 1 and mods == 0: #key right and key not released without mod keys
                 self.caret +=1
                 self.caret = min(len(self.preview),self.caret)
                 self.highlight=False
                 should_redraw = True
 
-            elif  k[0] == 263 and k[2] !=1 and k[3]==1: #key left with shift:
+            elif  key == 263 and action != 1 and mods == 1: #key left and key not released with shift mod
                 if self.highlight is False:
                     self.start_highlight_idx = max(0,self.caret)
                 self.caret -=1
@@ -559,7 +560,7 @@ cdef class Text_Input(UI_element):
                 self.highlight = True
                 should_redraw = True
 
-            elif k[0] == 262 and k[2] !=1 and k[3]==1: #key right with shift:
+            elif key == 262 and action != 1 and mods == 1: #key right and key not released with shift mod
                 if self.highlight is False:
                     self.start_highlight_idx = min(len(self.preview),self.caret)
                 self.caret +=1
