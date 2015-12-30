@@ -537,6 +537,7 @@ cdef class Text_Input(UI_element):
                     self.caret = min(self.start_highlight_idx,self.caret)
                     self.highlight = False
 
+                self.update_input_val() #update with new keys 
                 self.caret = max(0,self.caret)
                 should_redraw = True
 
@@ -606,28 +607,39 @@ cdef class Text_Input(UI_element):
                         self.highlight = False
                         self.preview = str(self.sync_val.value)
                         self.caret = len(self.preview)
+
+                        res = self.textfield.get_relative_mouse_x(new_input.m.x-x_spacer)
+                        
+                        # get caret position closest to current mouse.x 
+                        # self.calculate_start_idx()
+                        caret_positions = glfont.char_cumulative_width(x_spacer,0,self.preview[self.start_char_idx:self.caret])
+                        mouse_to_caret = [abs(i-res) for i in caret_positions]
+                        min_distance = min(mouse_to_caret)
+                        self.caret = mouse_to_caret.index(min_distance)
+
                         should_redraw = True
                         if self.catch_input:
                             # this is required so that we can catch mouse up behavior
                             new_input.buttons.remove(b)
                 if self.selected and b[1] == 0 and time()-self.t0 > long_press_duration:
-                    # long press highlights all text
-                    # similar to the behavior on a mobile device
-                    self.caret = len(self.preview)
-                    self.start_highlight_idx = 0
-                    self.highlight = True
-                    should_redraw = True
-                    self.t0 = 0.0
+                        # long press highlights all text
+                        # similar to the behavior on a mobile device
+                        self.caret = len(self.preview)
+                        self.start_highlight_idx = 0
+                        self.highlight = True
+                        should_redraw = True
+                        self.t0 = 0.0
 
-        if self.textfield.mouse_over(new_input.m) and self.selected:
-            res = self.textfield.get_relative_mouse_x(new_input.m.x-x_spacer)
-            # closest caret index
-            self.calculate_start_idx()
-            caret_positions = glfont.char_cumulative_width(x_spacer,0,self.preview[self.start_char_idx:self.caret])
-            mouse_to_caret = [abs(i-res) for i in caret_positions]
-            min_distance = min(mouse_to_caret)
-            closest_caret = mouse_to_caret.index(min_distance)
-            print "mouse_x: %s - closest_caret idx: %s - closets caret: %s" %(res,closest_caret,caret_positions[closest_caret])
+
+        # if self.textfield.mouse_over(new_input.m) and self.selected:
+        #     res = self.textfield.get_relative_mouse_x(new_input.m.x-x_spacer)
+        #     # closest caret index
+        #     self.calculate_start_idx()
+        #     caret_positions = glfont.char_cumulative_width(x_spacer,0,self.preview[self.start_char_idx:self.caret])
+        #     mouse_to_caret = [abs(i-res) for i in caret_positions]
+        #     min_distance = min(mouse_to_caret)
+        #     closest_caret = mouse_to_caret.index(min_distance)
+        #     print "mouse_x: %s - closest_caret idx: %s - closets caret: %s" %(res,closest_caret,caret_positions[closest_caret])
 
         if self.selected:
             new_input.active_ui_elements.append(self)
