@@ -569,6 +569,17 @@ cdef class Text_Input(UI_element):
                 self.highlight = True
                 should_redraw = True
 
+            elif key == 65 and action == 0 and mods in (8,2): # select all
+                # key a and action key press and mods are either command/super for MacOS or control for Windows
+                if len(self.preview) > 0 and self.highlight is False:
+                    self.start_highlight_idx = 0
+                    self.caret = len(self.preview)
+                    self.highlight = True
+                else:
+                    self.highlight = False
+                should_redraw = True
+
+
         while new_input.chars:
             c = new_input.chars.pop(0)
             if self.highlight:
@@ -611,7 +622,7 @@ cdef class Text_Input(UI_element):
                         res = self.textfield.get_relative_mouse_x(new_input.m.x-x_spacer)
                         
                         # get caret position closest to current mouse.x 
-                        self.calculate_start_idx() # if overflowing text we need to update start_idx first
+                        self.calculate_start_idx() # caret position needs to be updated relative to text offset in the case of long string of text
                         caret_positions = glfont.char_cumulative_width(x_spacer,0,self.preview[self.start_char_idx:self.caret])
                         mouse_to_caret = [abs(i-res) for i in caret_positions]
                         min_distance = min(mouse_to_caret)
@@ -629,17 +640,6 @@ cdef class Text_Input(UI_element):
                         self.highlight = True
                         should_redraw = True
                         self.t0 = 0.0
-
-
-        # if self.textfield.mouse_over(new_input.m) and self.selected:
-        #     res = self.textfield.get_relative_mouse_x(new_input.m.x-x_spacer)
-        #     # closest caret index
-        #     self.calculate_start_idx()
-        #     caret_positions = glfont.char_cumulative_width(x_spacer,0,self.preview[self.start_char_idx:self.caret])
-        #     mouse_to_caret = [abs(i-res) for i in caret_positions]
-        #     min_distance = min(mouse_to_caret)
-        #     closest_caret = mouse_to_caret.index(min_distance)
-        #     print "mouse_x: %s - closest_caret idx: %s - closets caret: %s" %(res,closest_caret,caret_positions[closest_caret])
 
         if self.selected:
             new_input.active_ui_elements.append(self)
