@@ -619,6 +619,16 @@ cdef class Text_Input(UI_element):
                     should_redraw = True
                     self.t0 = 0.0
 
+        if self.textfield.mouse_over(new_input.m) and self.selected:
+            res = self.textfield.get_relative_mouse_x(new_input.m.x-x_spacer)
+            # closest caret index
+            self.calculate_start_idx()
+            caret_positions = glfont.char_cumulative_width(x_spacer,0,self.preview[self.start_char_idx:self.caret])
+            mouse_to_caret = [abs(i-res) for i in caret_positions]
+            min_distance = min(mouse_to_caret)
+            closest_caret = mouse_to_caret.index(min_distance)
+            print "mouse_x: %s - closest_caret idx: %s - closets caret: %s" %(res,closest_caret,caret_positions[closest_caret])
+
         if self.selected:
             new_input.active_ui_elements.append(self)
 

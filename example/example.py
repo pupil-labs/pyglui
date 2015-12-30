@@ -117,10 +117,6 @@ def demo():
         quit = True
         logger.info('Process closing from window')
 
-    def on_paste(window,val):
-        print val
-        return val
-
     # get glfw started
     glfwInit()
 
@@ -138,6 +134,7 @@ def demo():
     glfwSetMouseButtonCallback(window,on_button)
     glfwSetCursorPosCallback(window,on_pos)
     glfwSetScrollCallback(window,on_scroll)
+    # test out new paste function
 
     glfwMakeContextCurrent(window)
     init()
