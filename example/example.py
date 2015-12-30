@@ -81,6 +81,18 @@ def demo():
         if action == GLFW_PRESS:
             if key == GLFW_KEY_ESCAPE:
                 on_close(window)
+            if mods == GLFW_MOD_SUPER:
+                if key == 67:
+                    # copy value to system clipboard
+                    # ideally copy what is in our text input area
+                    test_val = "copied text input"
+                    glfwSetClipboardString(window,test_val)
+                    print "set clipboard to: %s" %(test_val)
+                if key == 86:
+                    # copy from system clipboard
+                    clipboard = glfwGetClipboardString(window) 
+                    print "pasting from clipboard: %s" %(clipboard)
+
 
     def on_char(window,char):
         gui.update_char(char)
@@ -105,6 +117,9 @@ def demo():
         quit = True
         logger.info('Process closing from window')
 
+    def on_paste(window,val):
+        print val
+        return val
 
     # get glfw started
     glfwInit()
