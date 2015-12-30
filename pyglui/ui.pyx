@@ -100,7 +100,7 @@ cdef class UI:
             self.new_input.active_ui_elements = []
 
             #now everybody
-            # ontop level in reverse so that menues drawn abover other take precendece
+            # ontop level in reverse so that menus drawn above other take precedence
             for e in self.elements[::-1]:
                 e.handle_input(self.new_input,True)
             self.new_input.purge()
