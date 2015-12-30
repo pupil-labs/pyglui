@@ -611,7 +611,7 @@ cdef class Text_Input(UI_element):
                         res = self.textfield.get_relative_mouse_x(new_input.m.x-x_spacer)
                         
                         # get caret position closest to current mouse.x 
-                        # self.calculate_start_idx()
+                        self.calculate_start_idx() # if overflowing text we need to update start_idx first
                         caret_positions = glfont.char_cumulative_width(x_spacer,0,self.preview[self.start_char_idx:self.caret])
                         mouse_to_caret = [abs(i-res) for i in caret_positions]
                         min_distance = min(mouse_to_caret)
