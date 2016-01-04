@@ -537,7 +537,7 @@ cdef class Text_Input(UI_element):
                     self.caret = min(self.start_highlight_idx,self.caret)
                     self.highlight = False
 
-                self.update_input_val() #update with new keys 
+                self.update_input_val() #update with new keys
                 self.caret = max(0,self.caret)
                 should_redraw = True
 
@@ -592,7 +592,7 @@ cdef class Text_Input(UI_element):
                 self.preview = self.preview[:self.caret] + c + self.preview[self.caret:]
                 self.caret +=1
 
-            self.update_input_val() #update with new keys rather than on click. 
+            self.update_input_val() #update with new keys rather than on click.
             should_redraw = True
 
         for b in new_input.buttons:
@@ -619,12 +619,12 @@ cdef class Text_Input(UI_element):
                         self.preview = str(self.sync_val.value)
                         self.caret = len(self.preview)
 
-                        res = self.textfield.get_relative_mouse_x(new_input.m.x-x_spacer)
-                        
-                        # get caret position closest to current mouse.x 
+                        mouse_x_in_text_box = new_input.m.x-x_spacer-self.textfield.org.x
+
+                        # get caret position closest to current mouse.x
                         self.calculate_start_idx() # caret position needs to be updated relative to text offset in the case of long string of text
                         caret_positions = glfont.char_cumulative_width(x_spacer,0,self.preview[self.start_char_idx:self.caret])
-                        mouse_to_caret = [abs(i-res) for i in caret_positions]
+                        mouse_to_caret = [abs(i-mouse_x_in_text_box) for i in caret_positions]
                         min_distance = min(mouse_to_caret)
                         self.caret = mouse_to_caret.index(min_distance)
 

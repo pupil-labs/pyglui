@@ -601,9 +601,6 @@ cdef class FitBox:
     cdef bint mouse_over(self,Vec2 m):
         return self.org.x <= m.x <= self.org.x+self.size.x and self.org.y <= m.y <=self.org.y+self.size.y
 
-    cdef float get_relative_mouse_x(self,mouse_x):
-        return mouse_x-self.org.x
-
     def __str__(self):
         return "FitBox:\n   design org: %s size: %s\n   comptd org: %s size: %s"%(self.design_org,self.design_size,self.org,self.size)
 
