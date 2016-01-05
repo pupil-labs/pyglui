@@ -575,8 +575,6 @@ cdef class Text_Input(UI_element):
                     self.start_highlight_idx = 0
                     self.caret = len(self.preview)
                     self.highlight = True
-                else:
-                    self.highlight = False
                 should_redraw = True
 
 
