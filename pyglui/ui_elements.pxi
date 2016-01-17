@@ -6,7 +6,7 @@ cdef class UI_element:
     The base class for all UI elements.
     '''
     cdef readonly bytes label
-    cdef readonly long  uid
+    cdef readonly object uid
     cdef public FitBox outline
     cdef bint _read_only
 
@@ -451,12 +451,13 @@ cdef class Text_Input(UI_element):
     Text input field.
     '''
     cdef FitBox field, textfield
-    cdef bint selected,highlight,
+    cdef bint selected,highlight, catch_input
     cdef Synced_Value sync_val
     cdef bytes preview
     cdef int caret,start_char_idx,end_char_idx,start_highlight_idx
     cdef RGBA text_color, text_input_highlight_color, text_input_line_highlight_color
     cdef object data_type
+    cdef double t0
     def __cinit__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
         self.uid = id(self)
         self.label = label or attribute_name
@@ -475,6 +476,8 @@ cdef class Text_Input(UI_element):
         self.text_input_highlight_color = RGBA(*text_input_highlight_color)
         self.text_input_line_highlight_color = RGBA(*text_input_line_highlight_color)
         self.data_type = type(self.sync_val.value)
+        self.catch_input = True
+        self.t0 = 0.0 #timer used for long press
 
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
         pass
@@ -515,15 +518,17 @@ cdef class Text_Input(UI_element):
     cpdef pre_handle_input(self,Input new_input):
         global should_redraw
         while new_input.keys:
-            k = new_input.keys.pop(0)
-            if k[0] == 257 and k[2]==0: #Enter and key up:
+            key,scancode,action,mods = new_input.keys.pop(0)
+            # See file glfw.py
+            # for key,scancode,action,mods definitions
+            if key == 257 and action == 0: #Enter and key press
                 self.finish_input()
                 return
-            if  k[0] == 256 and k[2]==0: #ESC and key up:
+            if  key == 256 and action == 0: #ESC and key press
                 self.abort_input()
                 return
 
-            elif k[0] == 259 and k[2] !=1: #Delete and key up:
+            elif key == 259 and action != 1: #Delete and key not released (key repeat)
                 if self.caret > 0 and self.highlight is False:
                     self.preview = self.preview[:self.caret-1] + self.preview[self.caret:]
                     self.caret -=1
@@ -532,22 +537,23 @@ cdef class Text_Input(UI_element):
                     self.caret = min(self.start_highlight_idx,self.caret)
                     self.highlight = False
 
+                self.update_input_val() #update with new keys
                 self.caret = max(0,self.caret)
                 should_redraw = True
 
-            elif k[0] == 263 and k[2] !=1 and k[3]==0: #key left:
+            elif key == 263 and action != 1 and mods == 0: #key left and key not released without mod keys
                 self.caret -=1
                 self.caret = max(0,self.caret)
                 self.highlight=False
                 should_redraw = True
 
-            elif k[0] == 262 and k[2] !=1 and k[3]==0: #key right
+            elif key == 262 and action != 1 and mods == 0: #key right and key not released without mod keys
                 self.caret +=1
                 self.caret = min(len(self.preview),self.caret)
                 self.highlight=False
                 should_redraw = True
 
-            elif  k[0] == 263 and k[2] !=1 and k[3]==1: #key left with shift:
+            elif  key == 263 and action != 1 and mods == 1: #key left and key not released with shift mod
                 if self.highlight is False:
                     self.start_highlight_idx = max(0,self.caret)
                 self.caret -=1
@@ -555,7 +561,7 @@ cdef class Text_Input(UI_element):
                 self.highlight = True
                 should_redraw = True
 
-            elif k[0] == 262 and k[2] !=1 and k[3]==1: #key left with shift:
+            elif key == 262 and action != 1 and mods == 1: #key right and key not released with shift mod
                 if self.highlight is False:
                     self.start_highlight_idx = min(len(self.preview),self.caret)
                 self.caret +=1
@@ -563,45 +569,87 @@ cdef class Text_Input(UI_element):
                 self.highlight = True
                 should_redraw = True
 
+            elif key == 65 and action == 0 and mods in (8,2): # select all
+                # key a and action key press and mods are either command/super for MacOS or control for Windows
+                if len(self.preview) > 0 and self.highlight is False:
+                    self.start_highlight_idx = 0
+                    self.caret = len(self.preview)
+                    self.highlight = True
+                should_redraw = True
+
 
         while new_input.chars:
             c = new_input.chars.pop(0)
-            self.preview = self.preview[:self.caret] + c + self.preview[self.caret:]
-            self.caret +=1
-            self.highlight = False
+            if self.highlight:
+                # new char overwrites all highlighted chars
+                self.preview = self.preview[:min(self.start_highlight_idx,self.caret)] + c + self.preview[max(self.start_highlight_idx,self.caret):]
+                self.caret = min(self.start_highlight_idx+1,self.caret+1)
+                self.caret = max(1,self.caret)
+                self.highlight = False
+            else:
+                self.preview = self.preview[:self.caret] + c + self.preview[self.caret:]
+                self.caret +=1
+
+            self.update_input_val() #update with new keys rather than on click.
             should_redraw = True
 
-        for b in new_input.buttons[:]:#copy for remove to work
+        for b in new_input.buttons:
             if b[1] == 1:
                 if self.textfield.mouse_over(new_input.m):
-                    self.finish_input()
-                    new_input.buttons.remove(b) #avoid reselection during handle_input
+                    self.highlight = False
+                    should_redraw = True
                 else:
                     self.finish_input()
 
 
     cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
         global should_redraw
-        if not (self._read_only or parent_read_only) and not self.selected:
-            for b in new_input.buttons:
+        cdef double long_press_duration
+        long_press_duration = 1.0 #seconds for long press
+
+        if not (self._read_only or parent_read_only):
+            for b in new_input.buttons[:]:
                 if b[1] == 1 and visible:
                     if self.textfield.mouse_over(new_input.m):
+                        self.t0 = time()
                         self.selected = True
                         self.highlight = False
                         self.preview = str(self.sync_val.value)
                         self.caret = len(self.preview)
-                        should_redraw = True
 
+                        mouse_x_in_text_box = new_input.m.x-x_spacer-self.textfield.org.x
+
+                        # get caret position closest to current mouse.x
+                        self.calculate_start_idx() # caret position needs to be updated relative to text offset in the case of long string of text
+                        caret_positions = glfont.char_cumulative_width(x_spacer,0,self.preview[self.start_char_idx:self.caret])
+                        mouse_to_caret = [abs(i-mouse_x_in_text_box) for i in caret_positions]
+                        min_distance = min(mouse_to_caret)
+                        self.caret = mouse_to_caret.index(min_distance)
+
+                        should_redraw = True
+                        if self.catch_input:
+                            # this is required so that we can catch mouse up behavior
+                            new_input.buttons.remove(b)
+                if self.selected and b[1] == 0 and time()-self.t0 > long_press_duration:
+                        # long press highlights all text
+                        # similar to the behavior on a mobile device
+                        self.caret = len(self.preview)
+                        self.start_highlight_idx = 0
+                        self.highlight = True
+                        should_redraw = True
+                        self.t0 = 0.0
 
         if self.selected:
             new_input.active_ui_elements.append(self)
-
 
 
     cdef finish_input(self):
         global should_redraw
         should_redraw = True
         self.selected = False
+        self.update_input_val()
+
+    cdef update_input_val(self):
         # turn string back into the data_type of the value
         if self.data_type == str:
             typed_val = self.preview

@@ -63,6 +63,7 @@ def demo():
         w = max(w,1)
         hdpi_factor = glfwGetFramebufferSize(window)[0]/glfwGetWindowSize(window)[0]
         w,h = w*hdpi_factor,h*hdpi_factor
+        gui.update_window(w,h)
         active_window = glfwGetCurrentContext()
         glfwMakeContextCurrent(window)
         # norm_size = normalize((w,h),glfwGetWindowSize(window))
@@ -75,17 +76,46 @@ def demo():
         pass
 
     def on_key(window, key, scancode, action, mods):
+        gui.update_key(key,scancode,action,mods)
 
         if action == GLFW_PRESS:
             if key == GLFW_KEY_ESCAPE:
                 on_close(window)
+            if mods == GLFW_MOD_SUPER:
+                if key == 67:
+                    # copy value to system clipboard
+                    # ideally copy what is in our text input area
+                    test_val = "copied text input"
+                    glfwSetClipboardString(window,test_val)
+                    print "set clipboard to: %s" %(test_val)
+                if key == 86:
+                    # copy from system clipboard
+                    clipboard = glfwGetClipboardString(window) 
+                    print "pasting from clipboard: %s" %(clipboard)
 
+
+    def on_char(window,char):
+        gui.update_char(char)
+
+    def on_button(window,button, action, mods):
+        # print "button: ", button
+        # print "action: ", action
+        gui.update_button(button,action,mods)
+        # pos = normalize(pos,glfwGetWindowSize(window))
+        # pos = denormalize(pos,(frame.img.shape[1],frame.img.shape[0]) ) # Position in img pixels
+
+    def on_pos(window,x, y):
+        hdpi_factor = float(glfwGetFramebufferSize(window)[0]/glfwGetWindowSize(window)[0])
+        x,y = x*hdpi_factor,y*hdpi_factor
+        gui.update_mouse(x,y)
+
+    def on_scroll(window,x,y):
+        gui.update_scroll(x,y)
 
     def on_close(window):
         global quit
         quit = True
         logger.info('Process closing from window')
-
 
     # get glfw started
     glfwInit()
@@ -95,17 +125,23 @@ def demo():
         exit()
 
     glfwSetWindowPos(window,0,0)
-    # Register callbacks window
+    # Register callbacks for the window
     glfwSetWindowSizeCallback(window,on_resize)
     glfwSetWindowCloseCallback(window,on_close)
     glfwSetWindowIconifyCallback(window,on_iconify)
     glfwSetKeyCallback(window,on_key)
+    glfwSetCharCallback(window,on_char)
+    glfwSetMouseButtonCallback(window,on_button)
+    glfwSetCursorPosCallback(window,on_pos)
+    glfwSetScrollCallback(window,on_scroll)
+    # test out new paste function
 
     glfwMakeContextCurrent(window)
     init()
     basic_gl_setup()
 
     print glGetString(GL_VERSION)
+
 
     class Temp(object):
         """Temp class to make objects"""
@@ -114,31 +150,26 @@ def demo():
 
     foo = Temp()
     foo.bar = 34
-    foo.bur = 4
-    foo.mytext = [203,12]
-    foo.myswitch = 10
-    foo.select = 'Tiger'
-    foo.record = False
-    foo.calibrate = False
-    foo.stream = True
-    foo.test = False
+    foo.mytext = "some text"
+    
 
-
-    d = {}
-
-    d['one'] = 1
-    def print_hello():
-        foo.select = 'Cougar'
-        gui.scale += .1
-        print 'hello'
-
-        # m.configuration = sidebar.configuration
-
-    def printer(val):
-        print 'setting to :',val
+    def set_text_val(val):
+        foo.mytext = val
+        # print 'setting to :',val
 
 
     print "pyglui version: %s" %(ui.__version__)
+
+    gui = ui.UI()
+    gui.scale = 1.0
+    sidebar = ui.Scrolling_Menu("MySideBar",pos=(-300,0),size=(0,0),header_pos='left')
+
+    sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
+    sm.append(ui.Slider("bar",foo))
+    sm.append(ui.Text_Input('mytext',foo,setter=set_text_val))
+    
+    sidebar.append(sm)
+    gui.append(sidebar)
 
     import os
     import psutil
@@ -177,6 +208,8 @@ def demo():
         cpu_g.draw()
         fps_g.add(1./dt)
         fps_g.draw()
+
+        gui.update()
 
         glfwSwapBuffers(window)
         glfwPollEvents()
