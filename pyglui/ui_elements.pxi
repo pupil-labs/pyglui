@@ -862,15 +862,18 @@ cdef class Thumb(UI_element):
         #update appearance
         self.outline.compute(parent)
         self.button.compute(self.outline)
+        cdef int stroke_width = 16
+        cdef int stroke_width_half = int(stroke_width * 0.5)
+        cdef int shadow_stroke_width = 36
         if self.sync_val.value == self.on_val:
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=RGBA(*thumb_color_shadow),sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_on, color=self.on_color,sharpness=thumb_button_sharpness)
+            utils.draw_circle(self.button.center,radius=int(min(self.button.size))+stroke_width_half,stroke_width = shadow_stroke_width,  color=RGBA(*thumb_color_shadow),sharpness=shadow_sharpness)
+            utils.draw_circle(self.button.center,radius=int(min(self.button.size)), stroke_width = stroke_width, color=self.on_color,sharpness=thumb_button_sharpness)
         elif self.selected:
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=RGBA(*thumb_color_shadow),sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_selected, color=self.on_color,sharpness=thumb_button_sharpness)
+            utils.draw_circle(self.button.center,radius=int(min(self.button.size))+stroke_width_half,stroke_width = shadow_stroke_width ,  color=RGBA(*thumb_color_shadow),sharpness=shadow_sharpness)
+            utils.draw_circle(self.button.center,radius=int(min(self.button.size)), stroke_width = stroke_width, color=self.on_color,sharpness=thumb_button_sharpness)
         else:
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size)), color=RGBA(*thumb_color_shadow),sharpness=shadow_sharpness)
-            utils.draw_points(((self.button.center),),size=int(min(self.button.size))-thumb_button_size_offset_off, color=self.off_color,sharpness=thumb_button_sharpness)
+            utils.draw_circle(self.button.center,radius=int(min(self.button.size))+stroke_width_half, stroke_width = shadow_stroke_width, color=RGBA(*thumb_color_shadow),sharpness=shadow_sharpness)
+            utils.draw_circle(self.button.center,radius=int(min(self.button.size)), stroke_width = stroke_width,  color=self.off_color,sharpness=thumb_button_sharpness)
 
         if self.selected:
             self.selected = False
