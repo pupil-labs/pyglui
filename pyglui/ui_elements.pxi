@@ -60,6 +60,7 @@ cdef class Slider(UI_element):
     cdef Vec2 slider_pos
     cdef Synced_Value sync_val
     cdef int steps
+    cdef public str display_format
     cdef RGBA line_default_color, line_highlight_color, text_color, button_color, button_selected_color, button_shadow_color,step_color
 
     def __cinit__(self,bytes attribute_name, object attribute_context = None,label = None, min = 0, max = 100, step = 0,setter= None,getter= None):
@@ -88,7 +89,7 @@ cdef class Slider(UI_element):
         self.button_selected_color = RGBA(*color_selected)
         self.button_shadow_color = RGBA(*color_shadow)
         self.step_color = RGBA(*slider_color_step)
-
+        self.display_format = '%0.2f'
 
     def __init__(self,bytes attribute_name, object attribute_context = None,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
         self.sync()
@@ -134,9 +135,9 @@ cdef class Slider(UI_element):
 
 
         if type(self.sync_val.value) == float:
-            glfont.draw_text(self.field.size.x-x_spacer,0,bytes('%0.2f'%self.sync_val.value) )
+            glfont.draw_text(self.field.size.x-x_spacer,0,bytes(self.display_format%self.sync_val.value) )
             glfont.pop_state()
-            used_x = glfont.text_bounds(0,0,bytes('%0.2f'%self.sync_val.value))
+            used_x = glfont.text_bounds(0,0,bytes(self.display_format%self.sync_val.value))
         else:
             glfont.draw_text(self.field.size.x-x_spacer,0,bytes(self.sync_val.value ))
             glfont.pop_state()
