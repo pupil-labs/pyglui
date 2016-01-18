@@ -916,13 +916,16 @@ cdef class Thumb(UI_element):
         cdef int shadow_stroke_width = 36
         if self.sync_val.value == self.on_val:
             #utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.7)+stroke_width_half, stroke_width = shadow_stroke_width, color=RGBA(*thumb_color_shadow),sharpness=thumb_button_shadow_sharpness)
+            utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width, color=RGBA(*thumb_color_shadow),sharpness=thumb_button_shadow_sharpness)
             utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width, color=self.on_color,sharpness=thumb_button_sharpness)
         elif self.selected:
             #utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.7)+stroke_width_half, stroke_width = shadow_stroke_width , color=RGBA(*thumb_color_shadow),sharpness=thumb_button_shadow_sharpness)
+            utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width, color=RGBA(*thumb_color_shadow),sharpness=thumb_button_shadow_sharpness)
             utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width, color=self.on_color,sharpness=thumb_button_sharpness)
         else:
             #utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.7)+stroke_width_half, stroke_width = shadow_stroke_width, color=RGBA(*thumb_color_shadow),sharpness=thumb_button_shadow_sharpness)
-            utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width,  color=self.off_color,sharpness=thumb_button_sharpness)
+            utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width, color=RGBA(*thumb_color_shadow),sharpness=thumb_button_shadow_sharpness)
+            utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width, color=self.off_color,sharpness=thumb_button_sharpness)
 
         if self.selected:
             self.selected = False
