@@ -73,9 +73,10 @@ DEF thumb_button_size_offset_on = 25.
 DEF thumb_button_size_offset_selected = 20.
 DEF thumb_button_size_offset_off = thumb_button_size_offset_on
 DEF thumb_color_on = (.5,.5,.9,.9)
-DEF thumb_color_off = (.5,.5,.5,.9)
+DEF thumb_color_off = (1,1,1,0.9)
 DEF thumb_color_shadow = (.0,.0,.0,.5)
-DEF thumb_button_sharpness = 0.9
+DEF thumb_button_sharpness = 0.8
+DEF thumb_button_shadow_sharpness = 0.5
 DEF thumb_font_padding = 30.
 
 # Menu - design parameters
