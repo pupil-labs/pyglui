@@ -61,7 +61,8 @@ extensions = [
 				libraries = libs,
 				library_dirs = lib_dir,
 				extra_link_args=link_args,
-				extra_compile_args=extra_compile_args),
+				extra_compile_args=extra_compile_args,
+                language="c++"),
 
 	Extension(	name="pyglui.graph",
 				sources=['pyglui/graph.pyx'],
@@ -69,7 +70,8 @@ extensions = [
 				libraries = libs,
 				library_dirs = lib_dir,
 				extra_link_args=link_args,
-				extra_compile_args=extra_compile_args),
+				extra_compile_args=extra_compile_args,
+                language="c++"),
 
 	Extension(	name="pyglui.cygl.utils",
 				sources=['pyglui/cygl/utils.pyx'],
@@ -77,7 +79,8 @@ extensions = [
 				libraries = libs,
 				library_dirs = lib_dir,
 				extra_link_args=link_args,
-				extra_compile_args=extra_compile_args),
+				extra_compile_args=extra_compile_args,
+                language="c++"),
 
 	Extension(	name="pyglui.cygl.shader",
 				sources=['pyglui/cygl/shader.pyx'],
