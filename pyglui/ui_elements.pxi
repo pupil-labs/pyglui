@@ -538,7 +538,6 @@ cdef class Text_Input(UI_element):
                     self.caret = min(self.start_highlight_idx,self.caret)
                     self.highlight = False
 
-                self.update_input_val() #update with new keys
                 self.caret = max(0,self.caret)
                 should_redraw = True
 
@@ -591,7 +590,6 @@ cdef class Text_Input(UI_element):
                 self.preview = self.preview[:self.caret] + c + self.preview[self.caret:]
                 self.caret +=1
 
-            self.update_input_val() #update with new keys rather than on click.
             should_redraw = True
 
         for b in new_input.buttons:
