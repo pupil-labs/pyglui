@@ -171,6 +171,14 @@ def demo():
     sidebar.append(sm)
     gui.append(sidebar)
 
+    menu = ui.Scrolling_Menu('My Window 1', pos=(200,100), size=(50, 200),header_pos='top')
+    menu.append(ui.Slider("bar",foo))
+    gui.append(menu)
+    
+    menu = ui.Scrolling_Menu('My Window 2', pos=(200,100), size=(50, 200),header_pos='top')
+    menu.append(ui.Text_Input('mytext',foo,setter=set_text_val))
+    gui.append(menu)
+
     import os
     import psutil
     pid = os.getpid()
