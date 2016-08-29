@@ -94,6 +94,21 @@ cdef class UI:
         if self.new_input:
             #print self.new_input
 
+            # Bring clicked element to front.
+            # Fix https://github.com/pupil-labs/pupil/issues/363
+            for e in self.elements[::-1]:
+                if self.new_input.buttons and e.outline.py_mouse_over(self.new_input.m):
+                    self.elements.insert(
+                        len(self.elements),
+                        self.elements.pop(
+                            self.elements.index(e)
+                        )
+                    )
+                    global should_redraw
+                    should_redraw = True
+                    break
+
+
             #let active elements deal with input first:
             for e in self.new_input.active_ui_elements:
                 e.pre_handle_input(self.new_input)
@@ -597,6 +612,9 @@ cdef class FitBox:
     property center:
         def __get__(self):
             return self.org.x+self.size.x/2,self.org.y+self.size.y/2
+
+    def py_mouse_over(self, Vec2 m):
+        return self.mouse_over(m)
 
     cdef bint mouse_over(self,Vec2 m):
         return self.org.x <= m.x <= self.org.x+self.size.x and self.org.y <= m.y <=self.org.y+self.size.y
