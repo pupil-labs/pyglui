@@ -97,7 +97,7 @@ cdef class UI:
             # Bring clicked element to front.
             # Fix https://github.com/pupil-labs/pupil/issues/363
             for e in self.elements[::-1]:
-                if self.new_input.buttons and e.outline.py_mouse_over(self.new_input.m):
+                if self.new_input.buttons and e.outline.mouse_over(self.new_input.m):
                     self.elements.insert(
                         len(self.elements),
                         self.elements.pop(
@@ -613,10 +613,7 @@ cdef class FitBox:
         def __get__(self):
             return self.org.x+self.size.x/2,self.org.y+self.size.y/2
 
-    def py_mouse_over(self, Vec2 m):
-        return self.mouse_over(m)
-
-    cdef bint mouse_over(self,Vec2 m):
+    cpdef bint mouse_over(self,Vec2 m):
         return self.org.x <= m.x <= self.org.x+self.size.x and self.org.y <= m.y <=self.org.y+self.size.y
 
     def __str__(self):
