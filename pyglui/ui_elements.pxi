@@ -314,20 +314,21 @@ cdef class Selector(UI_element):
     cdef int selection_idx
     cdef bint selected
     cdef RGBA text_color, triangle_color
+    cdef object selection_getter
 
-    def __cinit__(self,bytes attribute_name, object attribute_context = None, selection = [], labels=None, label=None, setter=None, getter=None):
+    def __cinit__(self,bytes attribute_name, object attribute_context = None, selection = [], labels=None, label=None, setter=None, getter=None, selection_getter = None):
         self.uid = id(self)
         self.label = label or attribute_name
-
-        self.selection = list(selection)
-        self.selection_labels = labels or [str(s) for s in selection]
 
         self.text_color = RGBA(*color_text_default)
         self.triangle_color = RGBA(*selector_triangle_color_default)
 
-        for s in self.selection_labels:
-            if not isinstance(s,str):
-                raise Exception('Labels need to be strings not "%s"'%s)
+        def default_selection_getter():
+            return selection,(labels or [str(s) for s in selection])
+
+        self.selection_getter = selection_getter or default_selection_getter
+
+        self.selection,self.selection_labels = self.selection_getter()
 
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter,self._on_change)
 
@@ -335,21 +336,22 @@ cdef class Selector(UI_element):
         self.field = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
         self.select_field = FitBox(Vec2(x_spacer,0),Vec2(0,0))
 
-    def __init__(self,bytes attribute_name, object attribute_context = None, selection = [], labels=None, label=None, setter=None, getter=None):
+    def __init__(self,*args,**kwargs):
         pass
 
     cpdef sync(self):
         self.sync_val.sync()
 
     def _on_change(self,new_value):
+        self.selection,self.selection_labels = self.selection_getter()
         try:
             self.selection_idx = self.selection.index(new_value)
         except ValueError:
-            #we could throw and error here or ignore
-            #but for now we just add the new object to the selection
-            self.selection.append(new_value)
-            self.selection_labels.append(str(new_value))
-        self.selection_idx = self.selection.index(new_value)
+            ##we could throw and error here or ignore
+            ##but for now we just add the new object to the selection
+            #self.selection.append(new_value)
+            #self.selection_labels.append(str(new_value))
+            raise ValueError("Synced value '%s' is not part of selection."%str(new_value))
 
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
@@ -392,10 +394,9 @@ cdef class Selector(UI_element):
                 glfont.draw_limited_text(x_spacer,y*line_height*ui_scale,self.selection_labels[y],self.select_field.size.x-x_spacer)
         else:
             glfont.draw_limited_text(x_spacer,0,self.selection_labels[self.selection_idx],self.select_field.size.x-x_spacer-self.select_field.size.y)
-            if len(self.selection) > 1:
-                triangle_h(self.select_field.size-Vec2(self.select_field.size.y,self.select_field.size.y),
-                        Vec2(self.select_field.size.y,self.select_field.size.y),
-                        self.triangle_color)
+            triangle_h(self.select_field.size-Vec2(self.select_field.size.y,self.select_field.size.y),
+                    Vec2(self.select_field.size.y,self.select_field.size.y),
+                    self.triangle_color)
         glfont.pop_state()
         gl.glPopMatrix()
 
@@ -414,10 +415,13 @@ cdef class Selector(UI_element):
 
     cdef init_selection(self):
         self.selected = True
+        self.selection,self.selection_labels = self.selection_getter()
         #blow up the menu to fit the open selector field
         cdef h = line_height * len(self.selection_labels)
         h+= self.field.design_org.y - self.field.design_size.y #double neg
-        h+= self.select_field.design_org.y - self.select_field.design_size.y #double neg
+        h+= self.select_field.design_org.y - self.select_field.design_size.y
+        h+= line_height*.5
+         #double neg
         self.outline.design_size.y = h
 
 
