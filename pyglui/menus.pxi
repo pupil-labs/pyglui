@@ -135,8 +135,8 @@ cdef class Base_Menu(UI_element):
                 else:
                     triangle_h(*self.menu_bar_icon_rect,RGBA(*color_line_default))
 
-                glfont.draw_text(self.menu_bar.outline.org.x+menu_offset.x+menu_topbar_text_x_org*ui_scale,
-                                 self.outline.org.y+menu_offset.y,self.label)
+                glfont.draw_limited_text(self.menu_bar.outline.org.x+menu_offset.x+menu_topbar_text_x_org*ui_scale,
+                                 self.outline.org.y+menu_offset.y,self.label,self.menu_bar.outline.size.x-menu_offset.x-menu_offset.x-menu_topbar_text_x_org*ui_scale)
                 line(Vec2(self.menu_bar.outline.org.x+menu_offset.x,self.menu_bar.outline.org.y+self.menu_bar.outline.size.y),
                      Vec2(self.menu_bar.outline.org.x+self.menu_bar.outline.size.x-menu_offset.x,self.menu_bar.outline.org.y+self.menu_bar.outline.size.y),
                      RGBA(*menu_line))
