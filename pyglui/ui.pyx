@@ -351,6 +351,11 @@ cdef class Input:
         self.s.x = 0
         self.s.y = 0
 
+    property mouse_pos:
+        def __get__(self):
+            return self.m
+
+
     def __str__(self):
         return 'Current Input: \n   Mouse pos  : %s\n   Mouse delta: %s\n   Scroll: %s\n   Buttons: %s\n   Keys: %s\n   Chars: %s' %(self.m,self.dm,self.s,self.buttons,self.keys,self.chars)
 
@@ -446,7 +451,7 @@ cdef class Draggable:
             if self.selected and b[1] == 0:
                 self.selected = False
                 if self.click_cb and not self.dragged:
-                    self.click_cb()
+                    self.click_cb(new_input)
 
         if self.selected:
             new_input.active_ui_elements.append(self)
@@ -614,7 +619,7 @@ cdef class FitBox:
             return self.org.x+self.size.x/2,self.org.y+self.size.y/2
 
     cpdef bint mouse_over(self,Vec2 m):
-        return self.org.x <= m.x <= self.org.x+self.size.x and self.org.y <= m.y <=self.org.y+self.size.y
+        return m.is_contained_in_rect(self.org, self.size)
 
     def __str__(self):
         return "FitBox:\n   design org: %s size: %s\n   comptd org: %s size: %s"%(self.design_org,self.design_size,self.org,self.size)
@@ -715,3 +720,6 @@ cdef class Vec2:
                 self.y == obj
             else:
                 raise IndexError()
+
+    cpdef bint is_contained_in_rect(self, Vec2 rect_org, Vec2 rect_size):
+        return rect_org.x <= self.x <= rect_org.x+rect_size.x and rect_org.y <= self.y <= rect_org.y+rect_size.y

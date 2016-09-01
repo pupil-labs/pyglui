@@ -32,7 +32,7 @@ cdef inline rect_corners(Vec2 org, Vec2 end, RGBA color):
     gl.glVertex3f(end.x,org.y,0.0)
     gl.glEnd()
 
-cdef inline tripple_h(Vec2 org, Vec2 size):
+cpdef inline tripple_h(Vec2 org, Vec2 size):
     gl.glColor4f(1,1,1,.5)
     gl.glLineWidth(1.6*ui_scale)
     gl.glBegin(gl.GL_LINES)
@@ -47,7 +47,7 @@ cdef inline tripple_h(Vec2 org, Vec2 size):
 
     gl.glEnd()
 
-cdef inline tripple_d(Vec2 org, Vec2 size):
+cpdef inline tripple_d(Vec2 org, Vec2 size):
     cdef Vec2 o = org,s=size-Vec2(9*ui_scale,9*ui_scale)
     gl.glColor4f(1,1,1,.5)
     gl.glLineWidth(1.6*ui_scale)
@@ -65,7 +65,7 @@ cdef inline tripple_d(Vec2 org, Vec2 size):
 
     gl.glEnd()
 
-cdef inline triangle_h(Vec2 org, Vec2 size, RGBA color):
+cpdef inline triangle_h(Vec2 org, Vec2 size, RGBA color):
     gl.glColor4f(color.r,color.g,color.b,color.a)
 
     gl.glLineWidth(1.6*ui_scale)
@@ -86,7 +86,7 @@ cdef inline triangle_h(Vec2 org, Vec2 size, RGBA color):
     gl.glVertex3f(org.x + size.x -3*ui_scale ,org.y+size.y/2,0)
     gl.glEnd()
 
-cdef inline tripple_v(Vec2 org, Vec2 size):
+cpdef inline tripple_v(Vec2 org, Vec2 size):
     gl.glColor4f(1,1,1,.5)
     gl.glLineWidth(1.6*ui_scale)
     gl.glBegin(gl.GL_LINES)
@@ -101,7 +101,7 @@ cdef inline tripple_v(Vec2 org, Vec2 size):
 
     gl.glEnd()
 
-cdef inline triangle_right(Vec2 org, Vec2 size):
+cpdef inline triangle_right(Vec2 org, Vec2 size):
     gl.glColor4f(1,1,1,.5)
 
     gl.glLineWidth(1.6*ui_scale)
@@ -117,7 +117,7 @@ cdef inline triangle_right(Vec2 org, Vec2 size):
     gl.glVertex3f(org.x + size.x/2  ,org.y+size.y-3*ui_scale,0)
     gl.glEnd()
 
-cdef inline triangle_left(Vec2 org, Vec2 size):
+cpdef inline triangle_left(Vec2 org, Vec2 size):
     gl.glColor4f(1,1,1,.5)
 
     gl.glLineWidth(1.6*ui_scale)
