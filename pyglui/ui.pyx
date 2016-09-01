@@ -325,7 +325,7 @@ cdef class Input:
     '''
 
     cdef public list keys,chars,buttons,active_ui_elements
-    cdef Vec2 dm,m,s
+    cdef public Vec2 dm,m,s
 
     def __cinit__(self):
         self.keys = []
@@ -350,11 +350,6 @@ cdef class Input:
         self.dm.y = 0
         self.s.x = 0
         self.s.y = 0
-
-    property mouse_pos:
-        def __get__(self):
-            return self.m
-
 
     def __str__(self):
         return 'Current Input: \n   Mouse pos  : %s\n   Mouse delta: %s\n   Scroll: %s\n   Buttons: %s\n   Keys: %s\n   Chars: %s' %(self.m,self.dm,self.s,self.buttons,self.keys,self.chars)
@@ -619,7 +614,7 @@ cdef class FitBox:
             return self.org.x+self.size.x/2,self.org.y+self.size.y/2
 
     cpdef bint mouse_over(self,Vec2 m):
-        return m.is_contained_in_rect(self.org, self.size)
+        return rect_contains_point(self.org, self.size, m)
 
     def __str__(self):
         return "FitBox:\n   design org: %s size: %s\n   comptd org: %s size: %s"%(self.design_org,self.design_size,self.org,self.size)
@@ -644,7 +639,8 @@ cdef class FitBox:
     cdef has_area(self):
         return 1 < self.size.x*self.size.y
 
-
+cdef bint rect_contains_point(Vec2 rect_org, Vec2 rect_size, Vec2 p):
+    return rect_org.x <= p.x <= rect_org.x+rect_size.x and rect_org.y <= p.y <= rect_org.y+rect_size.y
 
 cdef class Vec2:
     cdef public float x,y
@@ -720,6 +716,3 @@ cdef class Vec2:
                 self.y == obj
             else:
                 raise IndexError()
-
-    cpdef bint is_contained_in_rect(self, Vec2 rect_org, Vec2 rect_size):
-        return rect_org.x <= self.x <= rect_org.x+rect_size.x and rect_org.y <= self.y <= rect_org.y+rect_size.y

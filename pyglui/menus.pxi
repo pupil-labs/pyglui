@@ -11,7 +11,7 @@ cdef class Base_Menu(UI_element):
     cdef int header_pos_id
     cdef Draggable menu_bar, resize_corner
     cdef public RGBA color
-    cdef tuple menu_bar_icon_rect # (Vec2, Vec2)
+    cdef Vec2 menu_bar_icon_rect_org, menu_bar_icon_rect_size
 
     cpdef sync(self):
         if self.element_space.has_area():
@@ -115,25 +115,25 @@ cdef class Base_Menu(UI_element):
             self.menu_bar.outline.compute(self.outline)
             #self.menu_bar.outline.sketch()
             if 2 == self.header_pos_id: #left
-                self.menu_bar_icon_rect = self.menu_bar.outline.org+menu_offset,tripple_v_size
+                self.menu_bar_icon_rect_org, self.menu_bar_icon_rect_size = self.menu_bar.outline.org+menu_offset,tripple_v_size
                 if self.element_space.has_area():
-                    tripple_v(*self.menu_bar_icon_rect)
+                    tripple_v(self.menu_bar_icon_rect_org, self.menu_bar_icon_rect_size)
                 else:
-                    triangle_right(*self.menu_bar_icon_rect)
+                    triangle_right(self.menu_bar_icon_rect_org, self.menu_bar_icon_rect_size)
             elif 3 == self.header_pos_id: #right
-                self.menu_bar_icon_rect = self.menu_bar.outline.org+menu_offset,tripple_v_size
+                self.menu_bar_icon_rect_org, self.menu_bar_icon_rect_size = self.menu_bar.outline.org+menu_offset,tripple_v_size
                 if self.element_space.has_area():
-                    tripple_v(*self.menu_bar_icon_rect)
+                    tripple_v(self.menu_bar_icon_rect_org, self.menu_bar_icon_rect_size)
                 else:
-                    triangle_left(*self.menu_bar_icon_rect)
+                    triangle_left(self.menu_bar_icon_rect_org, self.menu_bar_icon_rect_size)
             else: #top (botton not implemented)
                 if nested:
                     menu_offset.x = 0
-                self.menu_bar_icon_rect = self.menu_bar.outline.org+menu_offset,tripple_h_size
+                self.menu_bar_icon_rect_org, self.menu_bar_icon_rect_size = self.menu_bar.outline.org+menu_offset,tripple_h_size
                 if self.element_space.has_area():
-                    tripple_h(*self.menu_bar_icon_rect)
+                    tripple_h(self.menu_bar_icon_rect_org, self.menu_bar_icon_rect_size)
                 else:
-                    triangle_h(*self.menu_bar_icon_rect,RGBA(*color_line_default))
+                    triangle_h(self.menu_bar_icon_rect_org, self.menu_bar_icon_rect_size,RGBA(*color_line_default))
 
                 glfont.draw_limited_text(self.menu_bar.outline.org.x+menu_offset.x+menu_topbar_text_x_org*ui_scale,
                                  self.outline.org.y+menu_offset.y,self.label,self.menu_bar.outline.size.x-menu_offset.x-menu_offset.x-menu_topbar_text_x_org*ui_scale)
@@ -369,7 +369,7 @@ cdef class Growing_Menu(Base_Menu):
 
 
     def toggle_iconified(self, input):
-        if input.mouse_pos.is_contained_in_rect(*self.menu_bar_icon_rect):
+        if rect_contains_point(self.menu_bar_icon_rect_org, self.menu_bar_icon_rect_size, input.m):
             global should_redraw
             should_redraw = True
             self.collapsed = not self.collapsed
@@ -576,7 +576,7 @@ cdef class Scrolling_Menu(Base_Menu):
         if self.element_space.has_area():
             # let the elements know that the mouse should be ignored
             # if outside of the visible scroll section
-            mouse_over_menu =  self.element_space.org.y <= new_input.mouse_pos.y <= self.element_space.org.y+self.element_space.size.y
+            mouse_over_menu =  self.element_space.org.y <= new_input.m.y <= self.element_space.org.y+self.element_space.size.y
             mouse_over_menu = mouse_over_menu and visible
             for e in self.elements:
                 e.handle_input(new_input, mouse_over_menu,self._read_only or parent_read_only)
@@ -586,14 +586,14 @@ cdef class Scrolling_Menu(Base_Menu):
             #mouse:
             self.scrollbar.handle_input(new_input,visible)
             #scrollwheel:
-            if new_input.s.y and visible and self.element_space.mouse_over(new_input.mouse_pos):
+            if new_input.s.y and visible and self.element_space.mouse_over(new_input.m):
                 self.scrollstate.y += new_input.s.y * 3
                 new_input.s.y = 0
                 should_redraw = True
 
 
     def toggle_iconified(self, input):
-        if input.mouse_pos.is_contained_in_rect(*self.menu_bar_icon_rect):
+        if rect_contains_point(self.menu_bar_icon_rect_org, self.menu_bar_icon_rect_size, input.m):
             global should_redraw
             should_redraw = True
 
