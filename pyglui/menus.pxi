@@ -9,7 +9,7 @@ cdef class Base_Menu(UI_element):
     cdef public list elements
     cdef FitBox element_space
     cdef int header_pos_id
-    cdef Draggable menu_bar, resize_corner
+    cdef Draggable menu_bar,minimize_corner, resize_corner
     cdef public RGBA color
 
     cpdef sync(self):
@@ -113,7 +113,8 @@ cdef class Base_Menu(UI_element):
 
         if self.menu_bar is not None:
             self.menu_bar.outline.compute(self.outline)
-            #self.menu_bar.outline.sketch()
+            self.minimize_corner.outline.compute(self.menu_bar.outline)
+            #self.minimize_corner.outline.sketch()
             if 2 == self.header_pos_id: #left
                 if self.element_space.has_area():
                     tripple_v(self.menu_bar.outline.org+menu_offset,tripple_v_size)
@@ -152,6 +153,92 @@ cdef class Base_Menu(UI_element):
         if self.outline.design_org.y < 0:
             self.outline.design_org.y = min(self.outline.design_org.y, -1* window.size.y/ui_scale-100)
             should_redraw = True
+
+
+cdef class Movable_Menu(Base_Menu):
+    '''
+    Abstract class that implemented movable ui elements.
+    '''
+
+
+    property header_pos:
+        def __get__(self):
+            header_pos_list = ['top','bottom','left','right','hidden']
+            return header_pos_list[self.header_pos_id]
+
+        def __set__(self, header_pos):
+            #if the menu position is user changable we want the dragable to catch the input. This is good of user interaction
+            cdef bint catch_input =  bool(self.outline.design_org.x or self.outline.design_org.y)
+
+            if header_pos == 'top':
+                self.element_space = FitBox(Vec2(menu_pad,menu_topbar_pad),Vec2(-menu_pad,-menu_pad- menu_bottom_pad))
+                self.menu_bar = Draggable(Vec2(0,0),Vec2(0,menu_topbar_pad),
+                                            self.outline.design_org,
+                                            arrest_axis=0,zero_crossing = False,
+                                            catch_input = catch_input )
+                self.minimize_corner = Draggable(Vec2(0,0),Vec2(menu_topbar_pad,0),
+                                            self.outline.design_org,
+                                            arrest_axis=0,zero_crossing = False,
+                                            click_cb=self.toggle_iconified,catch_input = catch_input )
+                if self.outline.design_size.x:
+                    self.resize_corner = Draggable(Vec2(-resize_corner_size,-resize_corner_size),Vec2(0,0),
+                                                self.outline.design_size,
+                                                arrest_axis=0,zero_crossing = False)
+                else:
+                    self.resize_corner = None
+
+            elif header_pos == 'bottom':
+                self.element_space = FitBox(Vec2(menu_pad,menu_bottom_pad + menu_pad),Vec2(-menu_pad,-menu_pad- menu_topbar_pad))
+                self.menu_bar = Draggable(Vec2(0,-menu_pad),Vec2(0,0),
+                                            self.outline.design_size,
+                                            arrest_axis=0,zero_crossing = False,
+                                            catch_input = catch_input  )
+                self.minimize_corner = Draggable(Vec2(0,0),Vec2(menu_topbar_pad,0),
+                                            self.outline.design_org,
+                                            arrest_axis=0,zero_crossing = False,
+                                            click_cb=self.toggle_iconified,catch_input = catch_input )
+                self.resize_corner = None
+
+            elif header_pos == 'right':
+                self.element_space = FitBox(Vec2(menu_pad,0),Vec2(-menu_pad-menu_sidebar_pad,0))
+                self.menu_bar = Draggable(Vec2(-menu_sidebar_pad,0),Vec2(0,0),
+                                            self.outline.design_size,
+                                            arrest_axis=0,zero_crossing = False,
+                                            catch_input = catch_input  )
+                self.minimize_corner = Draggable(Vec2(0,0),Vec2(menu_topbar_pad,0),
+                                            self.outline.design_org,
+                                            arrest_axis=0,zero_crossing = False,
+                                            click_cb=self.toggle_iconified,catch_input = catch_input )
+                self.resize_corner = None
+
+            elif header_pos == 'left':
+                self.element_space = FitBox(Vec2(menu_sidebar_pad+menu_pad,0),Vec2(-menu_pad,0))
+                self.menu_bar = Draggable(Vec2(0,0),Vec2(menu_sidebar_pad,0),
+                                            self.outline.design_org,
+                                            arrest_axis=0,zero_crossing = False,
+                                            catch_input = catch_input  )
+                self.minimize_corner = Draggable(Vec2(0,0),Vec2(0,menu_topbar_pad),
+                                            self.outline.design_org,
+                                            arrest_axis=0,zero_crossing = False,
+                                            click_cb=self.toggle_iconified,catch_input = catch_input )
+
+                if self.outline.design_size.x:
+                    self.resize_corner = Draggable(Vec2(-resize_corner_size,-resize_corner_size),Vec2(0,0),
+                                                    self.outline.design_size,
+                                                    arrest_axis=2,zero_crossing = False)
+
+            elif header_pos == 'hidden':
+                self.element_space = FitBox(Vec2(0,0),Vec2(0,0))
+                self.resize_corner = None
+                self.menu_bar = None
+
+
+            else:
+                raise Exception("Header Positon argument needs to be one of 'top,right,left,bottom', was %s "%header_pos)
+
+            self.header_pos_id = ['top','bottom','left','right','hidden'].index(header_pos)
+
+
 
 
 cdef class Stretching_Menu(Base_Menu):
@@ -214,7 +301,7 @@ cdef class Stretching_Menu(Base_Menu):
             self.set_submenu_config(new_conf.get('submenus',{}))
 
 
-cdef class Growing_Menu(Base_Menu):
+cdef class Growing_Menu(Movable_Menu):
     '''
     Growing_Menu is a movable object on the canvas grows with its content
 
@@ -248,68 +335,6 @@ cdef class Growing_Menu(Base_Menu):
 
     def __init__(self,label, pos=(0,0),size=(0,0),header_pos = 'top'):
         pass
-    property header_pos:
-        def __get__(self):
-            header_pos_list = ['top','bottom','left','right','hidden']
-            return header_pos_list[self.header_pos_id]
-
-        def __set__(self, header_pos):
-
-            #if the menu position is user changable we want the dragable to catch the input. This is good of user interaction
-            cdef bint catch_input =  bool(self.outline.design_org.x or self.outline.design_org.y)
-            if header_pos == 'top':
-                self.element_space = FitBox(Vec2(menu_pad,menu_topbar_pad),Vec2(-menu_pad,-menu_pad- menu_bottom_pad))
-                self.menu_bar = Draggable(Vec2(0,0),Vec2(0,menu_topbar_pad),
-                                            self.outline.design_org,
-                                            arrest_axis=0,zero_crossing = False,
-                                            click_cb=self.toggle_iconified,catch_input = catch_input )
-                if self.outline.design_size.x:
-                    self.resize_corner = Draggable(Vec2(-resize_corner_size,-resize_corner_size),Vec2(0,0),
-                                                self.outline.design_size,
-                                                arrest_axis=0,zero_crossing = False)
-                else:
-                    self.resize_corner = None
-
-            elif header_pos == 'bottom':
-                self.element_space = FitBox(Vec2(menu_pad,menu_bottom_pad + menu_pad),Vec2(-menu_pad,-menu_pad- menu_topbar_pad))
-                self.menu_bar = Draggable(Vec2(0,-menu_pad),Vec2(0,0),
-                                            self.outline.design_size,
-                                            arrest_axis=0,zero_crossing = False,
-                                            click_cb=self.toggle_iconified,catch_input = catch_input  )
-                self.resize_corner = None
-
-            elif header_pos == 'right':
-                self.element_space = FitBox(Vec2(menu_pad,0),Vec2(-menu_pad-menu_sidebar_pad,0))
-                self.menu_bar = Draggable(Vec2(-menu_sidebar_pad,0),Vec2(0,0),
-                                            self.outline.design_size,
-                                            arrest_axis=0,zero_crossing = False,
-                                            click_cb=self.toggle_iconified,catch_input = catch_input  )
-                self.resize_corner = None
-
-            elif header_pos == 'left':
-                self.element_space = FitBox(Vec2(menu_sidebar_pad+menu_pad,0),Vec2(-menu_pad,0))
-                self.menu_bar = Draggable(Vec2(0,0),Vec2(menu_sidebar_pad,0),
-                                            self.outline.design_org,
-                                            arrest_axis=0,zero_crossing = False,
-                                            click_cb=self.toggle_iconified,catch_input = catch_input  )
-
-                if self.outline.design_size.x:
-                    self.resize_corner = Draggable(Vec2(-resize_corner_size,-resize_corner_size),Vec2(0,0),
-                                                    self.outline.design_size,
-                                                    arrest_axis=2,zero_crossing = False)
-
-            elif header_pos == 'hidden':
-                self.element_space = FitBox(Vec2(0,0),Vec2(0,0))
-                self.resize_corner = None
-                self.menu_bar = None
-
-
-            else:
-                raise Exception("Header Positon argument needs to be one of 'top,right,left,bottom', was %s "%header_pos)
-
-            self.header_pos_id = ['top','bottom','left','right','hidden'].index(header_pos)
-
-
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
         self.outline.compute(parent)
@@ -336,6 +361,7 @@ cdef class Growing_Menu(Base_Menu):
         if self.resize_corner is not None:
             self.resize_corner.handle_input(new_input,visible)
         if self.menu_bar is not None:
+            self.minimize_corner.handle_input(new_input,visible)
             self.menu_bar.handle_input(new_input,visible)
 
         #if elements are not visible, no need to interact with them.
@@ -386,7 +412,7 @@ cdef class Growing_Menu(Base_Menu):
 
 
 
-cdef class Scrolling_Menu(Base_Menu):
+cdef class Scrolling_Menu(Movable_Menu):
     '''
     Scrolling_Menu is a movable object on the canvas that contains other elements
     and scrolls when they overflow the space.
@@ -424,69 +450,6 @@ cdef class Scrolling_Menu(Base_Menu):
 
     def __init__(self,label,pos=(100,100),size=(200,100),header_pos = 'top'):
         pass
-
-    property header_pos:
-        def __get__(self):
-            header_pos_list = ['top','bottom','left','right','hidden']
-            return header_pos_list[self.header_pos_id]
-
-        def __set__(self, header_pos):
-            #if the menu position is user changable we want the dragable to catch the input. This is good of user interaction
-            cdef bint catch_input =  bool(self.outline.design_org.x or self.outline.design_org.y)
-
-            if header_pos == 'top':
-                self.element_space = FitBox(Vec2(menu_pad,menu_topbar_pad),Vec2(-menu_pad,-menu_pad- menu_bottom_pad))
-                self.menu_bar = Draggable(Vec2(0,0),Vec2(0,menu_topbar_pad),
-                                            self.outline.design_org,
-                                            arrest_axis=0,zero_crossing = False,
-                                            click_cb=self.toggle_iconified,catch_input = catch_input  )
-                if self.outline.design_size.x:
-                    self.resize_corner = Draggable(Vec2(-resize_corner_size,-resize_corner_size),Vec2(0,0),
-                                                self.outline.design_size,
-                                                arrest_axis=0,zero_crossing = False)
-                else:
-                    self.resize_corner = None
-
-            elif header_pos == 'bottom':
-                self.element_space = FitBox(Vec2(menu_pad,menu_bottom_pad + menu_pad),Vec2(-menu_pad,-menu_pad- menu_topbar_pad))
-                self.menu_bar = Draggable(Vec2(0,-menu_pad),Vec2(0,0),
-                                            self.outline.design_size,
-                                            arrest_axis=0,zero_crossing = False,
-                                            click_cb=self.toggle_iconified,catch_input = catch_input  )
-                self.resize_corner = None
-
-            elif header_pos == 'right':
-                self.element_space = FitBox(Vec2(menu_pad,0),Vec2(-menu_pad-menu_sidebar_pad,0))
-                self.menu_bar = Draggable(Vec2(-menu_sidebar_pad,0),Vec2(0,0),
-                                            self.outline.design_size,
-                                            arrest_axis=0,zero_crossing = False,
-                                            click_cb=self.toggle_iconified,catch_input = catch_input  )
-                self.resize_corner = None
-
-            elif header_pos == 'left':
-                self.element_space = FitBox(Vec2(menu_sidebar_pad+menu_pad,0),Vec2(-menu_pad,0))
-                self.menu_bar = Draggable(Vec2(0,0),Vec2(menu_sidebar_pad,0),
-                                            self.outline.design_org,
-                                            arrest_axis=0,zero_crossing = False,
-                                            click_cb=self.toggle_iconified,catch_input = catch_input  )
-
-                if self.outline.design_size.x:
-                    self.resize_corner = Draggable(Vec2(-resize_corner_size,-resize_corner_size),Vec2(0,0),
-                                                    self.outline.design_size,
-                                                    arrest_axis=2,zero_crossing = False)
-
-            elif header_pos == 'hidden':
-                self.element_space = FitBox(Vec2(0,0),Vec2(0,0))
-                self.resize_corner = None
-                self.menu_bar = None
-
-
-            else:
-                raise Exception("Header Positon argument needs to be one of 'top,right,left,bottom', was %s "%header_pos)
-
-            self.header_pos_id = ['top','bottom','left','right','hidden'].index(header_pos)
-
-
 
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
@@ -566,6 +529,7 @@ cdef class Scrolling_Menu(Base_Menu):
         if self.resize_corner is not None:
             self.resize_corner.handle_input(new_input,visible)
         if self.menu_bar is not None:
+            self.minimize_corner.handle_input(new_input,visible)
             self.menu_bar.handle_input(new_input,visible)
 
         #if elements are not visible, no need to interact with them.
