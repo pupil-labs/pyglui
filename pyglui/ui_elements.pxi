@@ -938,10 +938,6 @@ cdef class Thumb(UI_element):
             utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width, color=RGBA(*thumb_color_shadow),sharpness=thumb_button_shadow_sharpness)
             utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width, color=self.off_color,sharpness=thumb_button_sharpness)
 
-        print 'button center: ', self.button.center
-        print 'radius: ', int(min(self.button.size)*.77)
-        print 'stroke_width: ', stroke_width
-
 
         if self.selected:
             self.selected = False
