@@ -24,6 +24,9 @@ def get_roboto_font_path():
 def get_opensans_font_path():
     return path.join(path.dirname(__file__),'OpenSans-Regular.ttf')
 
+def get_fontawesome_font_path():
+    return path.join(path.dirname(__file__),'fontawesome-webfont.ttf')
+
 cdef class UI:
     '''
     The UI context for a glfw window.
@@ -45,6 +48,7 @@ cdef class UI:
         glfont = fs.Context()
         glfont.add_font('roboto',get_roboto_font_path() )
         glfont.add_font('opensans',get_opensans_font_path())
+        glfont.add_font('fontawesome',get_fontawesome_font_path())
 
 
     def __init__(self):

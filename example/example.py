@@ -179,6 +179,8 @@ def demo():
     menu.append(ui.Text_Input('mytext',foo,setter=set_text_val))
     gui.append(menu)
 
+    gui.append(ui.Thumb('mytext',foo,label=unichr(0xf04b).encode('utf-8'),hotkey='r',use_icon_font=True,icon_offset_x=5,icon_offset_y=20,icon_scaling_num=1))
+
     import os
     import psutil
     pid = os.getpid()
