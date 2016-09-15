@@ -875,8 +875,12 @@ cdef class Thumb(UI_element):
     cdef public RGBA on_color,off_color
     cdef bytes _status_text
     cdef object hotkey
+    cdef bint use_icon_font
+    cdef int icon_offset_x, icon_offset_y
+    cdef float icon_scaling_num
 
-    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None, hotkey = None,  on_color=thumb_color_on, off_color=thumb_color_off):
+    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None, hotkey = None,  on_color=thumb_color_on, off_color=thumb_color_off, 
+            use_icon_font=False,icon_offset_x=0,icon_offset_y=0,icon_scaling_num=0):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
@@ -889,8 +893,13 @@ cdef class Thumb(UI_element):
         self.off_color = RGBA(*off_color)
         self.hotkey = hotkey
         self._status_text = bytes('')
+        self.use_icon_font = use_icon_font
+        self.icon_offset_x = icon_offset_x
+        self.icon_offset_y = icon_offset_y
+        self.icon_scaling_num = icon_scaling_num
 
-    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None, hotkey = None, on_color=thumb_color_on):
+        
+    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None, hotkey = None, on_color=thumb_color_on, use_icon_font=False, icon_offset_x=0, icon_offset_y=0, icon_scaling_num=0):
         pass
 
 
@@ -929,25 +938,47 @@ cdef class Thumb(UI_element):
             utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width, color=RGBA(*thumb_color_shadow),sharpness=thumb_button_shadow_sharpness)
             utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width, color=self.off_color,sharpness=thumb_button_sharpness)
 
+
         if self.selected:
             self.selected = False
             global should_redraw
             should_redraw = True
 
         glfont.push_state()
+
+        # Choose either icon (fontawesome) or letter(roboto) label for button
+        cdef bytes text_to_draw
+        cdef float size_of_text
+        cdef list text_center_point
+
         glfont.set_font('roboto')
+        text_to_draw = self.label[0]
+        size_of_text = max(1,int(min(self.button.size))-thumb_font_padding)
+        text_center_point = [self.button.center[0],self.button.center[1]]
+
+        if self.use_icon_font:
+            glfont.set_font('fontawesome')
+            text_to_draw = self.label
+            size_of_text = 0.7*max(1,int(min(self.button.size))-thumb_font_padding)
+            text_center_point[0] = self.button.center[0] + self.icon_offset_x
+            text_center_point[1] = self.button.center[1] + self.icon_offset_y
+            if self.icon_scaling_num > 0:
+                size_of_text = self.icon_scaling_num*max(1,int(min(self.button.size))-thumb_font_padding)
+                
+                
+
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_CENTER)
-        glfont.set_size(max(1,int(min(self.button.size))-thumb_font_padding))
+        glfont.set_size(size_of_text)
         glfont.set_color_float((0,0,0,0.5))
         glfont.set_blur(10.5)
-        glfont.draw_text(self.button.center[0],self.button.center[1],self.label[0])
+        glfont.draw_text(text_center_point[0],text_center_point[1],text_to_draw)
         glfont.set_blur(0.5)
         #glfont.set_color_float(self.on_color[:])
         if self.sync_val.value == self.on_val:
             glfont.set_color_float(self.on_color[:])
         else:
             glfont.set_color_float(self.off_color[:])
-        glfont.draw_text(self.button.center[0],self.button.center[1],self.label[0])
+        glfont.draw_text(text_center_point[0],text_center_point[1],text_to_draw)
 
         # draw status text.
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_LEFT)
