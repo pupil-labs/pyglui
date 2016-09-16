@@ -871,14 +871,20 @@ cdef class Thumb(UI_element):
     cdef public FitBox button
     cdef bint selected
     cdef int on_val,off_val
+    cdef float offset_x,offset_y,offset_size
+    cdef bytes label_font
     cdef Synced_Value sync_val
     cdef public RGBA on_color,off_color
     cdef bytes _status_text
     cdef object hotkey
 
-    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None, hotkey = None,  on_color=thumb_color_on, off_color=thumb_color_off):
+    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None,label_font='roboto', label_offset_x=0, label_offset_y=0,label_offset_size=0, setter=None, getter=None, hotkey = None,  on_color=thumb_color_on, off_color=thumb_color_off):
         self.uid = id(self)
-        self.label = label or attribute_name
+        self.label = label or attribute_name[0]
+        self.label_font = label_font
+        self.offset_x = label_offset_x
+        self.offset_y = label_offset_y
+        self.offset_size = label_offset_size
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
         self.on_val = on_val
         self.off_val = off_val
@@ -890,7 +896,7 @@ cdef class Thumb(UI_element):
         self.hotkey = hotkey
         self._status_text = bytes('')
 
-    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None, hotkey = None, on_color=thumb_color_on):
+    def __init__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None,label_font='roboto', label_offset_x=0, label_offset_y=0,label_offset_size=0, setter=None, getter=None, hotkey = None,  on_color=thumb_color_on, off_color=thumb_color_off):
         pass
 
 
@@ -916,53 +922,53 @@ cdef class Thumb(UI_element):
         cdef int stroke_width = 14
         cdef int stroke_width_half = int(stroke_width * 0.5)
         cdef int shadow_stroke_width = 36
+        cdef RGBA icon_color
+
         if self.sync_val.value == self.on_val:
-            #utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.7)+stroke_width_half, stroke_width = shadow_stroke_width, color=RGBA(*thumb_color_shadow),sharpness=thumb_button_shadow_sharpness)
-            utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width, color=RGBA(*thumb_color_shadow),sharpness=thumb_button_shadow_sharpness)
-            utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width, color=self.on_color,sharpness=thumb_button_sharpness)
+            icon_color = self.on_color
         elif self.selected:
-            #utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.7)+stroke_width_half, stroke_width = shadow_stroke_width , color=RGBA(*thumb_color_shadow),sharpness=thumb_button_shadow_sharpness)
-            utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width, color=RGBA(*thumb_color_shadow),sharpness=thumb_button_shadow_sharpness)
-            utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width, color=self.on_color,sharpness=thumb_button_sharpness)
+            icon_color = self.on_color
         else:
-            #utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.7)+stroke_width_half, stroke_width = shadow_stroke_width, color=RGBA(*thumb_color_shadow),sharpness=thumb_button_shadow_sharpness)
-            utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width, color=RGBA(*thumb_color_shadow),sharpness=thumb_button_shadow_sharpness)
-            utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width, color=self.off_color,sharpness=thumb_button_sharpness)
+            icon_color = self.off_color
+
+        #utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.7)+stroke_width_half, stroke_width = shadow_stroke_width, color=RGBA(*thumb_color_shadow),sharpness=thumb_button_shadow_sharpness)
+        utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width, color=RGBA(*thumb_color_shadow),sharpness=thumb_button_shadow_sharpness)
+        utils.draw_circle(self.button.center,radius=int(min(self.button.size)*.77), stroke_width = stroke_width, color=icon_color,sharpness=thumb_button_sharpness)
 
         if self.selected:
             self.selected = False
             global should_redraw
             should_redraw = True
 
+
+
         glfont.push_state()
-        glfont.set_font('roboto')
+        glfont.set_font(self.label_font)
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_CENTER)
-        glfont.set_size(max(1,int(min(self.button.size))-thumb_font_padding))
+        glfont.set_size(max(1,int(min(self.button.size)+self.offset_size*ui_scale)-thumb_font_padding))
         glfont.set_color_float((0,0,0,0.5))
         glfont.set_blur(10.5)
-        glfont.draw_text(self.button.center[0],self.button.center[1],self.label[0])
+        cdef int text_x = self.button.center[0]+int(self.offset_x*ui_scale)
+        cdef int text_y = self.button.center[1]+int(self.offset_y*ui_scale)
+        glfont.draw_text(text_x,text_y,self.label)
         glfont.set_blur(0.5)
-        #glfont.set_color_float(self.on_color[:])
-        if self.sync_val.value == self.on_val:
-            glfont.set_color_float(self.on_color[:])
-        else:
-            glfont.set_color_float(self.off_color[:])
-        glfont.draw_text(self.button.center[0],self.button.center[1],self.label[0])
+        glfont.set_color_float(icon_color[:])
+        glfont.draw_text(text_x,text_y,self.label)
+        glfont.pop_state()
+
 
         # draw status text.
+        glfont.push_state()
+        glfont.set_font('roboto')
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_LEFT)
         glfont.set_size( max(1, int( (min(self.button.size) )-thumb_font_padding )/2.) )
         glfont.set_color_float((0,0,0,1))
         glfont.set_blur(10.5)
         glfont.draw_text(self.button.center[0]+self.button.size.x/2.,self.button.center[1],self._status_text)
-        if self.sync_val.value == self.on_val:
-            glfont.set_color_float(self.on_color[:])
-        else:
-            glfont.set_color_float(self.off_color[:])
+        glfont.set_color_float(icon_color[:])
         glfont.set_blur(.1)
         glfont.draw_text(self.button.center[0]+self.button.size.x/2.,self.button.center[1],self._status_text)
         glfont.pop_state()
-        glfont.set_font('opensans')
 
 
 
