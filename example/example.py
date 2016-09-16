@@ -179,6 +179,10 @@ def demo():
     menu.append(ui.Text_Input('mytext',foo,setter=set_text_val))
     gui.append(menu)
 
+    label = unichr(0xf04b).encode('utf-8')
+    # label = 'R'
+    gui.append(ui.Thumb('mytext',foo,label=label,hotkey='r',label_font='fontawesome',label_offset_x=5,label_offset_y=0,label_offset_size=-20))
+
     import os
     import psutil
     pid = os.getpid()
@@ -222,7 +226,7 @@ def demo():
         glfwSwapBuffers(window)
         glfwPollEvents()
 
-    glfwDestroyWindow(window)
+    gui.terminate()
     glfwTerminate()
     logger.debug("Process done")
 

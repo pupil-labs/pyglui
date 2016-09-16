@@ -24,6 +24,13 @@ def get_roboto_font_path():
 def get_opensans_font_path():
     return path.join(path.dirname(__file__),'OpenSans-Regular.ttf')
 
+def get_fontawesome_font_path():
+    return path.join(path.dirname(__file__),'fontawesome-webfont.ttf')
+
+def get_all_font_paths():
+    return get_roboto_font_path(),get_opensans_font_path(),get_fontawesome_font_path()
+
+
 cdef class UI:
     '''
     The UI context for a glfw window.
@@ -43,12 +50,17 @@ cdef class UI:
         #global init of gl fonts
         global glfont
         glfont = fs.Context()
-        glfont.add_font('roboto',get_roboto_font_path() )
-        glfont.add_font('opensans',get_opensans_font_path())
+        self.add_font('roboto',get_roboto_font_path() )
+        self.add_font('opensans',get_opensans_font_path())
+        self.add_font('fontawesome',get_fontawesome_font_path())
 
 
     def __init__(self):
         pass
+
+    def add_font(self,font_name,font_path):
+        if glfont:
+            glfont.add_font(font_name,font_path)
 
     def terminate(self):
         global glfont
