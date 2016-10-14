@@ -760,7 +760,7 @@ cdef class Button(UI_element):
 
     def __cinit__(self,label, function):
         self.uid = id(self)
-        self.label = label
+        self.label = unicode(label)
         self.outline = FitBox(Vec2(0,0),Vec2(0,button_outline_size_y)) # we only fix the height
         self.button = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
         self.selected = False
