@@ -149,7 +149,7 @@ cdef class Bar_Graph:
         gl.glPopMatrix()
 
 
-        self.glfont.draw_text(0,-3,bytes(self.label%self.avg))
+        self.glfont.draw_text(0,-3,unicode(self.label%self.avg))
         gl.glPopMatrix()
 
 
@@ -174,7 +174,7 @@ cdef class Line_Graph:
         self.max_val = max_val
 
         self.glfont = fs.Context()
-        self.glfont.add_font('opensans',get_opensans_font_path())
+        self.glfont.add_font(u'opensans',unicode(get_opensans_font_path()))
         self.glfont.set_size(18)
         self.glfont.set_align(fs.FONS_ALIGN_LEFT | fs.FONS_ALIGN_MIDDLE)
         self.color = RGBA(.1,.1,.7,.5)
@@ -264,7 +264,7 @@ cdef class Line_Graph:
         gl.glEnd()
         gl.glPopMatrix()
         self.glfont.set_color_float(self.color[:])
-        self.glfont.draw_text(x +10 ,-self.data[i],bytes(self.label%self.avg))
+        self.glfont.draw_text(x +10 ,-self.data[i],unicode(self.label%self.avg))
         gl.glPopMatrix()
 
 
@@ -346,7 +346,7 @@ cdef class Averaged_Value:
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glPushMatrix()
         self.glfont.set_color_float(self.color[:])
-        self.glfont.draw_text(self.x,self.y,bytes(self.label%self.avg))
+        self.glfont.draw_text(self.x,self.y,unicode(self.label%self.avg))
         gl.glPopMatrix()
 
 

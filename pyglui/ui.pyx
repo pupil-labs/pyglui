@@ -50,9 +50,9 @@ cdef class UI:
         #global init of gl fonts
         global glfont
         glfont = fs.Context()
-        self.add_font('roboto',get_roboto_font_path() )
-        self.add_font('opensans',get_opensans_font_path())
-        self.add_font('fontawesome',get_fontawesome_font_path())
+        self.add_font(u'roboto',unicode(get_roboto_font_path()))
+        self.add_font(u'opensans',unicode(get_opensans_font_path()))
+        self.add_font(u'fontawesome',unicode(get_fontawesome_font_path()))
 
 
     def __init__(self):
@@ -91,7 +91,7 @@ cdef class UI:
 
     def update_char(self,c):
         try:
-            self.new_input.chars.append(chr(c))
+            self.new_input.chars.append(unichr(c))
         except:
             pass
 
@@ -144,7 +144,7 @@ cdef class UI:
             push_view(self.window.size)
             render_to_ui_texture(self.ui_layer)
             glfont.clear_state()
-            glfont.set_font('opensans')
+            glfont.set_font(u'opensans')
             glfont.set_size(int(ui_scale * text_size))
             glfont.set_color_float(color_text_default)
             glfont.set_blur(.1)
@@ -260,13 +260,13 @@ cdef class Synced_Value:
     '''
     cdef object attribute_context
     cdef bint use_dict
-    cdef bytes attribute_name
+    cdef unicode attribute_name
     cdef object _value
     cdef object getter
     cdef object setter
     cdef object on_change
 
-    def __cinit__(self,bytes attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None):
+    def __cinit__(self,unicode attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None):
         assert attribute_context is not None or getter is not None
         self.attribute_context = attribute_context
 
@@ -280,7 +280,7 @@ cdef class Synced_Value:
         self.setter = setter
         self.on_change = on_change
 
-    def __init__(self,bytes attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None):
+    def __init__(self,unicode attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None):
         if self.attribute_context is not None:
             if self.use_dict:
                 try:
