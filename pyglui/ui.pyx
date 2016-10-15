@@ -260,13 +260,13 @@ cdef class Synced_Value:
     '''
     cdef object attribute_context
     cdef bint use_dict
-    cdef bytes attribute_name
+    cdef str attribute_name
     cdef object _value
     cdef object getter
     cdef object setter
     cdef object on_change
 
-    def __cinit__(self,bytes attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None):
+    def __cinit__(self,str attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None):
         assert attribute_context is not None or getter is not None
         self.attribute_context = attribute_context
 
@@ -280,7 +280,7 @@ cdef class Synced_Value:
         self.setter = setter
         self.on_change = on_change
 
-    def __init__(self,bytes attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None):
+    def __init__(self,str attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None):
         if self.attribute_context is not None:
             if self.use_dict:
                 try:

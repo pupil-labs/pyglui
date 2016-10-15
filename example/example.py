@@ -90,7 +90,7 @@ def demo():
                     print "set clipboard to: %s" %(test_val)
                 if key == 86:
                     # copy from system clipboard
-                    clipboard = glfwGetClipboardString(window) 
+                    clipboard = glfwGetClipboardString(window)
                     print "pasting from clipboard: %s" %(clipboard)
 
 
@@ -150,8 +150,11 @@ def demo():
 
     foo = Temp()
     foo.bar = 34
+    foo.sel = 'mi'
+    foo.selection = [unichr(0xf04b),'mi', u"re"]
+
     foo.mytext = "some text"
-    
+
 
     def set_text_val(val):
         foo.mytext = val
@@ -167,19 +170,20 @@ def demo():
     sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
     sm.append(ui.Slider("bar",foo))
     sm.append(ui.Text_Input('mytext',foo,setter=set_text_val))
-    
+    sm.append(ui.Selector('sel',foo,selection=foo.selection))
+
     sidebar.append(sm)
     gui.append(sidebar)
 
     menu = ui.Scrolling_Menu('My Window 1', pos=(200,100), size=(50, 200),header_pos='top')
     menu.append(ui.Slider("bar",foo))
     gui.append(menu)
-    
+
     menu = ui.Scrolling_Menu('My Window 2', pos=(200,100), size=(50, 200),header_pos='top')
     menu.append(ui.Text_Input('mytext',foo,setter=set_text_val))
     gui.append(menu)
 
-    label = unichr(0xf04b).encode('utf-8')
+    label = unichr(0xf04b)
     # label = 'R'
     gui.append(ui.Thumb('mytext',foo,label=label,hotkey='r',label_font='fontawesome',label_offset_x=5,label_offset_y=0,label_offset_size=-20))
 
