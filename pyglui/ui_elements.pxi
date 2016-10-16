@@ -5,7 +5,7 @@ cdef class UI_element:
     '''
     The base class for all UI elements.
     '''
-    cdef readonly object label
+    cdef readonly basestring label
     cdef readonly object uid
     cdef public FitBox outline
     cdef bint _read_only
