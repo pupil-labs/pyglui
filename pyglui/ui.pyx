@@ -91,7 +91,7 @@ cdef class UI:
 
     def update_char(self,c):
         try:
-            self.new_input.chars.append(chr(c))
+            self.new_input.chars.append(unichr(c))
         except:
             pass
 

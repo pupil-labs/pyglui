@@ -464,7 +464,7 @@ cdef class Text_Input(UI_element):
     cdef FitBox field, textfield
     cdef bint selected,highlight, catch_input
     cdef Synced_Value sync_val
-    cdef basestring preview
+    cdef unicode preview
     cdef int caret,start_char_idx,end_char_idx,start_highlight_idx
     cdef RGBA text_color, text_input_highlight_color, text_input_line_highlight_color
     cdef object data_type
@@ -478,7 +478,7 @@ cdef class Text_Input(UI_element):
         self.textfield = FitBox(Vec2(x_spacer,0),Vec2(0,0))
         self.selected = False
         self.highlight = False
-        self.preview = str('') #only used when self.selected==True
+        self.preview = u'' #only used when self.selected==True
         self.caret = 0 #only used when self.selected==True
         self.start_char_idx = 0
         self.end_char_idx = self.caret
@@ -611,6 +611,14 @@ cdef class Text_Input(UI_element):
                     self.finish_input()
 
 
+    cdef to_unicode(self,obj):
+        if type(obj) is unicode:
+            return obj
+        elif type(obj) is bytes:
+            return obj.decode('utf-8')
+        else:
+            return unicode(obj)
+
     cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
         global should_redraw
         cdef double long_press_duration
@@ -623,7 +631,7 @@ cdef class Text_Input(UI_element):
                         self.t0 = time()
                         self.selected = True
                         self.highlight = False
-                        self.preview = str(self.sync_val.value)
+                        self.preview = self.to_unicode(self.sync_val.value)
                         self.caret = len(self.preview)
 
                         mouse_x_in_text_box = new_input.m.x-x_spacer-self.textfield.org.x
@@ -659,7 +667,7 @@ cdef class Text_Input(UI_element):
         self.update_input_val()
 
     cdef update_input_val(self):
-        # turn string back into the data_type of the value
+        # turn string back into the data_type of the value in case of str always use unicode
         if isinstance(self.sync_val.value, basestring):
             typed_val = self.preview
         else:
@@ -742,7 +750,7 @@ cdef class Text_Input(UI_element):
             #then transform locally and render the UI element
             #self.textfield.sketch()
             gl.glTranslatef(self.textfield.org.x,self.textfield.org.y,0)
-            glfont.draw_limited_text(x_spacer,0,str(self.sync_val.value),self.textfield.size.x-x_spacer)
+            glfont.draw_limited_text(x_spacer,0,self.to_unicode(self.sync_val.value),self.textfield.size.x-x_spacer)
             gl.glPopMatrix()
 
 
