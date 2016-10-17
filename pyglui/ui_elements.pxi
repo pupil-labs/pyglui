@@ -5,7 +5,7 @@ cdef class UI_element:
     '''
     The base class for all UI elements.
     '''
-    cdef readonly bytes label
+    cdef readonly basestring label
     cdef readonly object uid
     cdef public FitBox outline
     cdef bint _read_only
@@ -63,7 +63,7 @@ cdef class Slider(UI_element):
     cdef public str display_format
     cdef RGBA line_default_color, line_highlight_color, text_color, button_color, button_selected_color, button_shadow_color,step_color
 
-    def __cinit__(self,bytes attribute_name, object attribute_context = None,label = None, min = 0, max = 100, step = 0,setter= None,getter= None):
+    def __cinit__(self,str attribute_name, object attribute_context = None, label = None, min = 0, max = 100, step = 0,setter= None,getter= None):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
@@ -91,7 +91,7 @@ cdef class Slider(UI_element):
         self.step_color = RGBA(*slider_color_step)
         self.display_format = '%0.2f'
 
-    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
+    def __init__(self,str attribute_name, object attribute_context = None,label = None, min = 0, max = 100, step = 1,setter= None,getter= None):
         self.sync()
         if not isinstance(self.sync_val.value, (float,int) ):
             raise Exception('Slider values should be float or int type. "%s" is of type %s'%(self.sync_val.value,type(self.sync_val.value)))
@@ -135,13 +135,13 @@ cdef class Slider(UI_element):
 
 
         if type(self.sync_val.value) == float:
-            glfont.draw_text(self.field.size.x-x_spacer,0,bytes(self.display_format%self.sync_val.value) )
+            glfont.draw_text(self.field.size.x-x_spacer,0,str(self.display_format%self.sync_val.value ))
             glfont.pop_state()
-            used_x = glfont.text_bounds(0,0,bytes(self.display_format%self.sync_val.value))
+            used_x = glfont.text_bounds(0,0,str(self.display_format%self.sync_val.value))
         else:
-            glfont.draw_text(self.field.size.x-x_spacer,0,bytes(self.sync_val.value ))
+            glfont.draw_text(self.field.size.x-x_spacer,0,str(self.sync_val.value ))
             glfont.pop_state()
-            used_x = glfont.text_bounds(0,0,bytes(self.sync_val.value))
+            used_x = glfont.text_bounds(0,0,str(self.sync_val.value))
 
         glfont.push_state()
         glfont.set_color_float(self.text_color[:])
@@ -208,7 +208,7 @@ cdef class Switch(UI_element):
     cdef Synced_Value sync_val
     cdef RGBA text_color, button_color_on, button_color_off, button_shadow_color, button_selected_color
 
-    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None):
+    def __cinit__(self,str attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
@@ -226,7 +226,7 @@ cdef class Switch(UI_element):
         self.button_selected_color = RGBA(*color_selected)
 
 
-    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None):
+    def __init__(self,str attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None):
         pass
 
 
@@ -316,7 +316,7 @@ cdef class Selector(UI_element):
     cdef RGBA text_color, triangle_color
     cdef object selection_getter
 
-    def __cinit__(self,bytes attribute_name, object attribute_context = None, selection = [], labels=None, label=None, setter=None, getter=None, selection_getter = None):
+    def __cinit__(self,str attribute_name, object attribute_context = None, selection = [], labels=None, label=None, setter=None, getter=None, selection_getter = None):
         self.uid = id(self)
         self.label = label or attribute_name
 
@@ -324,7 +324,13 @@ cdef class Selector(UI_element):
         self.triangle_color = RGBA(*selector_triangle_color_default)
 
         def default_selection_getter():
-            return selection,(labels or [str(s) for s in selection])
+            def to_str(obj):
+                if isinstance(obj,basestring):
+                    return obj
+                else:
+                    return str(obj)
+
+            return selection,(labels or [to_str(s) for s in selection])
 
         self.selection_getter = selection_getter or default_selection_getter
 
@@ -458,12 +464,12 @@ cdef class Text_Input(UI_element):
     cdef FitBox field, textfield
     cdef bint selected,highlight, catch_input
     cdef Synced_Value sync_val
-    cdef bytes preview
+    cdef unicode preview
     cdef int caret,start_char_idx,end_char_idx,start_highlight_idx
     cdef RGBA text_color, text_input_highlight_color, text_input_line_highlight_color
     cdef object data_type
     cdef double t0
-    def __cinit__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
+    def __cinit__(self,str attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
@@ -472,7 +478,7 @@ cdef class Text_Input(UI_element):
         self.textfield = FitBox(Vec2(x_spacer,0),Vec2(0,0))
         self.selected = False
         self.highlight = False
-        self.preview = str('') #only used when self.selected==True
+        self.preview = u'' #only used when self.selected==True
         self.caret = 0 #only used when self.selected==True
         self.start_char_idx = 0
         self.end_char_idx = self.caret
@@ -484,7 +490,7 @@ cdef class Text_Input(UI_element):
         self.catch_input = True
         self.t0 = 0.0 #timer used for long press
 
-    def __init__(self,bytes attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
+    def __init__(self,str attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
         pass
 
 
@@ -605,6 +611,14 @@ cdef class Text_Input(UI_element):
                     self.finish_input()
 
 
+    cdef to_unicode(self,obj):
+        if type(obj) is unicode:
+            return obj
+        elif type(obj) is bytes:
+            return obj.decode('utf-8')
+        else:
+            return unicode(obj)
+
     cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
         global should_redraw
         cdef double long_press_duration
@@ -617,7 +631,7 @@ cdef class Text_Input(UI_element):
                         self.t0 = time()
                         self.selected = True
                         self.highlight = False
-                        self.preview = str(self.sync_val.value)
+                        self.preview = self.to_unicode(self.sync_val.value)
                         self.caret = len(self.preview)
 
                         mouse_x_in_text_box = new_input.m.x-x_spacer-self.textfield.org.x
@@ -653,8 +667,8 @@ cdef class Text_Input(UI_element):
         self.update_input_val()
 
     cdef update_input_val(self):
-        # turn string back into the data_type of the value
-        if self.data_type == str:
+        # turn string back into the data_type of the value in case of str always use unicode
+        if isinstance(self.sync_val.value, basestring):
             typed_val = self.preview
         else:
             try:
@@ -703,7 +717,6 @@ cdef class Text_Input(UI_element):
 
     cdef draw_text_field(self):
         cdef float x
-        cdef bytes highlight_size = <bytes>''
 
         if self.selected:
             self.calculate_start_idx()
@@ -737,7 +750,7 @@ cdef class Text_Input(UI_element):
             #then transform locally and render the UI element
             #self.textfield.sketch()
             gl.glTranslatef(self.textfield.org.x,self.textfield.org.y,0)
-            glfont.draw_limited_text(x_spacer,0,str(self.sync_val.value),self.textfield.size.x-x_spacer)
+            glfont.draw_limited_text(x_spacer,0,self.to_unicode(self.sync_val.value),self.textfield.size.x-x_spacer)
             gl.glPopMatrix()
 
 
@@ -813,25 +826,25 @@ cdef class Button(UI_element):
 
 
 cdef class Info_Text(UI_element):
-    cdef bytes _text
+    cdef basestring _text
     cdef int max_height
     cdef FitBox text_area
 
 
-    def __cinit__(self, bytes text):
-        self._text = bytes(text)
+    def __cinit__(self, basestring text):
+        self._text = text
         self.max_height = 200
         self.outline = FitBox(Vec2(0,0),Vec2(0,0))
         self.text_area = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
 
-    def __init__(self, bytes text):
+    def __init__(self, basestring text):
         pass
 
     property text:
         def __get__(self):
             return self._text
 
-        def __set__(self,bytes new_text):
+        def __set__(self,basestring new_text):
             global should_redraw
             if self._text != new_text:
                 should_redraw = True
@@ -872,13 +885,13 @@ cdef class Thumb(UI_element):
     cdef bint selected
     cdef int on_val,off_val
     cdef float offset_x,offset_y,offset_size
-    cdef bytes label_font
+    cdef basestring label_font
     cdef Synced_Value sync_val
     cdef public RGBA on_color,off_color
-    cdef bytes _status_text
+    cdef basestring _status_text
     cdef object hotkey
 
-    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None,label_font='roboto', label_offset_x=0, label_offset_y=0,label_offset_size=0, setter=None, getter=None, hotkey = None,  on_color=thumb_color_on, off_color=thumb_color_off):
+    def __cinit__(self,str attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None,label_font='roboto', label_offset_x=0, label_offset_y=0,label_offset_size=0, setter=None, getter=None, hotkey = None,  on_color=thumb_color_on, off_color=thumb_color_off):
         self.uid = id(self)
         self.label = label or attribute_name[0]
         self.label_font = label_font
@@ -894,16 +907,16 @@ cdef class Thumb(UI_element):
         self.on_color = RGBA(*on_color)
         self.off_color = RGBA(*off_color)
         self.hotkey = hotkey
-        self._status_text = bytes('')
+        self._status_text = ''
 
-    def __init__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None,label_font='roboto', label_offset_x=0, label_offset_y=0,label_offset_size=0, setter=None, getter=None, hotkey = None,  on_color=thumb_color_on, off_color=thumb_color_off):
+    def __init__(self,str attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None,label_font='roboto', label_offset_x=0, label_offset_y=0,label_offset_size=0, setter=None, getter=None, hotkey = None,  on_color=thumb_color_on, off_color=thumb_color_off):
         pass
 
 
     property status_text:
         def __get__(self):
             return self._status_text
-        def __set__(self,bytes new_status_text):
+        def __set__(self,basestring new_status_text):
             if self._status_text != new_status_text:
                 global should_redraw
                 should_redraw = True
@@ -973,7 +986,6 @@ cdef class Thumb(UI_element):
 
 
     cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
-        cdef bytes c
         if not (self._read_only or parent_read_only):
             global should_redraw
 
@@ -1020,7 +1032,7 @@ cdef class Hot_Key(UI_element):
     cdef public RGBA on_color,off_color
     cdef object hotkey
 
-    def __cinit__(self,bytes attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None, hotkey = None):
+    def __cinit__(self,str attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None, hotkey = None):
         self.uid = id(self)
         self.label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
@@ -1030,7 +1042,7 @@ cdef class Hot_Key(UI_element):
         self.outline = FitBox(Vec2(0,0),Vec2(0,0)) # we dont use it but we need to have it.
 
 
-    def __init__(self,bytes attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None, hotkey = None):
+    def __init__(self,str attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None, hotkey = None):
         pass
 
 
@@ -1039,7 +1051,6 @@ cdef class Hot_Key(UI_element):
 
 
     cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
-        cdef bytes c
         if not (self._read_only or parent_read_only):
             if self.hotkey is not None:
                 for c in new_input.chars:
