@@ -1,5 +1,6 @@
 import os, platform
 from stat import ST_MTIME
+from __future__ import print_function
 
 if platform.system() == 'Windows':
     from setuptools import setup, Extension
@@ -48,9 +49,9 @@ else:
 
 
 if os.path.isfile('pyglui/cygl/glew.pxd') and os.stat('pyglui/cygl/glew.pxd')[ST_MTIME] > os.stat(glew_header)[ST_MTIME]:
-    print "'glew.pxd' is up-to-date."
+    print("'glew.pxd' is up-to-date.")
 else:
-    print "generating glew.pxd based on '%s'"%glew_header
+    print("generating glew.pxd based on '%s'"%glew_header)
     generate_pxd(glew_header,'pyglui/cygl')
 
 
