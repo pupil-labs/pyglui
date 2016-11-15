@@ -1,6 +1,6 @@
+from __future__ import print_function
 import os, platform
 from stat import ST_MTIME
-from __future__ import print_function
 
 if platform.system() == 'Windows':
     from setuptools import setup, Extension

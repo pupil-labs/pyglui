@@ -1,5 +1,5 @@
-import logging
 from __future__ import print_function
+import logging
 
 from glfw import *
 from OpenGL.GL import *
