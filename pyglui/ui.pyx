@@ -1,10 +1,4 @@
 # cython: profile=False
-import sys
-
-if sys.version_info < (3,0):
-    chr = unichr
-
-
 from pyglui.cygl cimport glew as gl
 from pyglui.cygl cimport utils
 from pyglui.cygl.utils cimport RGBA
@@ -35,6 +29,13 @@ def get_fontawesome_font_path():
 def get_all_font_paths():
     return get_roboto_font_path(),get_opensans_font_path(),get_fontawesome_font_path()
 
+try:
+    from six import unichr
+except ImportError:
+    pass
+else:
+    char = unichr
+
 
 cdef class UI:
     '''
@@ -58,7 +59,6 @@ cdef class UI:
         self.add_font('roboto',get_roboto_font_path() )
         self.add_font('opensans',get_opensans_font_path())
         self.add_font('fontawesome',get_fontawesome_font_path())
-
 
     def __init__(self):
         pass
