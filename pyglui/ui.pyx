@@ -1,4 +1,9 @@
 # cython: profile=False
+import sys
+
+if sys.version_info < (3,0):
+    chr = unichr
+
 
 from pyglui.cygl cimport glew as gl
 from pyglui.cygl cimport utils
@@ -91,7 +96,7 @@ cdef class UI:
 
     def update_char(self,c):
         try:
-            self.new_input.chars.append(unichr(c))
+            self.new_input.chars.append(chr(c))
         except:
             pass
 
