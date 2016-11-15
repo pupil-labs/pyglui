@@ -1,5 +1,6 @@
-
 import logging
+from __future__ import print_function
+
 from glfw import *
 from OpenGL.GL import *
 
@@ -87,19 +88,17 @@ def demo():
                     # ideally copy what is in our text input area
                     test_val = "copied text input"
                     glfwSetClipboardString(window,test_val)
-                    print "set clipboard to: %s" %(test_val)
+                    print("set clipboard to: %s" %(test_val))
                 if key == 86:
                     # copy from system clipboard
                     clipboard = glfwGetClipboardString(window)
-                    print "pasting from clipboard: %s" %(clipboard)
+                    print("pasting from clipboard: %s" %(clipboard))
 
 
     def on_char(window,char):
         gui.update_char(char)
 
     def on_button(window,button, action, mods):
-        # print "button: ", button
-        # print "action: ", action
         gui.update_button(button,action,mods)
         # pos = normalize(pos,glfwGetWindowSize(window))
         # pos = denormalize(pos,(frame.img.shape[1],frame.img.shape[0]) ) # Position in img pixels
@@ -140,7 +139,7 @@ def demo():
     init()
     basic_gl_setup()
 
-    print glGetString(GL_VERSION)
+    print(glGetString(GL_VERSION))
 
 
     class Temp(object):
@@ -161,7 +160,7 @@ def demo():
         # print 'setting to :',val
 
 
-    print "pyglui version: %s" %(ui.__version__)
+    print("pyglui version: %s" %(ui.__version__))
 
     gui = ui.UI()
     gui.scale = 1.0
@@ -194,7 +193,7 @@ def demo():
     ts = time.time()
 
     from pyglui import graph
-    print graph.__version__
+    print(graph.__version__)
     cpu_g = graph.Line_Graph()
     cpu_g.pos = (50,100)
     cpu_g.update_fn = ps.cpu_percent
@@ -242,4 +241,4 @@ if __name__ == '__main__':
         cProfile.runctx("demo()",{},locals(),"example.pstats")
         gprof2dot_loc = 'gprof2dot.py'
         subprocess.call("python "+gprof2dot_loc+" -f pstats example.pstats | dot -Tpng -o example_profile.png", shell=True)
-        print "created cpu time graph for example. Please check out the png next to this."
+        print("created cpu time graph for example. Please check out the png next to this.")
