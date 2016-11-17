@@ -1,9 +1,8 @@
-
 [submodule "pyglui/cygl"]
 	path = pyglui/cygl
 	url = https://github.com/pupil-labs/cygl/
-	branch = master
+	branch = python3
 [submodule "pyglui/pyfontstash"]
 	path = pyglui/pyfontstash
 	url = https://github.com/pupil-labs/pyfontstash
-	branch = master
+	branch = python3
