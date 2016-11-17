@@ -69,7 +69,7 @@ else:
     else:
         dll_path = find_library('glfw')
     if not dll_path:
-        raise RuntimeError, 'GLFW library not found'
+        raise RuntimeError('GLFW library not found')
 
 # if ctypes.CDLL('glfw3.dll') fails with "[Error 193] %1 is not a valid Win32 application", then a wrong compiled lib was possibly used
 _glfw = ctypes.CDLL(dll_path)
@@ -634,18 +634,18 @@ def %(callback)s(window, callback = None):
     return old_callback"""  % {'callback': callback, 'fun': fun}
     return code
 
-exec __callback__('Error')
-exec __callback__('Monitor')
-exec __callback__('WindowPos')
-exec __callback__('WindowSize')
-exec __callback__('WindowClose')
-exec __callback__('WindowRefresh')
-exec __callback__('WindowFocus')
-exec __callback__('WindowIconify')
-exec __callback__('FramebufferSize')
-exec __callback__('Key')
-exec __callback__('Char')
-exec __callback__('MouseButton')
-exec __callback__('CursorPos')
-exec __callback__('Scroll')
-exec __callback__('Drop')
+exec(__callback__('Error'))
+exec(__callback__('Monitor'))
+exec(__callback__('WindowPos'))
+exec(__callback__('WindowSize'))
+exec(__callback__('WindowClose'))
+exec(__callback__('WindowRefresh'))
+exec(__callback__('WindowFocus'))
+exec(__callback__('WindowIconify'))
+exec(__callback__('FramebufferSize'))
+exec(__callback__('Key'))
+exec(__callback__('Char'))
+exec(__callback__('MouseButton'))
+exec(__callback__('CursorPos'))
+exec(__callback__('Scroll'))
+exec(__callback__('Drop'))
