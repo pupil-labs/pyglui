@@ -351,7 +351,7 @@ cdef class Selector(UI_element):
     def _on_change(self,new_value):
         self.selection,self.selection_labels = self.selection_getter()
         try:
-            self.selection_idx = self.selection.index(new_value)
+            self.selection_idx = list(self.selection).index(new_value)
         except ValueError:
             ##we could throw and error here or ignore
             ##but for now we just add the new object to the selection

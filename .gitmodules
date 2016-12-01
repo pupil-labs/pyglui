@@ -1,4 +1,3 @@
-
 [submodule "pyglui/cygl"]
 	path = pyglui/cygl
 	url = https://github.com/pupil-labs/cygl/

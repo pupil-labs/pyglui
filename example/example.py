@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function
 import logging
 
@@ -39,8 +40,8 @@ def adjust_gl_view(w,h,window):
     """
     adjust view onto our scene.
     """
-
-    glViewport(0, 0, w, h)
+    print(w,h)
+    glViewport(0, 0, int(w), int(h))
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
     glOrtho(0, w, h, 0, -1, 1)
@@ -150,7 +151,7 @@ def demo():
     foo = Temp()
     foo.bar = 34
     foo.sel = 'mi'
-    foo.selection = [unichr(0xf04b),'mi', u"re"]
+    foo.selection = ['€','mi', u"re"]
 
     foo.mytext = "some text"
 
@@ -182,7 +183,7 @@ def demo():
     menu.append(ui.Text_Input('mytext',foo,setter=set_text_val))
     gui.append(menu)
 
-    label = unichr(0xf04b)
+    label = 'Ï'
     # label = 'R'
     gui.append(ui.Thumb('mytext',foo,label=label,hotkey='r',label_font='fontawesome',label_offset_x=5,label_offset_y=0,label_offset_size=-20))
 
