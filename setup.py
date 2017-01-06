@@ -89,7 +89,8 @@ extensions = [
 				libraries = libs,
 				library_dirs = lib_dir,
 				extra_link_args=link_args,
-				extra_compile_args=extra_compile_args),
+				extra_compile_args=extra_compile_args,
+                language="c++"),
 
 	Extension(	name="pyglui.pyfontstash.fontstash",
 				sources=['pyglui/pyfontstash/fontstash.pyx'],
