@@ -58,11 +58,7 @@ if getattr(sys, 'frozen', False):
 
 else:
     # we are running in a normal Python environment
-    if os_name == "Linux":
-        dll_path = find_library('glfw')
-    elif os_name == "Darwin":
-        dll_path = find_library('glfw3')
-    elif os_name == "Windows":
+    if os_name == "Windows":
         dll_path = os.path.join(os.path.dirname(os.path.abspath(os.path.curdir)), 'shared_modules', 'external', 'glfw3')
     # otherwise make sure that 'glfw3.dll' (http://www.glfw.org) is in Win-PATH-Variable (e.g. "C:\Windows\system32\glfw3.dll")
     # precompiled glfw3.dll needs to fit MSC Version and x86/x86_64 architecture (e.g MSC v. 1500 - 64bit == VS2008 + x86_64)
