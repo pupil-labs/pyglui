@@ -7,15 +7,7 @@ from os import path
 include 'version.pxi'
 
 
-
-cdef int win_height, win_width
-
-def adjust_size(w,h):
-    global win_width
-    global win_height
-    win_width,win_height = w,h
-
-def push_view(int w=0,int h=0):
+def push_view(int w, int h):
     '''
     Sets up pixel based gl coord system.
     Use this to prepare rendering of graphs.
@@ -23,19 +15,22 @@ def push_view(int w=0,int h=0):
     gl.glMatrixMode(gl.GL_PROJECTION)
     gl.glPushMatrix()
     gl.glLoadIdentity()
-    gl.glOrtho(0, w or win_width, h or win_height, 0, -1, 1)
+    gl.glOrtho(0, w, h, 0, -1, 1)
+
 
 def pop_view():
     gl.glMatrixMode(gl.GL_PROJECTION)
     gl.glPopMatrix()
     gl.glMatrixMode(gl.GL_MODELVIEW)
 
+
 cdef class Bar_Graph:
     cdef fs.Context glfont
     cdef double[::1] data
-    cdef public float avg,bar_width,min_val, max_val
+    cdef public float avg, bar_width, min_val, max_val
+    cdef float scale
     cdef int idx,d_len
-    cdef int x,y
+    cdef int x, y, win_height, win_width
     cdef basestring label
     cdef int s_idx,s_size
     cdef object data_source
@@ -48,11 +43,13 @@ cdef class Bar_Graph:
         self.bar_width = 4
         self.min_val = min_val
         self.max_val = max_val
+        self.scale = 1
 
         self.glfont = fs.Context()
         self.glfont.add_font('opensans', get_opensans_font_path())
-        self.glfont.set_size(18)
+        self.glfont.set_size(int(18*self.scale))
         self.color = RGBA(.1,.1,.7,.5)
+
     def __init__(self,int data_points = 25,float min_val = 0, float max_val = 100):
         cdef int x
         for x in range(data_points):
@@ -60,12 +57,23 @@ cdef class Bar_Graph:
         self.avg = 0
         self.data_source = lambda: 0
 
+    def adjust_size(self, w, h):
+        self.win_width = w
+        self.win_height = h
+
     property label:
         def __get__(self):
             return self.label
         def __set__(self,new_label):
             self.label = new_label
 
+    property scale:
+        def __get__(self):
+            return self.scale
+
+        def __set__(self,val):
+            self.scale = val
+            self.glfont.set_size(int(18*self.scale))
 
     property pos:
         def __get__(self):
@@ -85,7 +93,6 @@ cdef class Bar_Graph:
     property update_fn:
         def __set__(self,fn):
             self.data_source = fn
-
 
     def add(self,double val):
         self.s_idx = (self.s_idx +1) %self.s_size
@@ -113,11 +120,11 @@ cdef class Bar_Graph:
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glPushMatrix()
         gl.glLoadIdentity()
-        gl.glTranslatef(self.x,self.y,0)
+        gl.glTranslatef(self.x*self.scale,self.y*self.scale,0)
         #scale such that a bar at max val is 100px high
         gl.glPushMatrix()
-        gl.glScalef(1,-100./self.max_val,1)
-        gl.glTranslatef(0,self.min_val,0)
+        gl.glScalef(1,-100.*self.scale/self.max_val,1)
+        gl.glTranslatef(0,self.min_val*self.scale,0)
 
         ##draw background
         #gl.glColor4f(.0,.0,.0,.2)
@@ -128,7 +135,7 @@ cdef class Bar_Graph:
         #gl.glVertex3f(0,100,0.0)
         #gl.glEnd()
         #draw bars
-        gl.glLineWidth(self.bar_width)
+        gl.glLineWidth(self.bar_width*self.scale)
         gl.glColor4f(self.color.r,self.color.g,self.color.b,self.color.a)
         gl.glBegin(gl.GL_LINES)
 
@@ -136,14 +143,14 @@ cdef class Bar_Graph:
         #    x -= self.s_idx/float(self.s_size) * 4
 
         for i in range(self.idx,self.d_len):
-            gl.glVertex3f(x,0,0)
-            gl.glVertex3f(x,self.data[i],0)
-            x +=self.bar_width
+            gl.glVertex3f(x*self.scale,0,0)
+            gl.glVertex3f(x*self.scale,self.data[i],0)
+            x += self.bar_width
 
         for i in range(self.idx):
-            gl.glVertex3f(x,0,0)
-            gl.glVertex3f(x,self.data[i],0)
-            x +=self.bar_width
+            gl.glVertex3f(x*self.scale,0,0)
+            gl.glVertex3f(x*self.scale,self.data[i],0)
+            x += self.bar_width
 
         gl.glEnd()
         gl.glPopMatrix()
@@ -157,8 +164,9 @@ cdef class Line_Graph:
     cdef fs.Context glfont
     cdef double[::1] data
     cdef public float avg,bar_width,min_val, max_val
+    cdef float scale
     cdef int idx,d_len
-    cdef int x,y
+    cdef int x, y, win_height, win_width
     cdef basestring label
     cdef int s_idx,s_size
     cdef object data_source
@@ -172,14 +180,13 @@ cdef class Line_Graph:
         self.bar_width = 2
         self.min_val = min_val
         self.max_val = max_val
+        self.scale = 1.
 
         self.glfont = fs.Context()
         self.glfont.add_font('opensans',get_opensans_font_path())
-        self.glfont.set_size(18)
+        self.glfont.set_size(int(18*self.scale))
         self.glfont.set_align(fs.FONS_ALIGN_LEFT | fs.FONS_ALIGN_MIDDLE)
         self.color = RGBA(.1,.1,.7,.5)
-
-
 
     def __init__(self,int data_points = 25,float min_val = 0, float max_val = 100):
         cdef int x
@@ -188,12 +195,23 @@ cdef class Line_Graph:
         self.avg = 0
         self.data_source = lambda: 0
 
+    def adjust_size(self, w, h):
+        self.win_width = w
+        self.win_height = h
+
+    property scale:
+        def __get__(self):
+            return self.scale
+
+        def __set__(self,val):
+            self.scale = val
+            self.glfont.set_size(int(18*self.scale))
+
     property label:
         def __get__(self):
             return self.label
         def __set__(self,new_label):
             self.label = new_label
-
 
     property pos:
         def __get__(self):
@@ -241,25 +259,25 @@ cdef class Line_Graph:
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glPushMatrix()
         gl.glLoadIdentity()
-        gl.glTranslatef(self.x,self.y,0)
+        gl.glTranslatef(self.x*self.scale,self.y*self.scale,0)
         #scale such that a bar at max val is 100px high
         gl.glPushMatrix()
-        gl.glScalef(1,-100./self.max_val,1)
-        gl.glTranslatef(0,self.min_val,0)
+        gl.glScalef(1,-100.*self.scale/self.max_val,1)
+        gl.glTranslatef(0,self.min_val*self.scale,0)
 
 
-        gl.glLineWidth(self.bar_width)
+        gl.glLineWidth(self.bar_width*self.scale)
         gl.glColor4f(self.color.r,self.color.g,self.color.b,self.color.a)
         gl.glBegin(gl.GL_LINE_STRIP)
 
 
         for i in range(self.idx,self.d_len):
-            gl.glVertex3f(x,self.data[i],0)
-            x +=self.bar_width
+            gl.glVertex3f(x*self.scale,self.data[i],0)
+            x += self.bar_width
 
         for i in range(self.idx):
-            gl.glVertex3f(x,self.data[i],0)
-            x +=self.bar_width
+            gl.glVertex3f(x*self.scale,self.data[i],0)
+            x += self.bar_width
 
         gl.glEnd()
         gl.glPopMatrix()
@@ -277,17 +295,20 @@ cdef class Averaged_Value:
     cdef int idx,d_len
     cdef public float avg
     cdef int s_idx,s_size
-    cdef int x,y
+    cdef int x, y, font_size
+    cdef float scale
     cdef object data_source
     cdef public RGBA color
 
     def __cinit__(self, int data_points=25, int font_size=18):
         self.data = view.array(shape=(data_points,), itemsize=sizeof(double), format="d")
+        self.scale = 1.
         self.d_len = data_points
         self.label = 'Title %0.2f units'
+        self.font_size = font_size
         self.glfont = fs.Context()
         self.glfont.add_font('opensans',get_opensans_font_path())
-        self.glfont.set_size(font_size)
+        self.glfont.set_size(int(self.font_size*self.scale))
         self.glfont.set_align(fs.FONS_ALIGN_LEFT | fs.FONS_ALIGN_MIDDLE)
         self.color = RGBA(1.,1.,1.,1.)
 
@@ -317,6 +338,13 @@ cdef class Averaged_Value:
         def __get__(self):
             return self.s_size
 
+    property scale:
+        def __get__(self):
+            return self.scale
+
+        def __set__(self,val):
+            self.scale = val
+            self.glfont.set_size(int(self.font_size*self.scale))
 
     def set_text_align(self,v_align='left',h_align='top'):
         v_align = {'left':fs.FONS_ALIGN_LEFT,'center':fs.FONS_ALIGN_CENTER,'right':fs.FONS_ALIGN_RIGHT}[v_align]
@@ -346,7 +374,7 @@ cdef class Averaged_Value:
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glPushMatrix()
         self.glfont.set_color_float(self.color[:])
-        self.glfont.draw_text(self.x,self.y,self.label%self.avg)
+        self.glfont.draw_text(self.x*self.scale,self.y*self.scale,self.label%self.avg)
         gl.glPopMatrix()
 
 
