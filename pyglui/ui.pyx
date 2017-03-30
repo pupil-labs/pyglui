@@ -211,14 +211,17 @@ cdef class UI:
         return submenus
 
     #identical to base_menu method
-    cdef set_submenu_config(self,dict submenus):
+    cdef set_submenu_config(self, object submenus):
         '''
         Growing menus are sometimes emebedded in Other menues. We save their configurations recursively.
         '''
         if submenus:
+            # submenus is an Immutable_Dict with tuples as values.
+            # Keep state of current submenu entry with iterators
+            conf_iters = {k: iter(submenus[k]) for k in submenus.keys()}
             for e in self.elements:
                 if isinstance(e,(Growing_Menu,Scrolling_Menu,Stretching_Menu)):
-                    e.configuration = submenus.get(e.label,[{}]).pop(0) #pop of the first menu conf dict in the list.
+                    e.configuration = next(conf_iters[e.label]) if e.label in conf_iters else {}
 
     property configuration:
         def __get__(self):

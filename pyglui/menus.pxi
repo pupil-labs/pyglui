@@ -65,22 +65,25 @@ cdef class Base_Menu(UI_element):
 
     cdef get_submenu_config(self):
         '''
-        Growing menus are sometimes emebedded in Other menues. We load their configurations recursively.
+        Growing menus are sometimes emebedded in Other menus. We load their configurations recursively.
         '''
         cdef dict submenus = {}
         for e in self.elements:
             if isinstance(e,(Growing_Menu,Scrolling_Menu,Stretching_Menu)):
-                submenus[e.label] = submenus.get(e.label,[]) + [e.configuration] #we could have two submenues with same label so we use a list for each submenu label cotaining the conf dicts for each menu
+                submenus[e.label] = submenus.get(e.label,[]) + [e.configuration] #we could have two submenus with same label so we use a list for each submenu label cotaining the conf dicts for each menu
         return submenus
 
-    cdef set_submenu_config(self,dict submenus):
+    cdef set_submenu_config(self,object submenus):
         '''
-        Growing menus are sometimes emebedded in Other menues. We save their configurations recursively.
+        Growing menus are sometimes emebedded in Other menus. We save their configurations recursively.
         '''
         if submenus:
+            # submenus is an Immutable_Dict with tuples as values.
+            # Keep state of current submenu entry with iterators
+            conf_iters = {k: iter(submenus[k]) for k in submenus.keys()}
             for e in self.elements:
                 if isinstance(e,(Growing_Menu,Scrolling_Menu,Stretching_Menu)):
-                    e.configuration = submenus.get(e.label,[{}]).pop(0) #pop of the first menu conf dict in the list.
+                    e.configuration = next(conf_iters[e.label]) if e.label in conf_iters else {}
 
 
     cdef draw_menu(self,bint nested):
