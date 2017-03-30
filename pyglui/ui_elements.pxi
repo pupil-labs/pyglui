@@ -932,9 +932,9 @@ cdef class Thumb(UI_element):
         #update appearance
         self.outline.compute(parent)
         self.button.compute(self.outline)
-        cdef int stroke_width = 14
+        cdef int stroke_width = int(14 * ui_scale)
         cdef int stroke_width_half = int(stroke_width * 0.5)
-        cdef int shadow_stroke_width = 36
+        cdef int shadow_stroke_width = int(36 * ui_scale)
         cdef RGBA icon_color
 
         if self.sync_val.value == self.on_val:
