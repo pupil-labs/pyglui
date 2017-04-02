@@ -7,22 +7,6 @@ from os import path
 include 'version.pxi'
 
 
-def push_view(int w, int h):
-    '''
-    Sets up pixel based gl coord system.
-    Use this to prepare rendering of graphs.
-    '''
-    gl.glMatrixMode(gl.GL_PROJECTION)
-    gl.glPushMatrix()
-    gl.glLoadIdentity()
-    gl.glOrtho(0, w, h, 0, -1, 1)
-
-
-def pop_view():
-    gl.glMatrixMode(gl.GL_PROJECTION)
-    gl.glPopMatrix()
-    gl.glMatrixMode(gl.GL_MODELVIEW)
-
 
 cdef class Bar_Graph:
     cdef fs.Context glfont
@@ -57,7 +41,7 @@ cdef class Bar_Graph:
         self.avg = 0
         self.data_source = lambda: 0
 
-    def adjust_size(self, w, h):
+    def adjust_window_size(self, w, h):
         self.win_width = w
         self.win_height = h
 
@@ -116,6 +100,10 @@ cdef class Bar_Graph:
     def draw(self):
         cdef int i
         cdef float x=0
+        gl.glMatrixMode(gl.GL_PROJECTION)
+        gl.glPushMatrix()
+        gl.glLoadIdentity()
+        gl.glOrtho(0, self.win_width, self.win_height, 0, -1, 1)
 
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glPushMatrix()
@@ -159,6 +147,11 @@ cdef class Bar_Graph:
         self.glfont.draw_text(0,-3,self.label%self.avg)
         gl.glPopMatrix()
 
+        gl.glMatrixMode(gl.GL_PROJECTION)
+        gl.glPopMatrix()
+        gl.glMatrixMode(gl.GL_MODELVIEW)
+
+
 
 cdef class Line_Graph:
     cdef fs.Context glfont
@@ -195,7 +188,7 @@ cdef class Line_Graph:
         self.avg = 0
         self.data_source = lambda: 0
 
-    def adjust_size(self, w, h):
+    def adjust_window_size(self, w, h):
         self.win_width = w
         self.win_height = h
 
@@ -256,6 +249,12 @@ cdef class Line_Graph:
         cdef int i
         cdef float x=0
 
+        gl.glMatrixMode(gl.GL_PROJECTION)
+        gl.glPushMatrix()
+        gl.glLoadIdentity()
+        gl.glOrtho(0, self.win_width, self.win_height, 0, -1, 1)
+
+
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glPushMatrix()
         gl.glLoadIdentity()
@@ -284,6 +283,10 @@ cdef class Line_Graph:
         self.glfont.set_color_float(self.color[:])
         self.glfont.draw_text(x +10 ,-self.data[i],self.label%self.avg)
         gl.glPopMatrix()
+
+        gl.glMatrixMode(gl.GL_PROJECTION)
+        gl.glPopMatrix()
+        gl.glMatrixMode(gl.GL_MODELVIEW)
 
 
 
