@@ -7,6 +7,14 @@ from os import path
 include 'version.pxi'
 
 
+# legacy push and pop
+
+def push_view(int w, int h):
+    pass
+
+def pop_view():
+    pass
+
 
 cdef class Bar_Graph:
     cdef fs.Context glfont
