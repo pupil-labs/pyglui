@@ -488,7 +488,7 @@ cdef class Scrolling_Menu(Movable_Menu):
 
         self.pop_scissor()
 
-        cdef float scroll_factor = self.element_space.size.y/h
+        cdef float scroll_factor = self.element_space.size.y/(h or 1)
         cdef float scroll_handle_offset = max(0,-self.scrollstate.y*ui_scale)*scroll_factor
         cdef float scroll_handle_size = self.element_space.size.y * scroll_factor
 
