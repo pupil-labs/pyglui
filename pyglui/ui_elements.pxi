@@ -134,7 +134,7 @@ cdef class Slider(UI_element):
         glfont.set_color_float(self.text_color[:])
 
 
-        if type(self.sync_val.value) == float:
+        if isinstance(self.sync_val.value, float):
             glfont.draw_text(self.field.size.x-x_spacer,0,str(self.display_format%self.sync_val.value ))
             glfont.pop_state()
             used_x = glfont.text_bounds(0,0,str(self.display_format%self.sync_val.value))
