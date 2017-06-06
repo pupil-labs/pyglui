@@ -5,9 +5,9 @@ cdef class UI_element:
     '''
     The base class for all UI elements.
     '''
-    cdef readonly basestring label
     cdef readonly object uid
     cdef public FitBox outline
+    cdef basestring _label
     cdef bint _read_only
 
     cpdef sync(self):
@@ -45,7 +45,14 @@ cdef class UI_element:
                 global should_redraw
                 should_redraw = True
 
-
+    property label:
+        def __get__(self):
+            return self._label
+        def __set__(self,basestring val):
+            if self._label != val:
+                self._label = val
+                global should_redraw
+                should_redraw = True
 
 ########## Slider ##########
 #    +--------------------------------+
