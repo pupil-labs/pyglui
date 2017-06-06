@@ -72,7 +72,7 @@ cdef class Slider(UI_element):
 
     def __cinit__(self,str attribute_name, object attribute_context = None, label = None, min = 0, max = 100, step = 0,setter= None,getter= None):
         self.uid = id(self)
-        self.label = label or attribute_name
+        self._label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
         self.step = abs(step)
         self.minimum = min
@@ -152,7 +152,7 @@ cdef class Slider(UI_element):
 
         glfont.push_state()
         glfont.set_color_float(self.text_color[:])
-        glfont.draw_limited_text(x_spacer,0,self.label,self.field.size.x-3*x_spacer-used_x)
+        glfont.draw_limited_text(x_spacer,0,self._label,self.field.size.x-3*x_spacer-used_x)
         glfont.pop_state()
 
         line(Vec2(0.,self.slider_pos.y),Vec2(self.field.size.x, self.slider_pos.y),self.line_default_color)
@@ -217,7 +217,7 @@ cdef class Switch(UI_element):
 
     def __cinit__(self,str attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None):
         self.uid = id(self)
-        self.label = label or attribute_name
+        self._label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
         self.on_val = on_val
         self.off_val = off_val
@@ -278,7 +278,7 @@ cdef class Switch(UI_element):
         glfont.push_state()
         glfont.set_color_float(self.text_color[:])
 
-        glfont.draw_limited_text(x_spacer,0,self.label,self.field.size.x-(switch_button_size_on+switch_button_shadow))
+        glfont.draw_limited_text(x_spacer,0,self._label,self.field.size.x-(switch_button_size_on+switch_button_shadow))
 
         glfont.pop_state()
         gl.glPopMatrix()
@@ -325,7 +325,7 @@ cdef class Selector(UI_element):
 
     def __cinit__(self,str attribute_name, object attribute_context = None, selection = [], labels=None, label=None, setter=None, getter=None, selection_getter = None):
         self.uid = id(self)
-        self.label = label or attribute_name
+        self._label = label or attribute_name
 
         self.text_color = RGBA(*color_text_default)
         self.triangle_color = RGBA(*selector_triangle_color_default)
@@ -387,7 +387,7 @@ cdef class Selector(UI_element):
         glfont.push_state()
         glfont.set_color_float(self.text_color[:])
 
-        cdef float label_text_space = glfont.draw_text(x_spacer,0,self.label)
+        cdef float label_text_space = glfont.draw_text(x_spacer,0,self._label)
         glfont.pop_state()
         gl.glPopMatrix()
 
@@ -478,7 +478,7 @@ cdef class Text_Input(UI_element):
     cdef double t0
     def __cinit__(self,str attribute_name, object attribute_context = None,label = None,setter= None,getter= None):
         self.uid = id(self)
-        self.label = label or attribute_name
+        self._label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
         self.outline = FitBox(Vec2(0,0),Vec2(0,text_input_outline_size_y)) # we only fix the height
         self.field = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
@@ -522,7 +522,7 @@ cdef class Text_Input(UI_element):
 
         gl.glPushMatrix()
         gl.glTranslatef(self.field.org.x,self.field.org.y,0)
-        dx = glfont.draw_text(x_spacer,0,self.label)
+        dx = glfont.draw_text(x_spacer,0,self._label)
         gl.glPopMatrix()
 
         self.textfield.org.x += dx
@@ -779,7 +779,7 @@ cdef class Button(UI_element):
 
     def __cinit__(self,label, function):
         self.uid = id(self)
-        self.label = label
+        self._label = label
         self.outline = FitBox(Vec2(0,0),Vec2(0,button_outline_size_y)) # we only fix the height
         self.button = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
         self.selected = False
@@ -812,7 +812,7 @@ cdef class Button(UI_element):
         glfont.push_state()
         gl.glTranslatef(self.button.org.x,self.button.org.y,0)
         glfont.set_color_float(self.text_color[:])
-        glfont.draw_limited_text(x_spacer,0,self.label,self.button.size.x-x_spacer)
+        glfont.draw_limited_text(x_spacer,0,self._label,self.button.size.x-x_spacer)
         glfont.pop_state()
         gl.glPopMatrix()
 
@@ -900,7 +900,7 @@ cdef class Thumb(UI_element):
 
     def __cinit__(self,str attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None,label_font='roboto', label_offset_x=0, label_offset_y=0,label_offset_size=0, setter=None, getter=None, hotkey = None,  on_color=thumb_color_on, off_color=thumb_color_off):
         self.uid = id(self)
-        self.label = label or attribute_name[0]
+        self._label = label or attribute_name[0]
         self.label_font = label_font
         self.offset_x = label_offset_x
         self.offset_y = label_offset_y
@@ -970,10 +970,10 @@ cdef class Thumb(UI_element):
         glfont.set_blur(10.5)
         cdef int text_x = self.button.center[0]+int(self.offset_x*ui_scale)
         cdef int text_y = self.button.center[1]+int(self.offset_y*ui_scale)
-        glfont.draw_text(text_x,text_y,self.label)
+        glfont.draw_text(text_x,text_y,self._label)
         glfont.set_blur(0.5)
         glfont.set_color_float(icon_color[:])
-        glfont.draw_text(text_x,text_y,self.label)
+        glfont.draw_text(text_x,text_y,self._label)
         glfont.pop_state()
 
 
@@ -1041,7 +1041,7 @@ cdef class Hot_Key(UI_element):
 
     def __cinit__(self,str attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None, setter=None, getter=None, hotkey = None):
         self.uid = id(self)
-        self.label = label or attribute_name
+        self._label = label or attribute_name
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
         self.on_val = on_val
         self.off_val = off_val

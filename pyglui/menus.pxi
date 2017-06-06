@@ -134,7 +134,7 @@ cdef class Base_Menu(UI_element):
                     triangle_h(self.menu_bar.outline.org+menu_offset,tripple_h_size,RGBA(*color_line_default))
 
                 glfont.draw_text(self.menu_bar.outline.org.x+menu_offset.x+menu_topbar_text_x_org*ui_scale,
-                                 self.outline.org.y+menu_offset.y,self.label)
+                                 self.outline.org.y+menu_offset.y,self._label)
                 line(Vec2(self.menu_bar.outline.org.x+menu_offset.x,self.menu_bar.outline.org.y+self.menu_bar.outline.size.y),
                      Vec2(self.menu_bar.outline.org.x+self.menu_bar.outline.size.x-menu_offset.x,self.menu_bar.outline.org.y+self.menu_bar.outline.size.y),
                      RGBA(*menu_line))
@@ -251,7 +251,7 @@ cdef class Stretching_Menu(Base_Menu):
 
     def __cinit__(self,label,pos=(0,0),size=(200,100)):
         self.uid = id(self)
-        self.label = label
+        self._label = label
         self.outline = FitBox(position=Vec2(*pos),size=Vec2(*size),min_size=Vec2(0,0))
         self.element_space = FitBox(position=Vec2(menu_pad,menu_pad),size=Vec2(-menu_pad,-menu_pad))
         self.elements = []
@@ -319,7 +319,7 @@ cdef class Growing_Menu(Movable_Menu):
 
     def __cinit__(self,label,pos=(0,0),size=(0,0),header_pos = 'top'):
         self.uid = id(self)
-        self.label = label
+        self._label = label
         #design height will be overwritten in draw.
         if header_pos in ('top','bottom'):
             min_size = Vec2(menu_topbar_min_width,menu_topbar_pad)
@@ -431,7 +431,7 @@ cdef class Scrolling_Menu(Movable_Menu):
 
     def __cinit__(self,label,pos=(100,100),size=(200,100),header_pos = 'top'):
         self.uid = id(self)
-        self.label = label
+        self._label = label
 
         if header_pos in ('top','bottom'):
             min_size = Vec2(menu_topbar_min_width,menu_topbar_pad)
