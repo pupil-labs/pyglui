@@ -108,6 +108,7 @@ cdef class UI:
             e.sync()
 
     cdef handle_input(self):
+        unused_buttons = []
         if self.new_input:
             #print self.new_input
 
@@ -135,7 +136,9 @@ cdef class UI:
             # ontop level in reverse so that menus drawn above other take precedence
             for e in self.elements[::-1]:
                 e.handle_input(self.new_input,True)
+            unused_buttons = self.new_input.buttons
             self.new_input.purge()
+        return unused_buttons
 
     cdef draw(self):
         global should_redraw
@@ -166,9 +169,10 @@ cdef class UI:
 
 
     def update(self):
-        self.handle_input()
+        unused_buttons = self.handle_input()
         self.sync()
         self.draw()
+        return unused_buttons
 
     def collect_menus(self):
         for e in self.elements:
