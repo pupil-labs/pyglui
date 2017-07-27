@@ -14,7 +14,6 @@ from os import path
 from time import time
 from collections import namedtuple
 
-Unused_Elements = namedtuple('Unused_Elements', ['buttons', 'keys', 'chars'])
 
 #global cdefs
 cdef fs.Context glfont
@@ -140,10 +139,10 @@ cdef class UI:
             for e in self.elements[::-1]:
                 e.handle_input(self.new_input,True)
 
-            unused = Unused_Elements(self.new_input.buttons, self.new_input.keys, self.new_input.chars)
+            unused = Unused_Input(self.new_input.buttons, self.new_input.keys, self.new_input.chars)
             self.new_input.purge()
         else:
-            unused = Unused_Elements([], [], [])
+            unused = Unused_Input([], [], [])
 
         return unused
 
@@ -176,10 +175,10 @@ cdef class UI:
 
 
     def update(self):
-        unused_elements = self.handle_input()
+        unused_Input = self.handle_input()
         self.sync()
         self.draw()
-        return unused_elements
+        return unused_Input
 
     def collect_menus(self):
         for e in self.elements:
@@ -381,6 +380,8 @@ cdef class Input:
 
     def __str__(self):
         return 'Current Input: \n   Mouse pos  : %s\n   Mouse delta: %s\n   Scroll: %s\n   Buttons: %s\n   Keys: %s\n   Chars: %s' %(self.m,self.dm,self.s,self.buttons,self.keys,self.chars)
+
+Unused_Input = namedtuple('Unused_Input', ['buttons', 'keys', 'chars'])
 
 
 DEF drag_threshold = 10
