@@ -12,6 +12,10 @@ include 'design_params.pxi'
 
 from os import path
 from time import time
+from collections import namedtuple
+
+Unused_Elements = namedtuple('Unused_Elements', ['buttons', 'keys', 'chars'])
+
 #global cdefs
 cdef fs.Context glfont
 cdef double ui_scale = 1.0
@@ -108,7 +112,6 @@ cdef class UI:
             e.sync()
 
     cdef handle_input(self):
-        unused_buttons = []
         if self.new_input:
             #print self.new_input
 
@@ -136,9 +139,13 @@ cdef class UI:
             # ontop level in reverse so that menus drawn above other take precedence
             for e in self.elements[::-1]:
                 e.handle_input(self.new_input,True)
-            unused_buttons = self.new_input.buttons
+
+            unused = Unused_Elements(self.new_input.buttons, self.new_input.keys, self.new_input.chars)
             self.new_input.purge()
-        return unused_buttons
+        else:
+            unused = Unused_Elements([], [], [])
+
+        return unused
 
     cdef draw(self):
         global should_redraw
@@ -169,10 +176,10 @@ cdef class UI:
 
 
     def update(self):
-        unused_buttons = self.handle_input()
+        unused_elements = self.handle_input()
         self.sync()
         self.draw()
-        return unused_buttons
+        return unused_elements
 
     def collect_menus(self):
         for e in self.elements:
