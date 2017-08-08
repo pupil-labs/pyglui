@@ -222,7 +222,7 @@ cdef class Movable_Menu(Base_Menu):
                                             arrest_axis=0,zero_crossing = False,
                                             click_cb=self.toggle_iconified,catch_input = catch_input )
 
-                if self.outline.design_size.x:
+                if self.outline.design_size.x > 0:
                     self.resize_corner = Draggable(Vec2(-resize_corner_size,-resize_corner_size),Vec2(0,0),
                                                     self.outline.design_size,
                                                     arrest_axis=2,zero_crossing = False)
