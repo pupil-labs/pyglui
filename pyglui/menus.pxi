@@ -65,7 +65,7 @@ cdef class Base_Menu(UI_element):
 
     cdef get_submenu_config(self):
         '''
-        Growing menus are sometimes emebedded in Other menues. We load their configurations recursively.
+        Menus are sometimes emebedded in Other menues. We load their configurations recursively.
         '''
         cdef dict submenus = {}
         for e in self.elements:
