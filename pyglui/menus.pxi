@@ -314,7 +314,7 @@ cdef class Growing_Menu(Movable_Menu):
 
 
     '''
-    cdef public bint collapsed
+    cdef bint _collapsed
 
 
     def __cinit__(self,label,pos=(0,0),size=(0,0),header_pos = 'top'):
@@ -376,12 +376,12 @@ cdef class Growing_Menu(Movable_Menu):
 
     property height:
         def __get__(self):
-            cdef float height = 0
+            cdef float height = 0.0000001 #0 is magic and not meant when hight is computed to be 0.
             #space from outline to element space at top
             height += self.element_space.design_org.y*ui_scale
             #space from element_space to outline at bottom
             height -= self.element_space.design_size.y*ui_scale #double neg
-            if self.collapsed:
+            if self._collapsed:
                 #elemnt space is 0
                 pass
             else:
@@ -392,9 +392,17 @@ cdef class Growing_Menu(Movable_Menu):
 
 
     def toggle_iconified(self):
-        global should_redraw
-        should_redraw = True
-        self.collapsed = not self.collapsed
+        self.collapsed != self.collapsed
+
+    property collapsed:
+        def __get__(self):
+            return self._collapsed
+        def __set__(self,collapsed):
+            if collapsed != self._collapsed:
+                global should_redraw
+                should_redraw = True
+                self._collapsed = not self._collapsed
+
 
     property configuration:
         def __get__(self):
@@ -451,6 +459,8 @@ cdef class Scrolling_Menu(Movable_Menu):
     def __init__(self,label,pos=(100,100),size=(200,100),header_pos = 'top'):
         pass
 
+    def __str__(self):
+        return "Scrolling_Menu {}".format(self._label)
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
         self.outline.compute(parent)
@@ -567,8 +577,8 @@ cdef class Scrolling_Menu(Movable_Menu):
         def __get__(self):
             return not self.element_space.has_area()
 
-        def __set__(self,new_state):
-            if new_state != self.element_space.has_area():
+        def __set__(self,collapsed):
+            if collapsed != self.collapsed:
                 self.toggle_iconified()
 
     property configuration:
