@@ -996,11 +996,12 @@ cdef class Thumb(UI_element):
         if not (self._read_only or parent_read_only):
             global should_redraw
 
-            for b in new_input.buttons:
+            for b in new_input.buttons[:]:#we need to make a copy for remove to work as desired:
                 if visible and self.button.mouse_over(new_input.m):
                     if b[1] in (1,2):
                         self.selected = True
                         should_redraw = True
+                        new_input.buttons.remove(b)
                 if self.selected and b[1] in (1,2) and (self.sync_val.value == self.on_val):
                     self.sync_val.value = self.off_val
                 if self.selected and b[1] in (1,2) and (self.sync_val.value == self.off_val):
