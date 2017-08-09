@@ -50,10 +50,6 @@ def adjust_gl_view(w,h,window):
 
 
 
-def clear_gl_screen():
-    glClearColor(.9,.9,0.9,1.)
-    glClear(GL_COLOR_BUFFER_BIT)
-
 
 def demo():
     global quit
@@ -67,7 +63,7 @@ def demo():
         w,h = w*hdpi_factor,h*hdpi_factor
         gui.update_window(w,h)
         active_window = glfwGetCurrentContext()
-        glfwMakeContextCurrent(window)
+        glfwMakeContextCurrent(active_window)
         # norm_size = normalize((w,h),glfwGetWindowSize(window))
         # fb_size = denormalize(norm_size,glfwGetFramebufferSize(window))
         adjust_gl_view(w,h,window)
@@ -154,44 +150,71 @@ def demo():
     foo.selection = ['€','mi', u"re"]
 
     foo.mytext = "some text"
-
+    foo.T = True
+    foo.L = False
 
     def set_text_val(val):
         foo.mytext = val
         # print 'setting to :',val
 
-
-    print("pyglui version: %s" %(ui.__version__))
+    def pr():
+        print("pyglui version: %s" %(ui.__version__))
 
     gui = ui.UI()
     gui.scale = 1.0
-    sidebar = ui.Scrolling_Menu("MySideBar",pos=(-300,0),size=(0,0),header_pos='left')
+    thumbbar = ui.Scrolling_Menu("ThumbBar",pos=(-80,0),size=(0,0),header_pos='hidden')
+    menubar = ui.Scrolling_Menu("MenueBar",pos=(-500,0),size=(-90,0),header_pos='left')
 
-    sm = ui.Growing_Menu("SubMenu",pos=(0,0),size=(0,100))
-    sm.append(ui.Slider("bar",foo))
-    sm.append(ui.Text_Input('mytext',foo,setter=set_text_val))
-    sm.append(ui.Selector('sel',foo,selection=foo.selection))
 
-    sidebar.append(sm)
-    gui.append(sidebar)
+    gui.append(menubar)
+    gui.append(thumbbar)
 
-    menu = ui.Scrolling_Menu('My Window 1', pos=(200,100), size=(50, 200),header_pos='top')
-    menu.append(ui.Slider("bar",foo))
-    gui.append(menu)
 
-    menu = ui.Scrolling_Menu('My Window 2', pos=(200,100), size=(50, 200),header_pos='top')
-    menu.append(ui.Text_Input('mytext',foo,setter=set_text_val))
-    gui.append(menu)
 
-    label = 'Ï'
+    T = ui.Growing_Menu("T menu",header_pos='hidden')
+    menubar.append(T)
+    L = ui.Growing_Menu("L menu",header_pos='hidden')
+    menubar.append(L)
+    M = ui.Growing_Menu("M menu",header_pos='hidden')
+    menubar.append(M)
+
+    def toggle_menu(collapsed, menu):
+        menubar.collapsed = collapsed
+        for m in menubar.elements:
+            m.collapsed = True
+        menu.collapsed = collapsed
+
+
+    thumbbar.append(ui.Thumb('collapsed',T,label='T',on_val=False, off_val=True,setter=lambda x:toggle_menu(x,T)))
+    thumbbar.append(ui.Thumb('collapsed',L,label='L',on_val=False, off_val=True,setter=lambda x:toggle_menu(x,L)))
+    thumbbar.append(ui.Thumb('collapsed',M,label='M',on_val=False, off_val=True,setter=lambda x:toggle_menu(x,M)))
+
+    T.append(ui.Button("T test",pr))
+    T.append(ui.Info_Text("T best finerfpiwnesdco'n wfo;ineqrfo;inwefo'qefr voijeqfr'p9qefrp'i 'iqefr'ijqfr eqrfiqerfn'ioer"))
+    L.append(ui.Button("L test",pr))
+    L.append(ui.Button("L best",pr))
+    M.append(ui.Button("M test",pr))
+    M.append(ui.Button("M best",pr))
+    MM = ui.Growing_Menu("MM menu",pos=(0,0),size=(0,400))
+    M.append(MM)
+    for x in range(20):
+        MM.append(ui.Button("M test%s"%x,pr))
+    M.append(ui.Button("M best",pr))
+    M.append(ui.Button("M best",pr))
+    M.append(ui.Button("M best",pr))
+    M.append(ui.Button("M best",pr))
+    M.append(ui.Button("M best",pr))
+    M.append(ui.Button("M best",pr))
+    M.append(ui.Button("M best",pr))
+    # label = 'Ï'
     # label = 'R'
-    gui.append(ui.Thumb('mytext',foo,label=label,hotkey='r',label_font='fontawesome',label_offset_x=5,label_offset_y=0,label_offset_size=-20))
-
+    # gui.append(
     import os
     import psutil
     pid = os.getpid()
     ps = psutil.Process(pid)
     ts = time.time()
+
 
     from pyglui import graph
     print(graph.__version__)
@@ -210,25 +233,15 @@ def demo():
     on_resize(window,*glfwGetWindowSize(window))
 
     while not quit:
-        dt,ts = time.time()-ts,time.time()
-        clear_gl_screen()
-
-
-        draw_concentric_circles( (500,250), 200, 6 , 1.0 )
-        draw_concentric_circles( (600,250), 200, 7 , 1.0 )
-        draw_concentric_circles( (700,250), 200, 8 , 0.1 )
-
-
-
-        cpu_g.update()
-        cpu_g.draw()
-        fps_g.add(1./dt)
-        fps_g.draw()
-
         gui.update()
-
+        # print(T.collapsed,L.collapsed,M.collapsed)
+        # T.collapsed = True
+        # glfwMakeContextCurrent(window)
         glfwSwapBuffers(window)
         glfwPollEvents()
+        # adjust_gl_view(1280,720,window)
+        glClearColor(.3,.4,.1,1)
+        glClear(GL_COLOR_BUFFER_BIT)
 
     gui.terminate()
     glfwTerminate()
