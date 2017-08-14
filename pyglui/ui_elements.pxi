@@ -5,10 +5,12 @@ cdef class UI_element:
     '''
     The base class for all UI elements.
     '''
+    cdef public float order
     cdef readonly object uid
     cdef public FitBox outline
     cdef basestring _label
     cdef bint _read_only
+
 
     cpdef sync(self):
         global should_redraw

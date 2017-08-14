@@ -44,6 +44,11 @@ cdef class Base_Menu(UI_element):
         global should_redraw
         should_redraw = True
 
+    def sort(self,key):
+        self.elements.sort(key=key)
+        global should_redraw
+        should_redraw = True
+
     def __len__ (self):
         return len(self.elements)
 
@@ -392,7 +397,7 @@ cdef class Growing_Menu(Movable_Menu):
 
 
     def toggle_iconified(self):
-        self.collapsed != self.collapsed
+        self.collapsed = not self.collapsed
 
     property collapsed:
         def __get__(self):
