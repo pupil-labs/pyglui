@@ -911,7 +911,7 @@ cdef class Thumb(UI_element):
         self.on_val = on_val
         self.off_val = off_val
         self.outline = FitBox(Vec2(0,0),Vec2(thumb_outline_size,thumb_outline_size))
-        self.button = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
+        self.button = FitBox(Vec2(thumb_outline_pad,thumb_outline_pad),Vec2(-thumb_outline_pad,-thumb_outline_pad))
         self.selected = False
         self.on_color = RGBA(*on_color)
         self.off_color = RGBA(*off_color)
@@ -941,9 +941,9 @@ cdef class Thumb(UI_element):
         #update appearance
         self.outline.compute(parent)
         self.button.compute(self.outline)
-        cdef int stroke_width = int(14 * ui_scale)
+        cdef int stroke_width = int(8 * ui_scale)
         cdef int stroke_width_half = int(stroke_width * 0.5)
-        cdef int shadow_stroke_width = int(36 * ui_scale)
+        cdef int shadow_stroke_width = int(24 * ui_scale)
         cdef RGBA icon_color
 
         if self.sync_val.value == self.on_val:
@@ -961,8 +961,6 @@ cdef class Thumb(UI_element):
             self.selected = False
             global should_redraw
             should_redraw = True
-
-
 
         glfont.push_state()
         glfont.set_font(self.label_font)
