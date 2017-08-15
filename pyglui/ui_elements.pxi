@@ -848,13 +848,14 @@ cdef class Info_Text(UI_element):
     cdef basestring _text
     cdef int max_height
     cdef FitBox text_area
-
+    cdef float text_size
 
     def __cinit__(self, basestring text):
         self._text = text
         self.max_height = 200
         self.outline = FitBox(Vec2(0,0),Vec2(0,0))
         self.text_area = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
+        self.text_size = size_text_info
 
     def __init__(self, basestring text):
         pass
@@ -875,6 +876,7 @@ cdef class Info_Text(UI_element):
         self.text_area.compute(self.outline)
         glfont.push_state()
         glfont.set_color_float(color_text_info)
+        glfont.set_size(self.text_size)
         left_word, height = glfont.draw_breaking_text(self.text_area.org.x, self.text_area.org.y, self._text, self.text_area.size.x,self.max_height )
         glfont.pop_state()
         self.text_area.design_size.y  = (height-self.text_area.org.y)/ui_scale
@@ -884,11 +886,13 @@ cdef class Info_Text(UI_element):
     cpdef precompute(self,FitBox parent):
         self.outline.compute(parent)
         self.text_area.compute(self.outline)
+        glfont.push_state()
+        glfont.set_size(self.text_size)
         left_word, height = glfont.compute_breaking_text(self.text_area.org.x, self.text_area.org.y, self._text, self.text_area.size.x,self.max_height )
+        glfont.pop_state()
         self.text_area.design_size.y  = (height-self.text_area.org.y)/ui_scale
         self.outline.design_size.y = self.text_area.design_size.y+outline_padding*2
         self.outline.compute(parent)
-
 
 
 ########## Thumb ##########

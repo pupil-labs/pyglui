@@ -28,6 +28,7 @@ DEF color_text_default = (1.,1.,1.,1.)
 DEF color_text_info = (1.,1.,1.,.6)
 DEF color_text_read_only = (.5,.5,.5,.5)
 DEF color_line_default = (1.,1.,1.,.4)
+DEF size_text_info = 18
 
 # Slider - design parameters
 DEF slider_outline_size_y = 60.
