@@ -5,7 +5,7 @@ cdef class UI_element:
     '''
     The base class for all UI elements.
     '''
-    cdef public float order
+    cdef float _order
     cdef readonly object uid
     cdef public FitBox outline
     cdef basestring _label
@@ -55,6 +55,16 @@ cdef class UI_element:
                 self._label = val
                 global should_redraw
                 should_redraw = True
+
+    property order:
+        def __get__(self):
+            return self._order
+        def __set__(self,float order):
+            if self._order != order:
+                self._order = order
+                global should_redraw
+                should_redraw = True
+
 
 ########## Slider ##########
 #    +--------------------------------+

@@ -1,5 +1,9 @@
 
 
+cdef float sort_key(UI_element elm):
+        return elm._order
+
+
 cdef class Base_Menu(UI_element):
     """
     Base class that other menu inherit from. Dont use this.
@@ -41,11 +45,6 @@ cdef class Base_Menu(UI_element):
 
     def remove(self, obj):
         del self.elements[self.elements.index(obj)]
-        global should_redraw
-        should_redraw = True
-
-    def sort(self,key):
-        self.elements.sort(key=key)
         global should_redraw
         should_redraw = True
 
@@ -269,6 +268,7 @@ cdef class Stretching_Menu(Base_Menu):
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
         cdef float h = 0,y_spacing=0,org_y=0
         if not self.collapsed:
+            self.elements.sort(key=sort_key)
             self.outline.compute(parent)
             self.element_space.compute(self.outline)
 
@@ -356,6 +356,7 @@ cdef class Growing_Menu(Movable_Menu):
         cdef float org_y = self.element_space.org.y
         #if elements are not visible, no need to draw them.
         if self.element_space.has_area():
+            self.elements.sort(key=sort_key)
             for e in self.elements:
                 e.draw(self.element_space,parent_read_only = parent_read_only or self._read_only)
                 self.element_space.org.y+= e.height
@@ -474,6 +475,7 @@ cdef class Scrolling_Menu(Movable_Menu):
 
         #if elements are not visible, no need to draw them.
         if self.element_space.has_area():
+            self.elements.sort(key=sort_key)
             self.draw_scroll_window_elements(parent_read_only)
 
     cdef draw_scroll_window_elements(self, bint parent_read_only):
