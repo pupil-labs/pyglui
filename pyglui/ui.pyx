@@ -27,7 +27,7 @@ def get_opensans_font_path():
     return path.join(path.dirname(__file__),'OpenSans-Regular.ttf')
 
 def get_fontawesome_font_path():
-    return path.join(path.dirname(__file__),'fontawesome-webfont.ttf')
+    return path.join(path.dirname(__file__),'pupil_font.ttf')
 
 def get_all_font_paths():
     return get_roboto_font_path(),get_opensans_font_path(),get_fontawesome_font_path()
@@ -61,7 +61,7 @@ cdef class UI:
         glfont = fs.Context()
         self.add_font('roboto',get_roboto_font_path() )
         self.add_font('opensans',get_opensans_font_path())
-        self.add_font('fontawesome',get_fontawesome_font_path())
+        self.add_font('pupil',get_fontawesome_font_path())
 
     def __init__(self):
         pass
