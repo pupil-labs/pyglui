@@ -170,12 +170,11 @@ def demo():
     gui.append(thumbbar)
 
 
-
-    T = ui.Growing_Menu("T menu",header_pos='hidden')
+    T = ui.Growing_Menu("T menu",header_pos='headline')
     menubar.append(T)
-    L = ui.Growing_Menu("L menu",header_pos='hidden')
+    L = ui.Growing_Menu("L menu",header_pos='headline')
     menubar.append(L)
-    M = ui.Growing_Menu("M menu",header_pos='hidden')
+    M = ui.Growing_Menu("M menu",header_pos='headline')
     menubar.append(M)
 
     def toggle_menu(collapsed, menu):
@@ -189,6 +188,8 @@ def demo():
     thumbbar.append(ui.Thumb('collapsed',L,label='L',on_val=False, off_val=True,setter=lambda x:toggle_menu(x,L)))
     thumbbar.append(ui.Thumb('collapsed',M,label='M',on_val=False, off_val=True,setter=lambda x:toggle_menu(x,M)))
 
+    # thumbbar.elements[-1].order = -10.0
+    print('order'+str(thumbbar.elements[-1].order))
     T.append(ui.Button("T test",pr))
     T.append(ui.Info_Text("T best finerfpiwnesdco'n wfo;ineqrfo;inwefo'qefr voijeqfr'p9qefrp'i 'iqefr'ijqfr eqrfiqerfn'ioer"))
     L.append(ui.Button("L test",pr))
