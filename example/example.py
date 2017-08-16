@@ -163,7 +163,7 @@ def demo():
     gui = ui.UI()
     gui.scale = 1.0
     thumbbar = ui.Scrolling_Menu("ThumbBar",pos=(-80,0),size=(0,0),header_pos='hidden')
-    menubar = ui.Scrolling_Menu("MenueBar",pos=(-500,0),size=(-90,0),header_pos='left')
+    menubar = ui.Scrolling_Menu("MenuBar",pos=(-500,0),size=(-90,0),header_pos='left')
 
 
     gui.append(menubar)
@@ -177,6 +177,14 @@ def demo():
     menubar.append(L)
     M = ui.Growing_Menu("M menu",header_pos='hidden')
     menubar.append(M)
+    A = ui.Growing_Menu("B menu",header_pos='hidden')
+    menubar.append(A)
+    B = ui.Growing_Menu("B menu",header_pos='hidden')
+    menubar.append(B)
+    C = ui.Growing_Menu("C menu",header_pos='hidden')
+    menubar.append(C)
+    D = ui.Growing_Menu("D menu",header_pos='hidden')
+    menubar.append(D)
 
     def toggle_menu(collapsed, menu):
         menubar.collapsed = collapsed
@@ -185,9 +193,14 @@ def demo():
         menu.collapsed = collapsed
 
 
-    thumbbar.append(ui.Thumb('collapsed',T,label='T',on_val=False, off_val=True,setter=lambda x:toggle_menu(x,T)))
-    thumbbar.append(ui.Thumb('collapsed',L,label='L',on_val=False, off_val=True,setter=lambda x:toggle_menu(x,L)))
-    thumbbar.append(ui.Thumb('collapsed',M,label='M',on_val=False, off_val=True,setter=lambda x:toggle_menu(x,M)))
+    thumbbar.append(ui.Thumb('collapsed',T,label=chr(0xe8b8),on_val=False, off_val=True,setter=lambda x:toggle_menu(x,T),label_font='pupil'))
+    thumbbar.append(ui.Thumb('collapsed',L,label=chr(0xe8c0),on_val=False, off_val=True,setter=lambda x:toggle_menu(x,L),label_font='pupil'))
+    thumbbar.append(ui.Thumb('collapsed',M,label=chr(0xec01),on_val=False, off_val=True,setter=lambda x:toggle_menu(x,M),label_font='pupil'))
+    thumbbar.append(ui.Thumb('collapsed',A,label=chr(0xe412),on_val=False, off_val=True,setter=lambda x:toggle_menu(x,A),label_font='pupil'))
+    thumbbar.append(ui.Thumb('collapsed',B,label=chr(0xe04b),on_val=False, off_val=True,setter=lambda x:toggle_menu(x,B),label_font='pupil'))
+    thumbbar.append(ui.Thumb('collapsed',C,label=chr(0xe886),on_val=False, off_val=True,setter=lambda x:toggle_menu(x,C),label_font='pupil'))
+    thumbbar.append(ui.Thumb('collapsed',D,label=chr(0xe307),on_val=False, off_val=True,setter=lambda x:toggle_menu(x,D),label_font='pupil'))
+
 
     T.append(ui.Button("T test",pr))
     T.append(ui.Info_Text("T best finerfpiwnesdco'n wfo;ineqrfo;inwefo'qefr voijeqfr'p9qefrp'i 'iqefr'ijqfr eqrfiqerfn'ioer"))
@@ -240,7 +253,7 @@ def demo():
         glfwSwapBuffers(window)
         glfwPollEvents()
         # adjust_gl_view(1280,720,window)
-        glClearColor(.3,.4,.1,1)
+        glClearColor(.9,.9,.9,1)
         glClear(GL_COLOR_BUFFER_BIT)
 
     gui.terminate()
