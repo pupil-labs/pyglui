@@ -61,7 +61,7 @@ cdef class UI:
         glfont = fs.Context()
         self.add_font('roboto',get_roboto_font_path() )
         self.add_font('opensans',get_opensans_font_path())
-        self.add_font('pupil',get_pupil_icons_font_path())
+        self.add_font('pupil_icons',get_pupil_icons_font_path())
 
     def __init__(self):
         pass
