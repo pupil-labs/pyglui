@@ -908,7 +908,7 @@ cdef class Thumb(UI_element):
     cdef bint selected
     cdef int on_val,off_val
     cdef float offset_x,offset_y,offset_size
-    cdef basestring label_font
+    cdef public basestring label_font
     cdef Synced_Value sync_val
     cdef public RGBA on_color,off_color
     cdef basestring _status_text
