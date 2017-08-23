@@ -28,6 +28,7 @@ DEF color_text_default = (1.,1.,1.,1.)
 DEF color_text_info = (1.,1.,1.,.6)
 DEF color_text_read_only = (.5,.5,.5,.5)
 DEF color_line_default = (1.,1.,1.,.4)
+DEF size_text_info = 18
 
 # Slider - design parameters
 DEF slider_outline_size_y = 60.
@@ -68,9 +69,10 @@ DEF text_input_line_highlight_color = slider_line_color_highlight
 DEF button_outline_size_y = 40.
 
 # Thumb - design parameters
-DEF thumb_outline_size = 120.
-DEF thumb_button_size_offset_on = 25.
-DEF thumb_button_size_offset_selected = 20.
+DEF thumb_outline_size = 80.
+DEF thumb_outline_pad = 0.
+DEF thumb_button_size_offset_on = 30.
+DEF thumb_button_size_offset_selected = 25.
 DEF thumb_button_size_offset_off = thumb_button_size_offset_on
 DEF thumb_color_on = (.5,.5,.9,.7)
 DEF thumb_color_off = (1,1,1,0.6)

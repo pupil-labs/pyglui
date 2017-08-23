@@ -1,5 +1,9 @@
 
 
+cdef float sort_key(UI_element elm):
+        return elm._order
+
+
 cdef class Base_Menu(UI_element):
     """
     Base class that other menu inherit from. Dont use this.
@@ -65,7 +69,7 @@ cdef class Base_Menu(UI_element):
 
     cdef get_submenu_config(self):
         '''
-        Growing menus are sometimes emebedded in Other menues. We load their configurations recursively.
+        Menus are sometimes emebedded in Other menues. We load their configurations recursively.
         '''
         cdef dict submenus = {}
         for e in self.elements:
@@ -113,7 +117,8 @@ cdef class Base_Menu(UI_element):
 
         if self.menu_bar is not None:
             self.menu_bar.outline.compute(self.outline)
-            self.minimize_corner.outline.compute(self.menu_bar.outline)
+            if self.minimize_corner is not None:
+                self.minimize_corner.outline.compute(self.menu_bar.outline)
             #self.minimize_corner.outline.sketch()
             if 2 == self.header_pos_id: #left
                 if self.element_space.has_area():
@@ -125,7 +130,7 @@ cdef class Base_Menu(UI_element):
                     tripple_v(self.menu_bar.outline.org+menu_offset,tripple_v_size)
                 else:
                     triangle_left(self.menu_bar.outline.org+menu_offset,tripple_v_size)
-            else: #top (botton not implemented)
+            elif 0 == self.header_pos_id:  #top (botton not implemented)
                 if nested:
                     menu_offset.x = 0
                 if self.element_space.has_area():
@@ -139,6 +144,15 @@ cdef class Base_Menu(UI_element):
                      Vec2(self.menu_bar.outline.org.x+self.menu_bar.outline.size.x-menu_offset.x,self.menu_bar.outline.org.y+self.menu_bar.outline.size.y),
                      RGBA(*menu_line))
 
+            elif 5 == self.header_pos_id:  #headline
+                if not self.collapsed:
+                    glfont.draw_text(self.menu_bar.outline.org.x+menu_offset.x,
+                                     self.outline.org.y+menu_offset.y,self._label)
+                    line(Vec2(self.menu_bar.outline.org.x+menu_offset.x,self.menu_bar.outline.org.y+self.menu_bar.outline.size.y),
+                         Vec2(self.menu_bar.outline.org.x+self.menu_bar.outline.size.x-menu_offset.x,self.menu_bar.outline.org.y+self.menu_bar.outline.size.y),
+                         RGBA(*menu_line))
+
+            # (botton not implemented)
     def collect_in_window(self,FitBox window):
         global should_redraw
         if self.outline.design_org.x > 0:
@@ -163,7 +177,7 @@ cdef class Movable_Menu(Base_Menu):
 
     property header_pos:
         def __get__(self):
-            header_pos_list = ['top','bottom','left','right','hidden']
+            header_pos_list = ['top','bottom','left','right','hidden','headline']
             return header_pos_list[self.header_pos_id]
 
         def __set__(self, header_pos):
@@ -222,7 +236,7 @@ cdef class Movable_Menu(Base_Menu):
                                             arrest_axis=0,zero_crossing = False,
                                             click_cb=self.toggle_iconified,catch_input = catch_input )
 
-                if self.outline.design_size.x:
+                if self.outline.design_size.x > 0:
                     self.resize_corner = Draggable(Vec2(-resize_corner_size,-resize_corner_size),Vec2(0,0),
                                                     self.outline.design_size,
                                                     arrest_axis=2,zero_crossing = False)
@@ -231,12 +245,18 @@ cdef class Movable_Menu(Base_Menu):
                 self.element_space = FitBox(Vec2(0,0),Vec2(0,0))
                 self.resize_corner = None
                 self.menu_bar = None
-
+            elif header_pos == 'headline':
+                self.menu_bar = Draggable(Vec2(0,0),Vec2(0,menu_topbar_pad),
+                                            self.outline.design_org,
+                                            arrest_axis=0,zero_crossing = False,
+                                            catch_input = catch_input  )
+                self.element_space = FitBox(Vec2(0,menu_topbar_pad),Vec2(0,0))
+                self.resize_corner = None
 
             else:
-                raise Exception("Header Positon argument needs to be one of 'top,right,left,bottom', was %s "%header_pos)
+                raise Exception("Header Positon argument needs to be one of 'top,right,left,bottom','headline' was %s "%header_pos)
 
-            self.header_pos_id = ['top','bottom','left','right','hidden'].index(header_pos)
+            self.header_pos_id = ['top','bottom','left','right','hidden','headline'].index(header_pos)
 
 
 
@@ -264,6 +284,7 @@ cdef class Stretching_Menu(Base_Menu):
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
         cdef float h = 0,y_spacing=0,org_y=0
         if not self.collapsed:
+            self.elements.sort(key=sort_key)
             self.outline.compute(parent)
             self.element_space.compute(self.outline)
 
@@ -314,7 +335,7 @@ cdef class Growing_Menu(Movable_Menu):
 
 
     '''
-    cdef public bint collapsed
+    cdef bint _collapsed
 
 
     def __cinit__(self,label,pos=(0,0),size=(0,0),header_pos = 'top'):
@@ -345,12 +366,12 @@ cdef class Growing_Menu(Movable_Menu):
         #now we correct for any changes induced by the content.
         self.outline.compute(parent)
         self.element_space.compute(self.outline)
-
         self.draw_menu(nested)
 
         cdef float org_y = self.element_space.org.y
         #if elements are not visible, no need to draw them.
         if self.element_space.has_area():
+            self.elements.sort(key=sort_key)
             for e in self.elements:
                 e.draw(self.element_space,parent_read_only = parent_read_only or self._read_only)
                 self.element_space.org.y+= e.height
@@ -361,8 +382,10 @@ cdef class Growing_Menu(Movable_Menu):
         if self.resize_corner is not None:
             self.resize_corner.handle_input(new_input,visible)
         if self.menu_bar is not None:
-            self.minimize_corner.handle_input(new_input,visible)
             self.menu_bar.handle_input(new_input,visible)
+        if self.minimize_corner is not None:
+            self.minimize_corner.handle_input(new_input,visible)
+
 
         #if elements are not visible, no need to interact with them.
         if self.element_space.has_area():
@@ -376,12 +399,15 @@ cdef class Growing_Menu(Movable_Menu):
 
     property height:
         def __get__(self):
-            cdef float height = 0
-            #space from outline to element space at top
-            height += self.element_space.design_org.y*ui_scale
+            cdef float height = 0.0000001 #0 is magic and not meant when hight is computed to be 0.
+            if self.header_pos_id == 5 and self.collapsed:
+                pass
+            else:
+                #space from outline to element space at top
+                height += self.element_space.design_org.y*ui_scale
             #space from element_space to outline at bottom
             height -= self.element_space.design_size.y*ui_scale #double neg
-            if self.collapsed:
+            if self._collapsed:
                 #elemnt space is 0
                 pass
             else:
@@ -392,9 +418,17 @@ cdef class Growing_Menu(Movable_Menu):
 
 
     def toggle_iconified(self):
-        global should_redraw
-        should_redraw = True
         self.collapsed = not self.collapsed
+
+    property collapsed:
+        def __get__(self):
+            return self._collapsed
+        def __set__(self,collapsed):
+            if collapsed != self._collapsed:
+                global should_redraw
+                should_redraw = True
+                self._collapsed = not self._collapsed
+
 
     property configuration:
         def __get__(self):
@@ -451,6 +485,8 @@ cdef class Scrolling_Menu(Movable_Menu):
     def __init__(self,label,pos=(100,100),size=(200,100),header_pos = 'top'):
         pass
 
+    def __str__(self):
+        return "Scrolling_Menu {}".format(self._label)
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
         self.outline.compute(parent)
@@ -459,6 +495,7 @@ cdef class Scrolling_Menu(Movable_Menu):
 
         #if elements are not visible, no need to draw them.
         if self.element_space.has_area():
+            self.elements.sort(key=sort_key)
             self.draw_scroll_window_elements(parent_read_only)
 
     cdef draw_scroll_window_elements(self, bint parent_read_only):
@@ -528,8 +565,9 @@ cdef class Scrolling_Menu(Movable_Menu):
 
         if self.resize_corner is not None:
             self.resize_corner.handle_input(new_input,visible)
-        if self.menu_bar is not None:
+        if self.minimize_corner is not None:
             self.minimize_corner.handle_input(new_input,visible)
+        if self.menu_bar is not None:
             self.menu_bar.handle_input(new_input,visible)
 
         #if elements are not visible, no need to interact with them.
@@ -567,8 +605,8 @@ cdef class Scrolling_Menu(Movable_Menu):
         def __get__(self):
             return not self.element_space.has_area()
 
-        def __set__(self,new_state):
-            if new_state != self.element_space.has_area():
+        def __set__(self,collapsed):
+            if collapsed != self.collapsed:
                 self.toggle_iconified()
 
     property configuration:

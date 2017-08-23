@@ -5,10 +5,12 @@ cdef class UI_element:
     '''
     The base class for all UI elements.
     '''
+    cdef float _order
     cdef readonly object uid
     cdef public FitBox outline
     cdef basestring _label
     cdef bint _read_only
+
 
     cpdef sync(self):
         global should_redraw
@@ -53,6 +55,16 @@ cdef class UI_element:
                 self._label = val
                 global should_redraw
                 should_redraw = True
+
+    property order:
+        def __get__(self):
+            return self._order
+        def __set__(self,float order):
+            if self._order != order:
+                self._order = order
+                global should_redraw
+                should_redraw = True
+
 
 ########## Slider ##########
 #    +--------------------------------+
@@ -836,13 +848,14 @@ cdef class Info_Text(UI_element):
     cdef basestring _text
     cdef int max_height
     cdef FitBox text_area
-
+    cdef float text_size
 
     def __cinit__(self, basestring text):
         self._text = text
         self.max_height = 200
         self.outline = FitBox(Vec2(0,0),Vec2(0,0))
         self.text_area = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
+        self.text_size = size_text_info
 
     def __init__(self, basestring text):
         pass
@@ -863,6 +876,7 @@ cdef class Info_Text(UI_element):
         self.text_area.compute(self.outline)
         glfont.push_state()
         glfont.set_color_float(color_text_info)
+        glfont.set_size(self.text_size)
         left_word, height = glfont.draw_breaking_text(self.text_area.org.x, self.text_area.org.y, self._text, self.text_area.size.x,self.max_height )
         glfont.pop_state()
         self.text_area.design_size.y  = (height-self.text_area.org.y)/ui_scale
@@ -872,11 +886,13 @@ cdef class Info_Text(UI_element):
     cpdef precompute(self,FitBox parent):
         self.outline.compute(parent)
         self.text_area.compute(self.outline)
+        glfont.push_state()
+        glfont.set_size(self.text_size)
         left_word, height = glfont.compute_breaking_text(self.text_area.org.x, self.text_area.org.y, self._text, self.text_area.size.x,self.max_height )
+        glfont.pop_state()
         self.text_area.design_size.y  = (height-self.text_area.org.y)/ui_scale
         self.outline.design_size.y = self.text_area.design_size.y+outline_padding*2
         self.outline.compute(parent)
-
 
 
 ########## Thumb ##########
@@ -892,7 +908,7 @@ cdef class Thumb(UI_element):
     cdef bint selected
     cdef int on_val,off_val
     cdef float offset_x,offset_y,offset_size
-    cdef basestring label_font
+    cdef public basestring label_font
     cdef Synced_Value sync_val
     cdef public RGBA on_color,off_color
     cdef basestring _status_text
@@ -909,7 +925,7 @@ cdef class Thumb(UI_element):
         self.on_val = on_val
         self.off_val = off_val
         self.outline = FitBox(Vec2(0,0),Vec2(thumb_outline_size,thumb_outline_size))
-        self.button = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
+        self.button = FitBox(Vec2(thumb_outline_pad,thumb_outline_pad),Vec2(-thumb_outline_pad,-thumb_outline_pad))
         self.selected = False
         self.on_color = RGBA(*on_color)
         self.off_color = RGBA(*off_color)
@@ -939,9 +955,9 @@ cdef class Thumb(UI_element):
         #update appearance
         self.outline.compute(parent)
         self.button.compute(self.outline)
-        cdef int stroke_width = int(14 * ui_scale)
+        cdef int stroke_width = int(18 * ui_scale)
         cdef int stroke_width_half = int(stroke_width * 0.5)
-        cdef int shadow_stroke_width = int(36 * ui_scale)
+        cdef int shadow_stroke_width = int(24 * ui_scale)
         cdef RGBA icon_color
 
         if self.sync_val.value == self.on_val:
@@ -959,8 +975,6 @@ cdef class Thumb(UI_element):
             self.selected = False
             global should_redraw
             should_redraw = True
-
-
 
         glfont.push_state()
         glfont.set_font(self.label_font)
