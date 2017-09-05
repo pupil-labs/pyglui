@@ -1005,7 +1005,6 @@ cdef class Thumb(UI_element):
         glfont.pop_state()
 
 
-
     cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
         if not (self._read_only or parent_read_only):
             global should_redraw
@@ -1042,6 +1041,41 @@ cdef class Thumb(UI_element):
                             elif self.sync_val.value == self.off_val:
                                 self.sync_val.value = self.on_val
                             break
+
+cdef class Icon(Thumb):
+    cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        #update appearance
+        self.outline.compute(parent)
+        self.button.compute(self.outline)
+        cdef tuple icon_color, bg_color
+
+        if self.sync_val.value == self.on_val or self.selected:
+            icon_color = 0, 0, 0, 1
+            bg_color = 1, 1, 1, 1
+        else:
+            icon_color = 1, 1, 1, 1
+            bg_color = 0, 0, 0, 1
+
+        utils.draw_points([self.button.center], size=int(min(self.button.size)*.7), color=RGBA(*bg_color), sharpness=0.9)
+
+        if self.selected:
+            self.selected = False
+            global should_redraw
+            should_redraw = True
+
+        glfont.push_state()
+        glfont.set_font(self.label_font)
+        glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_CENTER)
+        glfont.set_size(max(1,int(min(self.button.size)+self.offset_size*ui_scale)-thumb_font_padding))
+        glfont.set_color_float((0,0,0,0.5))
+        glfont.set_blur(10.5)
+        cdef int text_x = self.button.center[0]+int(self.offset_x*ui_scale)
+        cdef int text_y = self.button.center[1]+int(self.offset_y*ui_scale)
+        # glfont.draw_text(text_x,text_y,self._label)
+        glfont.set_blur(0.5)
+        glfont.set_color_float(icon_color)
+        glfont.draw_text(text_x,text_y,self._label)
+        glfont.pop_state()
 
 
 cdef class Hot_Key(UI_element):
