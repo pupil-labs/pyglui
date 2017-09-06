@@ -1,0 +1,3 @@
+[submodule "fontstash"]
+	path = pyglui/pyfontstash
+	url = https://github.com/memononen/fontstash
