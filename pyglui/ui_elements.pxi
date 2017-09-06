@@ -843,6 +843,31 @@ cdef class Button(UI_element):
                     self.function()
 
 
+cdef class Separator(UI_element):
+    cdef float separator_height
+
+    def __cinit__(self):
+        self.outline = FitBox(Vec2(0,0),Vec2(0,0))
+
+    def __init__(self):
+        pass
+
+    cpdef draw(self, FitBox parent,bint nested=True, bint parent_read_only = False):
+        self.outline.compute(parent)
+
+        line(Vec2(self.outline.org.x + outline_padding,
+                  self.outline.org.y + outline_padding),
+             Vec2(self.outline.org.x - outline_padding + self.outline.size.x,
+                  self.outline.org.y + outline_padding),
+             RGBA(*menu_line))
+
+        self.outline.design_size.y = 1.5 * ui_scale + outline_padding * 2
+        self.outline.compute(parent)
+
+    cpdef precompute(self, FitBox parent):
+        self.outline.compute(parent)
+        self.outline.design_size.y = 1.5 * ui_scale +outline_padding*2
+        self.outline.compute(parent)
 
 cdef class Info_Text(UI_element):
     cdef basestring _text
