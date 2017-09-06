@@ -1049,29 +1049,29 @@ cdef class Icon(Thumb):
         self.button.compute(self.outline)
         cdef tuple icon_color, bg_color
 
-        if self.sync_val.value == self.on_val or self.selected:
-            icon_color = 0, 0, 0, 1
-            bg_color = 1, 1, 1, 1
+        icon_color = 0, 0, 0, 1
+        if self.sync_val.value == self.on_val:
+            bg_alpha = 1.
         else:
-            icon_color = 1, 1, 1, 1
-            bg_color = 0, 0, 0, 1
-
-        utils.draw_points([self.button.center], size=int(min(self.button.size)*.7), color=RGBA(*bg_color), sharpness=0.9)
+            bg_alpha = .6
 
         if self.selected:
             self.selected = False
             global should_redraw
             should_redraw = True
 
+        utils.draw_points([self.button.center], size=int(min(self.button.size)*.7), color=RGBA(1., 1., 1., .3), sharpness=0.7)
+        utils.draw_points([self.button.center], size=int(min(self.button.size)*.7), color=RGBA(1., 1., 1., bg_alpha), sharpness=0.9)
+
         glfont.push_state()
         glfont.set_font(self.label_font)
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_CENTER)
         glfont.set_size(max(1,int(min(self.button.size)+self.offset_size*ui_scale)-thumb_font_padding))
-        glfont.set_color_float((0,0,0,0.5))
-        glfont.set_blur(10.5)
+        glfont.set_color_float((*icon_color[:3], 0.3))
+        glfont.set_blur(3)
         cdef int text_x = self.button.center[0]+int(self.offset_x*ui_scale)
         cdef int text_y = self.button.center[1]+int(self.offset_y*ui_scale)
-        # glfont.draw_text(text_x,text_y,self._label)
+        glfont.draw_text(text_x,text_y,self._label)
         glfont.set_blur(0.5)
         glfont.set_color_float(icon_color)
         glfont.draw_text(text_x,text_y,self._label)
