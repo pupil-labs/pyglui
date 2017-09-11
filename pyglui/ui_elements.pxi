@@ -843,6 +843,31 @@ cdef class Button(UI_element):
                     self.function()
 
 
+cdef class Separator(UI_element):
+    cdef float separator_height
+
+    def __cinit__(self):
+        self.outline = FitBox(Vec2(0,0),Vec2(0,0))
+
+    def __init__(self):
+        pass
+
+    cpdef draw(self, FitBox parent,bint nested=True, bint parent_read_only = False):
+        self.outline.compute(parent)
+
+        line(Vec2(self.outline.org.x + outline_padding,
+                  self.outline.org.y + outline_padding),
+             Vec2(self.outline.org.x - outline_padding + self.outline.size.x,
+                  self.outline.org.y + outline_padding),
+             RGBA(*menu_line))
+
+        self.outline.design_size.y = 1.5 * ui_scale + outline_padding * 2
+        self.outline.compute(parent)
+
+    cpdef precompute(self, FitBox parent):
+        self.outline.compute(parent)
+        self.outline.design_size.y = 1.5 * ui_scale +outline_padding*2
+        self.outline.compute(parent)
 
 cdef class Info_Text(UI_element):
     cdef basestring _text
@@ -876,7 +901,7 @@ cdef class Info_Text(UI_element):
         self.text_area.compute(self.outline)
         glfont.push_state()
         glfont.set_color_float(color_text_info)
-        glfont.set_size(self.text_size)
+        glfont.set_size(self.text_size*ui_scale)
         left_word, height = glfont.draw_breaking_text(self.text_area.org.x, self.text_area.org.y, self._text, self.text_area.size.x,self.max_height )
         glfont.pop_state()
         self.text_area.design_size.y  = (height-self.text_area.org.y)/ui_scale
@@ -1049,29 +1074,29 @@ cdef class Icon(Thumb):
         self.button.compute(self.outline)
         cdef tuple icon_color, bg_color
 
-        if self.sync_val.value == self.on_val or self.selected:
-            icon_color = 0, 0, 0, 1
-            bg_color = 1, 1, 1, 1
+        icon_color = 0, 0, 0, 1
+        if self.sync_val.value == self.on_val:
+            bg_alpha = 1.
         else:
-            icon_color = 1, 1, 1, 1
-            bg_color = 0, 0, 0, 1
-
-        utils.draw_points([self.button.center], size=int(min(self.button.size)*.7), color=RGBA(*bg_color), sharpness=0.9)
+            bg_alpha = .6
 
         if self.selected:
             self.selected = False
             global should_redraw
             should_redraw = True
 
+        utils.draw_points([self.button.center], size=int(min(self.button.size)*.7), color=RGBA(1., 1., 1., .3), sharpness=0.7)
+        utils.draw_points([self.button.center], size=int(min(self.button.size)*.7), color=RGBA(1., 1., 1., bg_alpha), sharpness=0.9)
+
         glfont.push_state()
         glfont.set_font(self.label_font)
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_CENTER)
         glfont.set_size(max(1,int(min(self.button.size)+self.offset_size*ui_scale)-thumb_font_padding))
-        glfont.set_color_float((0,0,0,0.5))
-        glfont.set_blur(10.5)
+        glfont.set_color_float((*icon_color[:3], 0.3))
+        glfont.set_blur(3)
         cdef int text_x = self.button.center[0]+int(self.offset_x*ui_scale)
         cdef int text_y = self.button.center[1]+int(self.offset_y*ui_scale)
-        # glfont.draw_text(text_x,text_y,self._label)
+        glfont.draw_text(text_x,text_y,self._label)
         glfont.set_blur(0.5)
         glfont.set_color_float(icon_color)
         glfont.draw_text(text_x,text_y,self._label)
