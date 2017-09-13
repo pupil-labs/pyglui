@@ -5,6 +5,8 @@ cdef str _to_str(object s):
     if PY_MAJOR_VERSION > 2:
         if type(s) is unicode:
             return s
+        elif type(s) is bytearray:
+            return s.decode('utf-8')
         else:
             return (<bytes>s).decode('utf-8')
     else:
