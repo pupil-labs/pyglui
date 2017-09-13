@@ -19,6 +19,7 @@ from collections import namedtuple
 cdef fs.Context glfont
 cdef double ui_scale = 1.0
 cdef bint should_redraw = True
+cdef bint should_redraw_overlay = True
 
 def get_roboto_font_path():
     return path.join(path.dirname(__file__),'Roboto-Regular.ttf')
@@ -45,16 +46,18 @@ cdef class UI:
     The UI context for a glfw window.
     '''
     cdef Input new_input
-    cdef bint should_redraw
+    # cdef bint should_redraw
     cdef public list elements
     cdef FitBox window
     cdef fbo_tex_id ui_layer
+    cdef fbo_tex_id overlay_layer
 
     def __cinit__(self):
         self.elements = []
         self.new_input = Input()
         self.window = FitBox(Vec2(0,0),Vec2(0,0))
         self.ui_layer = create_ui_texture(Vec2(200,200))
+        self.overlay_layer = create_ui_texture(Vec2(200,200))
 
         #global init of gl fonts
         global glfont
@@ -74,6 +77,7 @@ cdef class UI:
         global glfont
         glfont = None
         destroy_ui_texture(self.ui_layer)
+        destroy_ui_texture(self.overlay_layer)
         self.elements = []
 
     def update_mouse(self,mx,my):
@@ -88,6 +92,7 @@ cdef class UI:
         self.window.size.x,self.window.size.y = w,h
         gl.glScissor(0,0,int(w),int(h))
         resize_ui_texture(self.ui_layer,self.window.size)
+        resize_ui_texture(self.overlay_layer,self.window.size)
 
 
     def update_scroll(self, sx,sy):
@@ -148,6 +153,7 @@ cdef class UI:
 
     cdef draw(self):
         global should_redraw
+        global should_redraw_overlay
         global window_size
         window_size = self.window.size
 
@@ -165,14 +171,31 @@ cdef class UI:
             glfont.set_align(fs.FONS_ALIGN_TOP)
 
             for e in self.elements:
-                e.draw(self.window,nested=False)
+                e.draw(self.window, nested=False)
 
             render_to_screen()
             pop_view()
 
-
         draw_ui_texture(self.ui_layer)
 
+        if should_redraw_overlay:
+            should_redraw_overlay = False
+            push_view(self.window.size)
+            render_to_ui_texture(self.overlay_layer)
+            glfont.clear_state()
+            glfont.set_font('opensans')
+            glfont.set_size(int(ui_scale * text_size))
+            glfont.set_color_float(color_text_default)
+            glfont.set_blur(.1)
+            glfont.set_align(fs.FONS_ALIGN_TOP)
+
+            for e in self.elements:
+                e.draw_overlay(self.window, nested=False)
+
+            render_to_screen()
+            pop_view()
+
+        draw_ui_texture(self.overlay_layer)
 
     def update(self):
         unused_Input = self.handle_input()

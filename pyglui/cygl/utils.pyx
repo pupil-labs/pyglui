@@ -41,6 +41,7 @@ cdef class RGBA:
 
 basic_shader = None
 simple_pt_shader = None
+progress_pt_shader = None
 simple_yuv422_shader = None
 simple_concentric_circle_shader = None
 simple_circle_shader = None
@@ -48,11 +49,13 @@ simple_circle_shader = None
 cpdef init():
     global basic_shader
     global simple_pt_shader
+    global progress_pt_shader
     global simple_yuv422_shader
     global simple_concentric_circle_shader
     global simple_circle_shader
     basic_shader = None
     simple_pt_shader = None
+    progress_pt_shader = None
     simple_yuv422_shader = None
     simple_concentric_circle_shader = None
     simple_circle_shader = None
@@ -140,6 +143,79 @@ cpdef draw_points(points,float size=20,RGBA color=RGBA(1.,0.5,0.5,.5),float shar
     glEnd()
     simple_pt_shader.unbind()
 
+cpdef draw_progress(location, float start, float stop, float inner_radius=15., float outer_radius=20.0, RGBA color=RGBA(1., 0.5, 0.5, .5), float sharpness=0.8):
+    global progress_pt_shader
+    if not progress_pt_shader:
+        VERT_SHADER = """
+        #version 120
+        varying vec4 f_color;
+        uniform float inner_radius = 15.;
+        uniform float outer_radius = 20.;
+        uniform float sharpness = 0.8;
+        uniform float start = 0.0;
+        uniform float stop = 0.0;
+
+        void main () {
+               gl_Position = gl_ModelViewProjectionMatrix*vec4(gl_Vertex.xyz,1.);
+               gl_PointSize = outer_radius;
+               f_color = gl_Color;
+               }
+        """
+
+        FRAG_SHADER = """
+        #version 120
+        #define PI 3.14159265359
+        #define TWO_PI 6.28318530718
+        varying vec4 f_color;
+        uniform float inner_radius = 15.;
+        uniform float outer_radius = 20.;
+        uniform float sharpness = 0.8;
+        uniform float start = 0.0;
+        uniform float stop = 0.0;
+
+        // Rotation matrix by 90deg or PI/2
+        mat2 rot = mat2(0., -1., 1., 0.);
+
+        void main()
+        {
+            float dist = distance(gl_PointCoord.xy, vec2(0.5))*outer_radius*2.0;
+            vec2 vec_loc = rot * normalize(gl_PointCoord.xy - vec2(0.5));
+            float rel_loc = (atan(vec_loc.y, vec_loc.x) + PI) / TWO_PI;
+            float pct = 0.;
+
+            if (stop > start) {
+                pct = smoothstep(start-0.01, start, rel_loc) -
+                      smoothstep(stop, stop+0.01, rel_loc);
+            }
+            else if (stop < start) {
+                pct = smoothstep(start-0.01, start, rel_loc) +
+                      1. - smoothstep(stop, stop+0.01, rel_loc);
+            }
+
+            pct *= smoothstep(inner_radius, inner_radius/sharpness, dist) -
+                   smoothstep(sharpness*outer_radius, outer_radius, dist);
+            gl_FragColor = mix(vec4(f_color.rgb,0.0), f_color, pct);
+        }
+        """
+
+        GEOM_SHADER = """"""
+        #shader link and compile
+        progress_pt_shader = shader.Shader(VERT_SHADER,FRAG_SHADER,GEOM_SHADER)
+
+    progress_pt_shader.bind()
+    progress_pt_shader.uniform1f('inner_radius',inner_radius)
+    progress_pt_shader.uniform1f('outer_radius',outer_radius)
+    progress_pt_shader.uniform1f('sharpness',sharpness)
+    progress_pt_shader.uniform1f('start', start)
+    progress_pt_shader.uniform1f('stop', stop)
+    glColor4f(color.r,color.g,color.b,color.a)
+    glBegin(GL_POINTS)
+    if len(location) == 2:
+        glVertex2f(location[0], location[1])
+    else:
+        glVertex3f(location[0],location[1],location[2])
+    glEnd()
+    progress_pt_shader.unbind()
 
 cpdef draw_circle( center_position = (0,0) ,float radius=20,float stroke_width= 2, RGBA color=RGBA(1.,0.5,0.5,0.5),float sharpness=0.8):
 

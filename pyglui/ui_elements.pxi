@@ -19,6 +19,9 @@ cdef class UI_element:
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         pass
 
+    cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        pass
+
     cpdef handle_input(self,Input new_input,bint visible, bint parent_read_only = False):
         if not (self._read_only or parent_read_only):
             global should_redraw
@@ -1068,11 +1071,44 @@ cdef class Thumb(UI_element):
                             break
 
 cdef class Icon(Thumb):
+    cdef float _indicator_start, _indicator_stop
+
+    def __cinit__(self, *args, **kwargs):
+        self._indicator_start = 0.
+        self._indicator_stop = 0.
+
+    @property
+    def indicator_start(self):
+        return self._indicator_start
+
+    @indicator_start.setter
+    def indicator_start(self, val):
+        assert isinstance(val, float), 'Indicator values are required to be floats'
+        val %= 1.
+        self._indicator_start = val
+        if self._indicator_start != self._indicator_stop:
+            global should_redraw_overlay
+            should_redraw_overlay = True
+
+    @property
+    def indicator_stop(self):
+        return self._indicator_stop
+
+    @indicator_stop.setter
+    def indicator_stop(self, val):
+        assert isinstance(val, float), 'Indicator values are required to be floats'
+        val %= 1.
+        self._indicator_stop = val
+        if self._indicator_start != self._indicator_stop:
+            global should_redraw_overlay
+            should_redraw_overlay = True
+
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         #update appearance
         self.outline.compute(parent)
         self.button.compute(self.outline)
         cdef tuple icon_color, bg_color
+        cdef float ref_size = min(self.button.size)
 
         icon_color = 0, 0, 0, 1
         if self.sync_val.value == self.on_val:
@@ -1085,13 +1121,13 @@ cdef class Icon(Thumb):
             global should_redraw
             should_redraw = True
 
-        utils.draw_points([self.button.center], size=int(min(self.button.size)*.7), color=RGBA(1., 1., 1., .3), sharpness=0.7)
-        utils.draw_points([self.button.center], size=int(min(self.button.size)*.7), color=RGBA(1., 1., 1., bg_alpha), sharpness=0.9)
+        utils.draw_points([self.button.center], size=int(ref_size*.7), color=RGBA(1., 1., 1., .3), sharpness=0.7)
+        utils.draw_points([self.button.center], size=int(ref_size*.7), color=RGBA(1., 1., 1., bg_alpha), sharpness=0.9)
 
         glfont.push_state()
         glfont.set_font(self.label_font)
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_CENTER)
-        glfont.set_size(max(1,int(min(self.button.size)+self.offset_size*ui_scale)-thumb_font_padding))
+        glfont.set_size(max(1,int(ref_size+self.offset_size*ui_scale)-thumb_font_padding))
         glfont.set_color_float((*icon_color[:3], 0.3))
         glfont.set_blur(3)
         cdef int text_x = self.button.center[0]+int(self.offset_x*ui_scale)
@@ -1101,6 +1137,15 @@ cdef class Icon(Thumb):
         glfont.set_color_float(icon_color)
         glfont.draw_text(text_x,text_y,self._label)
         glfont.pop_state()
+
+    cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        cdef RGBA progress_color = RGBA(1., 1., 1., .3)
+        cdef float ref_size = min(self.button.size)
+        if self.indicator_start != self.indicator_stop:
+            utils.draw_progress(self.button.center, self.indicator_start,
+                                self.indicator_stop, inner_radius=int(ref_size*.625),
+                                outer_radius=int(ref_size*.9), color=progress_color,
+                                sharpness=0.9)
 
 
 cdef class Hot_Key(UI_element):

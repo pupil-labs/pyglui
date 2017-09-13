@@ -302,6 +302,12 @@ cdef class Stretching_Menu(Base_Menu):
                     self.element_space.org.y+= e.height + y_spacing
                 self.outline.org.y = org_y
 
+    cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        if not self.collapsed and self.element_space.has_area():
+            self.elements.sort(key=sort_key)
+            for e in self.elements:
+                (<UI_element>e).draw_overlay(self.element_space, nested=False,
+                                             parent_read_only=parent_read_only or self._read_only)
 
     cpdef handle_input(self, Input new_input,bint visible,bint parent_read_only = False):
         #if elements are not visible, no need to interact with them.
@@ -376,6 +382,12 @@ cdef class Growing_Menu(Movable_Menu):
                 e.draw(self.element_space,parent_read_only = parent_read_only or self._read_only)
                 self.element_space.org.y+= e.height
             self.outline.org.y = org_y
+
+    cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        if self.element_space.has_area():
+            self.elements.sort(key=sort_key)
+            for e in self.elements:
+                (<UI_element>e).draw_overlay(self.element_space, parent_read_only=parent_read_only or self._read_only)
 
 
     cpdef handle_input(self, Input new_input,bint visible,bint parent_read_only = False):
@@ -497,6 +509,12 @@ cdef class Scrolling_Menu(Movable_Menu):
         if self.element_space.has_area():
             self.elements.sort(key=sort_key)
             self.draw_scroll_window_elements(parent_read_only)
+
+    cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        if self.element_space.has_area():
+            self.elements.sort(key=sort_key)
+            for e in self.elements:
+                (<UI_element>e).draw_overlay(self.element_space, parent_read_only=parent_read_only or self._read_only)
 
     cdef draw_scroll_window_elements(self, bint parent_read_only):
 
