@@ -1072,10 +1072,25 @@ cdef class Thumb(UI_element):
 
 cdef class Icon(Thumb):
     cdef float _indicator_start, _indicator_stop
+    cdef basestring _tooltip
+    cdef bint being_hovered
 
     def __cinit__(self, *args, **kwargs):
         self._indicator_start = 0.
         self._indicator_stop = 0.
+        self._tooltip = ''
+        self.being_hovered = False
+
+    @property
+    def tooltip(self):
+        return self._tooltip
+
+    @tooltip.setter
+    def tooltip(self, val):
+        if self._tooltip != val:
+            global should_redraw_overlay
+            should_redraw_overlay = True
+            self._tooltip = val
 
     @property
     def indicator_start(self):
@@ -1102,6 +1117,18 @@ cdef class Icon(Thumb):
         if self._indicator_start != self._indicator_stop:
             global should_redraw_overlay
             should_redraw_overlay = True
+
+    cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
+        unused = super(Icon, self).handle_input(new_input, visible, parent_read_only)
+        global should_redraw_overlay
+        cdef bint hovering = visible and self.button.mouse_over(new_input.m)
+
+        if hovering != self.being_hovered:
+            self.being_hovered = hovering
+            should_redraw_overlay = True
+        elif new_input.s.y > 0.:
+            should_redraw_overlay = True
+        return unused
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         #update appearance
@@ -1139,6 +1166,7 @@ cdef class Icon(Thumb):
         glfont.pop_state()
 
     cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        cdef basestring T = self.tooltip
         cdef RGBA progress_color = RGBA(1., 1., 1., .3)
         cdef float ref_size = min(self.button.size)
         if self.indicator_start != self.indicator_stop:
@@ -1146,6 +1174,41 @@ cdef class Icon(Thumb):
                                 self.indicator_stop, inner_radius=int(ref_size*.625),
                                 outer_radius=int(ref_size*.9), color=progress_color,
                                 sharpness=0.9)
+
+        if self._tooltip == '' or not self.being_hovered:
+            return # only draw tooltip when set
+
+        cdef float tip_width = 10.*ui_scale
+        cdef float text_height = max(1,int(0.25*ref_size*ui_scale))
+        cdef float pad_x = 0.5*text_height*ui_scale
+        cdef float pad_y = .5*pad_x
+
+        cdef float vert_loc = self.button.center[1]
+        cdef float tip_loc_x = self.button.org.x + 10.*ui_scale
+        cdef float text_loc_x = tip_loc_x - tip_width - pad_x
+        glfont.push_state()
+        glfont.set_font('opensans')
+        glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_RIGHT)
+        glfont.set_size(text_height)
+        cdef float text_width = glfont.text_bounds(text_loc_x, vert_loc, T)
+
+        utils.draw_tooltip((tip_loc_x, vert_loc), (text_width, text_height),
+                           tip_width=tip_width,  padding=(pad_x, pad_y),
+                           tooltip_color=RGBA(.0, .0, .0, .3), sharpness=.7)
+
+        utils.draw_tooltip((tip_loc_x, vert_loc), (text_width, text_height),
+                           tip_width=tip_width,  padding=(pad_x, pad_y),
+                           tooltip_color=RGBA(.8, .8, .8, .9), sharpness=.99)
+
+        # glfont.set_color_float((0., 0., 0., 0.3))
+        # glfont.set_blur(3)
+        # glfont.draw_text(text_loc_x, vert_loc, T)
+
+        glfont.set_blur(.0)
+        glfont.set_color_float((0., 0., 0., 8.))
+        glfont.draw_text(text_loc_x, vert_loc, T)
+
+        glfont.pop_state()
 
 
 cdef class Hot_Key(UI_element):

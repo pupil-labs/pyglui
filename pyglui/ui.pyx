@@ -94,7 +94,6 @@ cdef class UI:
         resize_ui_texture(self.ui_layer,self.window.size)
         resize_ui_texture(self.overlay_layer,self.window.size)
 
-
     def update_scroll(self, sx,sy):
         self.new_input.s.x = sx
         self.new_input.s.y = sy
@@ -178,7 +177,7 @@ cdef class UI:
 
         draw_ui_texture(self.ui_layer)
 
-        if should_redraw_overlay:
+        if should_redraw or should_redraw_overlay:
             should_redraw_overlay = False
             push_view(self.window.size)
             render_to_ui_texture(self.overlay_layer)
