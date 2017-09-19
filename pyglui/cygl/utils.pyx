@@ -1,7 +1,8 @@
 from cython cimport view
 from libcpp.vector cimport vector
+import numpy as np
+cimport numpy as np
 cimport shader
-import math
 
 cdef class RGBA:
     #cdef public float r,g,b,a
@@ -36,7 +37,13 @@ cdef class RGBA:
         else:
             raise IndexError()
 
-
+    def mix_smooth(self, RGBA other, float val, float min_, float max_):
+        cdef float pct = np.clip((val - min_) / (max_ - min_), 0., 1.)
+        pct = pct * pct * (3. - 2. * pct)
+        return RGBA(self.r * (1. - pct) + other.r * pct,
+                    self.g * (1. - pct) + other.g * pct,
+                    self.b * (1. - pct) + other.b * pct,
+                    self.a * (1. - pct) + other.a * pct)
 
 
 basic_shader = None
@@ -511,8 +518,8 @@ cdef class Sphere:
         pass
     def __init__(self,resolution=10):
         cdef int doubleRes = resolution*2
-        cdef float polarInc = math.pi/resolution
-        cdef float azimInc = math.pi*2.0/doubleRes
+        cdef float polarInc = np.pi/resolution
+        cdef float azimInc = np.pi*2.0/doubleRes
 
         cdef vector[GLfloat] vertices
         cdef vector[GLuint] indices
@@ -521,12 +528,12 @@ cdef class Sphere:
         cdef float tr
         for i in range(0, resolution+1):
 
-            tr = math.sin( math.pi-i * polarInc )
-            ny = math.cos( math.pi-i * polarInc )
+            tr = np.sin( np.pi-i * polarInc )
+            ny = np.cos( np.pi-i * polarInc )
 
             for j in range(0, doubleRes+1):
-                nx = tr * math.sin(j * azimInc)
-                nz = tr * math.cos(j * azimInc)
+                nx = tr * np.sin(j * azimInc)
+                nz = tr * np.cos(j * azimInc)
                 vertices.push_back(nx)
                 vertices.push_back(ny)
                 vertices.push_back(nz)
