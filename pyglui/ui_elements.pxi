@@ -779,31 +779,33 @@ cdef class Text_Input(UI_element):
 ########## Button ##########
 #
 #   +--------------------------------+
-#   | +----------------------------+ |
-#   | | Label                      | |
-#   | +----------------------------+ |
+#   |                      +-------+ |
+#   | Outer_Label          | Label | |
+#   |                      +-------+ |
 #   +--------------------------------+
 
 
 
 cdef class Button(UI_element):
-    cdef FitBox button
+    cdef FitBox field, button
     cdef bint selected
     cdef object function
     cdef RGBA text_color
+    cdef basestring _outer_label
 
-    def __cinit__(self,label, function):
+    def __cinit__(self,label, function, outer_label=''):
         self.uid = id(self)
         self._label = label
+        self._outer_label = outer_label
         self.outline = FitBox(Vec2(0,0),Vec2(0,button_outline_size_y)) # we only fix the height
+        self.field = FitBox(Vec2(0,0),Vec2(0,0))
         self.button = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
         self.selected = False
         self.function = function
         self.text_color = RGBA(*color_text_default)
 
-    def __init__(self,label, setter):
+    def __init__(self, *args, **kwargs):
         pass
-
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         cdef tuple text_color
@@ -813,8 +815,16 @@ cdef class Button(UI_element):
         else:
             self.text_color = RGBA(*color_text_default)
 
+        cdef float label_width = 0.
+        if self._outer_label:
+            label_width = glfont.text_bounds(0., 0., self._label)
+            self.field = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding-label_width-2*outline_padding,-outline_padding))
+            self.button = FitBox(Vec2(-label_width-2*outline_padding,outline_padding),Vec2(label_width+2*outline_padding,-outline_padding))
+
         #update appearance:
         self.outline.compute(parent)
+        if self._outer_label:
+            self.field.compute(self.outline)
         self.button.compute(self.outline)
 
         # self.outline.sketch()
@@ -823,11 +833,20 @@ cdef class Button(UI_element):
         else:
             self.button.sketch()
 
+        if self._outer_label:
+            gl.glPushMatrix()
+            glfont.push_state()
+            gl.glTranslatef(self.field.org.x,self.field.org.y,0)
+            glfont.set_color_float(self.text_color[:])
+            glfont.draw_limited_text(x_spacer,0,self._outer_label,self.field.size.x-self.button.size.x-x_spacer)
+            glfont.pop_state()
+            gl.glPopMatrix()
+
         gl.glPushMatrix()
         glfont.push_state()
         gl.glTranslatef(self.button.org.x,self.button.org.y,0)
         glfont.set_color_float(self.text_color[:])
-        glfont.draw_limited_text(x_spacer,0,self._label,self.button.size.x-x_spacer)
+        glfont.draw_limited_text(outline_padding,0,self._label,self.button.size.x-outline_padding)
         glfont.pop_state()
         gl.glPopMatrix()
 
