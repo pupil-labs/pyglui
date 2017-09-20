@@ -71,7 +71,7 @@ cdef class UI_element:
 
 ########## Slider ##########
 #    +--------------------------------+
-#    | Label                    Value |
+#    | Label  Input Text              |
 #    | ------------------O----------- |
 #    +--------------------------------+
 
@@ -562,7 +562,7 @@ cdef class Text_Input(UI_element):
                 self.abort_input()
                 return
 
-            elif key == 259 and action != 1: #Delete and key not released (key repeat)
+            elif key == 259 and action != 1: # Backspace and key not released (key repeat)
                 if self.caret > 0 and self.highlight is False:
                     self.preview = self.preview[:self.caret-1] + self.preview[self.caret:]
                     self.caret -=1
@@ -572,6 +572,17 @@ cdef class Text_Input(UI_element):
                     self.highlight = False
 
                 self.caret = max(0,self.caret)
+                should_redraw = True
+
+            elif key == 261 and action != 1: # Delete and key not released (key repeat)
+                if self.caret < len(self.preview) and self.highlight is False:
+                    self.preview = self.preview[:self.caret] + self.preview[self.caret+1:]
+                if self.highlight:
+                    self.preview = self.preview[:min(self.start_highlight_idx,self.caret)] + self.preview[max(self.start_highlight_idx,self.caret):]
+                    self.caret = min(self.start_highlight_idx,self.caret)
+                    self.highlight = False
+
+                self.caret = min(len(self.preview), self.caret)
                 should_redraw = True
 
             elif key == 263 and action != 1 and mods == 0: #key left and key not released without mod keys
