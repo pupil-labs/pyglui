@@ -228,22 +228,20 @@ cpdef draw_progress(location, float start, float stop, float inner_radius=15., f
     progress_shader.unbind()
 
 
-cdef draw_tooltip(tip_location, text_size, tip_width=20, padding=(0., 0.),
+cdef draw_tooltip(tip_location, text_size, padding=(0., 0.),
                    RGBA tooltip_color=RGBA(1., 1., 1., .8), float sharpness=0.95):
     global tooltip_shader
     if not tooltip_shader:
         VERT_SHADER = """
         #version 120
         varying vec4 f_color;
-        uniform float total_width = 100.;
-        uniform float text_ratio = .5;
-        uniform float tip_ratio = .15;
+        uniform float tip_width = 20.;
         uniform float blur = 0.05;
 
         void main () {
-            float xpos = gl_Vertex.x - total_width/2.;
+            float xpos = gl_Vertex.x - tip_width/2.;
             gl_Position = gl_ModelViewProjectionMatrix*vec4(xpos, gl_Vertex.yz, 1.);
-            gl_PointSize = total_width;
+            gl_PointSize = tip_width;
             f_color = gl_Color;
         }
         """
@@ -251,12 +249,10 @@ cdef draw_tooltip(tip_location, text_size, tip_width=20, padding=(0., 0.),
         FRAG_SHADER = """
         #version 120
         varying vec4 f_color;
-        uniform float total_width = 100.;
-        uniform float text_ratio = .5;
-        uniform float tip_ratio = .15;
+        uniform float tip_width = 20.;
         uniform float blur = 0.05;
 
-        uniform vec2 tip_anchor = vec2(1., .5);
+        uniform vec2 tip_anchor = vec2(.66,.5);
 
         float f(in float x, vec2 a, vec2 b)
         {
@@ -267,17 +263,10 @@ cdef draw_tooltip(tip_location, text_size, tip_width=20, padding=(0., 0.),
         void main()
         {
             vec2 uv = gl_PointCoord.xy;
-            float left = 0.;
-            float right = tip_anchor.x - tip_ratio;
-            float top = 1. - (1. - text_ratio)/2.;
-            float bot = (1. - text_ratio)/2.;
-            float bre = f(uv.x, tip_anchor, vec2(right, bot));
-            float tre = f(uv.x, vec2(right, top), tip_anchor);
-            float pct = smoothstep(left, left+blur, uv.x) -
-                        smoothstep(top-blur, top, uv.y) -
-                        smoothstep(bot+blur, bot, uv.y) -
-                        smoothstep(bre+blur*2., bre, uv.y) -
-                        smoothstep(tre-blur*2., tre, uv.y);
+            float bre = f(uv.x, tip_anchor, vec2(0.));
+            float tre = f(uv.x, vec2(0., 1.), tip_anchor);
+            float pct = smoothstep(bre-blur, bre, uv.y) -
+                        smoothstep(tre, tre+blur, uv.y);
             gl_FragColor = mix(vec4(0.), f_color, pct);
         }
         """
@@ -286,14 +275,10 @@ cdef draw_tooltip(tip_location, text_size, tip_width=20, padding=(0., 0.),
         #shader link and compile
         tooltip_shader = shader.Shader(VERT_SHADER,FRAG_SHADER,GEOM_SHADER)
 
-    cdef float total_width = text_size[0] + 2.*padding[0] + tip_width;
-    cdef float text_ratio = (text_size[1] + 2.*padding[1]) / total_width;
-    cdef float tip_ratio = tip_width / total_width;
+    cdef float tip_width = text_size[1] + 2.*padding[1]
 
     tooltip_shader.bind()
-    tooltip_shader.uniform1f('total_width', total_width)
-    tooltip_shader.uniform1f('text_ratio', text_ratio)
-    tooltip_shader.uniform1f('tip_ratio', tip_ratio)
+    tooltip_shader.uniform1f('tip_width', tip_width)
     tooltip_shader.uniform1f('blur', 1. - sharpness)
     glColor4f(tooltip_color.r,tooltip_color.g,tooltip_color.b,tooltip_color.a)
 
@@ -301,6 +286,17 @@ cdef draw_tooltip(tip_location, text_size, tip_width=20, padding=(0., 0.),
     glVertex2f(tip_location[0], tip_location[1])
     glEnd()
     tooltip_shader.unbind()
+
+    glBegin(GL_POLYGON)
+    glVertex2f(tip_location[0] - tip_width,
+               tip_location[1] + text_size[1] / 2. + padding[1])
+    glVertex2f(tip_location[0] - tip_width - text_size[0] - 2. * padding[0],
+               tip_location[1] + text_size[1] / 2. + padding[1])
+    glVertex2f(tip_location[0] - tip_width - text_size[0] - 2. * padding[0],
+               tip_location[1] - text_size[1] / 2. - padding[1])
+    glVertex2f(tip_location[0] - tip_width,
+               tip_location[1] - text_size[1] / 2. - padding[1])
+    glEnd()
 
 cpdef draw_circle( center_position = (0,0) ,float radius=20,float stroke_width= 2, RGBA color=RGBA(1.,0.5,0.5,0.5),float sharpness=0.8):
 

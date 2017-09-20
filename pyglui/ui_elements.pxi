@@ -1201,10 +1201,10 @@ cdef class Icon(Thumb):
         if self._tooltip == '' or not self.being_hovered:
             return # only draw tooltip when set
 
-        cdef float tip_width = 10.*ui_scale
         cdef float text_height = max(1,int(0.25*ref_size))
         cdef float pad_x = 0.25*text_height
         cdef float pad_y = .5*pad_x
+        cdef float tip_width = text_height + pad_x  # == 2* pad_y
 
         cdef float vert_loc = self.button.center[1]
         cdef float tip_loc_x = self.button.org.x + 10.*ui_scale
@@ -1217,12 +1217,8 @@ cdef class Icon(Thumb):
         cdef float text_width = glfont.text_bounds(text_loc_x, vert_loc, T)
 
         utils.draw_tooltip((tip_loc_x, vert_loc), (text_width, text_height),
-                           tip_width=tip_width,  padding=(pad_x, pad_y),
-                           tooltip_color=RGBA(.0, .0, .0, .3), sharpness=.7)
-
-        utils.draw_tooltip((tip_loc_x, vert_loc), (text_width, text_height),
-                           tip_width=tip_width,  padding=(pad_x, pad_y),
-                           tooltip_color=RGBA(.8, .8, .8, .9), sharpness=.9)
+                           padding=(pad_x, pad_y), tooltip_color=RGBA(.8, .8, .8, .9),
+                           sharpness=.9)
 
         # glfont.set_color_float((0., 0., 0., 0.3))
         # glfont.set_blur(3)
