@@ -82,13 +82,17 @@ cdef class Slider(UI_element):
     cdef Vec2 slider_pos
     cdef Synced_Value sync_val
     cdef int steps
-    cdef public str display_format
     cdef RGBA line_default_color, line_highlight_color, text_color, button_color, button_selected_color, button_shadow_color,step_color
+    cdef Slider_Text_Input label_field
 
     def __cinit__(self,str attribute_name, object attribute_context = None, label = None, min = 0, max = 100, step = 0,setter= None,getter= None):
+
+        self.label_field = Slider_Text_Input(attribute_name, attribute_context,
+                                             label=label or attribute_name,
+                                             setter=setter, getter=getter)
+        self.label_field.validator = self.validate
         self.uid = id(self)
-        self._label = label or attribute_name
-        self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
+        self.sync_val = self.label_field.sync_val
         self.step = abs(step)
         self.minimum = min
         if self.step:
@@ -151,25 +155,6 @@ cdef class Slider(UI_element):
         gl.glPushMatrix()
         gl.glTranslatef(self.field.org.x,self.field.org.y,0)
 
-        glfont.push_state()
-        glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)
-        glfont.set_color_float(self.text_color[:])
-
-
-        if isinstance(self.sync_val.value, float):
-            glfont.draw_text(self.field.size.x-x_spacer,0,str(self.display_format%self.sync_val.value ))
-            glfont.pop_state()
-            used_x = glfont.text_bounds(0,0,str(self.display_format%self.sync_val.value))
-        else:
-            glfont.draw_text(self.field.size.x-x_spacer,0,str(self.sync_val.value ))
-            glfont.pop_state()
-            used_x = glfont.text_bounds(0,0,str(self.sync_val.value))
-
-        glfont.push_state()
-        glfont.set_color_float(self.text_color[:])
-        glfont.draw_limited_text(x_spacer,0,self._label,self.field.size.x-3*x_spacer-used_x)
-        glfont.pop_state()
-
         line(Vec2(0.,self.slider_pos.y),Vec2(self.field.size.x, self.slider_pos.y),self.line_default_color)
         line(Vec2(0.,self.slider_pos.y),self.slider_pos,self.line_highlight_color)
 
@@ -188,6 +173,7 @@ cdef class Slider(UI_element):
             utils.draw_points((self.slider_pos,),size=slider_button_size*ui_scale, color=self.button_color)
 
         gl.glPopMatrix()
+        self.label_field.draw(self.outline, nested=True, parent_read_only=(self._read_only or parent_read_only))
 
 
 
@@ -214,6 +200,19 @@ cdef class Slider(UI_element):
                 if self.selected and b[1] == 0:
                     self.selected = False
                     should_redraw = True
+
+            self.label_field.handle_input(new_input, visible, False)
+
+    cpdef validate(self, val):
+        return step(clamp(val, self.minimum, self.maximum), self.minimum, self.maximum, self.step)
+
+    @property
+    def display_format(self):
+        return self.label_field.display_format
+
+    @display_format.setter
+    def display_format(self, val):
+        self.label_field.display_format = val
 
 
 ########## Switch ##########
@@ -485,7 +484,7 @@ cdef class Text_Input(UI_element):
     '''
     cdef FitBox field, textfield
     cdef bint selected,highlight, catch_input
-    cdef Synced_Value sync_val
+    cdef readonly Synced_Value sync_val
     cdef unicode preview
     cdef int caret,start_char_idx,end_char_idx,start_highlight_idx
     cdef RGBA text_color, text_input_highlight_color, text_input_line_highlight_color
@@ -775,6 +774,37 @@ cdef class Text_Input(UI_element):
             glfont.draw_limited_text(x_spacer,0,self.to_unicode(self.sync_val.value),self.textfield.size.x-x_spacer)
             gl.glPopMatrix()
 
+
+cdef class Slider_Text_Input(Text_Input):
+
+    cdef public object validator
+    cdef public basestring display_format
+
+    def __cinit__(self, *args, **kwargs):
+        self.validator = lambda x: x
+        self.display_format = '%0.2f'
+
+    cdef update_input_val(self):
+        # turn string back into the data_type of the value in case of str always use unicode
+        if isinstance(self.sync_val.value, basestring):
+            typed_val = self.preview
+        else:
+            try:
+                typed_val = self.data_type(eval(self.preview))
+            except:
+                #failed to convert. Ignore user input.
+                return
+        self.sync_val.value = self.validator(typed_val)
+
+    cdef to_unicode(self,obj):
+        if type(obj) is unicode:
+            return obj
+        elif type(obj) is bytes:
+            return obj.decode('utf-8')
+        elif isinstance(obj, float):
+            return self.display_format % obj
+        else:
+            return unicode(obj)
 
 ########## Button ##########
 #
