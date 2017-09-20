@@ -609,7 +609,18 @@ cdef class Text_Input(UI_element):
                     self.caret = len(self.preview)
                     self.highlight = True
                 should_redraw = True
+            elif key in (268, 269) and action == 1:  # home on release
+                if mods != 1:
+                    self.highlight = False
+                elif self.highlight is False:
+                    self.start_highlight_idx = min(len(self.preview),self.caret)
+                    self.highlight = True
 
+                if key == 269:
+                    self.caret = len(self.preview)
+                else:
+                    self.caret = 0
+                should_redraw = True
 
         while new_input.chars:
             c = new_input.chars.pop(0)
