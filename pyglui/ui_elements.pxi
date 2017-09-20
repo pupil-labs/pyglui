@@ -798,8 +798,8 @@ cdef class Button(UI_element):
         self._label = label
         self._outer_label = outer_label
         self.outline = FitBox(Vec2(0,0),Vec2(0,button_outline_size_y)) # we only fix the height
-        self.field = FitBox(Vec2(0,0),Vec2(0,0))
-        self.button = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
+        self.field = FitBox(Vec2(0,0),Vec2(0,0))  # depends on string length
+        self.button = FitBox(Vec2(0,0),Vec2(0,0))  # will be computed on demand
         self.selected = False
         self.function = function
         self.text_color = RGBA(*color_text_default)
@@ -815,16 +815,20 @@ cdef class Button(UI_element):
         else:
             self.text_color = RGBA(*color_text_default)
 
-        cdef float label_width = 0.
-        if self._outer_label:
-            label_width = glfont.text_bounds(0., 0., self._label)
-            self.field = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding-label_width-2*outline_padding,-outline_padding))
-            self.button = FitBox(Vec2(-label_width-2*outline_padding,outline_padding),Vec2(label_width+2*outline_padding,-outline_padding))
-
         #update appearance:
         self.outline.compute(parent)
+
+        cdef float label_width = 0.
         if self._outer_label:
+            label_width = glfont.text_bounds(0., 0., self._label) / ui_scale
+            self.field = FitBox(Vec2(outline_padding, outline_padding),
+                                Vec2(-label_width-outline_padding-3.*x_spacer, -outline_padding))
+            self.button = FitBox(Vec2(-label_width-outline_padding-2.*x_spacer, outline_padding),
+                                 Vec2(label_width+2.*x_spacer, -outline_padding))
             self.field.compute(self.outline)
+        else:
+            self.button = FitBox(Vec2(outline_padding, outline_padding),
+                                 Vec2(-outline_padding, -outline_padding))
         self.button.compute(self.outline)
 
         # self.outline.sketch()
@@ -838,7 +842,7 @@ cdef class Button(UI_element):
             glfont.push_state()
             gl.glTranslatef(self.field.org.x,self.field.org.y,0)
             glfont.set_color_float(self.text_color[:])
-            glfont.draw_limited_text(x_spacer,0,self._outer_label,self.field.size.x-self.button.size.x-x_spacer)
+            glfont.draw_limited_text(0,0,self._outer_label,self.field.size.x)
             glfont.pop_state()
             gl.glPopMatrix()
 
@@ -846,7 +850,7 @@ cdef class Button(UI_element):
         glfont.push_state()
         gl.glTranslatef(self.button.org.x,self.button.org.y,0)
         glfont.set_color_float(self.text_color[:])
-        glfont.draw_limited_text(outline_padding,0,self._label,self.button.size.x-outline_padding)
+        glfont.draw_limited_text(x_spacer*ui_scale,0,self._label,self.button.size.x)
         glfont.pop_state()
         gl.glPopMatrix()
 
@@ -1198,8 +1202,8 @@ cdef class Icon(Thumb):
             return # only draw tooltip when set
 
         cdef float tip_width = 10.*ui_scale
-        cdef float text_height = max(1,int(0.25*ref_size*ui_scale))
-        cdef float pad_x = 0.5*text_height*ui_scale
+        cdef float text_height = max(1,int(0.25*ref_size))
+        cdef float pad_x = 0.25*text_height
         cdef float pad_y = .5*pad_x
 
         cdef float vert_loc = self.button.center[1]
@@ -1209,6 +1213,7 @@ cdef class Icon(Thumb):
         glfont.set_font('opensans')
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_RIGHT)
         glfont.set_size(text_height)
+        glfont.set_blur(.0)
         cdef float text_width = glfont.text_bounds(text_loc_x, vert_loc, T)
 
         utils.draw_tooltip((tip_loc_x, vert_loc), (text_width, text_height),
@@ -1217,13 +1222,12 @@ cdef class Icon(Thumb):
 
         utils.draw_tooltip((tip_loc_x, vert_loc), (text_width, text_height),
                            tip_width=tip_width,  padding=(pad_x, pad_y),
-                           tooltip_color=RGBA(.8, .8, .8, .9), sharpness=.99)
+                           tooltip_color=RGBA(.8, .8, .8, .9), sharpness=.9)
 
         # glfont.set_color_float((0., 0., 0., 0.3))
         # glfont.set_blur(3)
         # glfont.draw_text(text_loc_x, vert_loc, T)
 
-        glfont.set_blur(.0)
         glfont.set_color_float((0., 0., 0., 8.))
         glfont.draw_text(text_loc_x, vert_loc, T)
 
