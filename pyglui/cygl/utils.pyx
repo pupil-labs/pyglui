@@ -4,6 +4,14 @@ import numpy as np
 cimport numpy as np
 cimport shader
 
+cpdef RGBA mix_smooth(RGBA first, RGBA second, float val, float min_, float max_):
+    cdef float pct = np.clip((val - min_) / (max_ - min_), 0., 1.)
+    pct = pct * pct * (3. - 2. * pct)
+    return RGBA(first.r * (1. - pct) + second.r * pct,
+                first.g * (1. - pct) + second.g * pct,
+                first.b * (1. - pct) + second.b * pct,
+                first.a * (1. - pct) + second.a * pct)
+
 cdef class RGBA:
     #cdef public float r,g,b,a
     def __cinit__(self,r=1,g=1,b=1,a=1):
@@ -36,15 +44,6 @@ cdef class RGBA:
             self.r,self.g,self.b,self.a = t
         else:
             raise IndexError()
-
-    def mix_smooth(self, RGBA other, float val, float min_, float max_):
-        cdef float pct = np.clip((val - min_) / (max_ - min_), 0., 1.)
-        pct = pct * pct * (3. - 2. * pct)
-        return RGBA(self.r * (1. - pct) + other.r * pct,
-                    self.g * (1. - pct) + other.g * pct,
-                    self.b * (1. - pct) + other.b * pct,
-                    self.a * (1. - pct) + other.a * pct)
-
 
 basic_shader = None
 simple_pt_shader = None
