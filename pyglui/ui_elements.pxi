@@ -193,7 +193,9 @@ cdef class Slider(UI_element):
 
             for b in new_input.buttons[:]:#list copy for remove to work
                 if b[1] == 1 and visible:
-                    if mouse_over_center(self.slider_pos+self.field.org,self.field.size.y,self.field.size.y,new_input.m):
+                    if mouse_over_center(Vec2(self.field.org.x + self.field.size.x / 2.,
+                                              self.slider_pos.y + self.field.org.y),
+                                         self.field.size.x,self.field.size.y,new_input.m):
                         new_input.buttons.remove(b) # the slider should catch the event (unlike other elements)
                         self.selected = True
                         should_redraw = True
