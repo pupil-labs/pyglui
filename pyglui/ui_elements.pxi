@@ -195,7 +195,7 @@ cdef class Slider(UI_element):
                 if b[1] == 1 and visible:
                     if mouse_over_center(Vec2(self.field.org.x + self.field.size.x / 2.,
                                               self.slider_pos.y + self.field.org.y),
-                                         self.field.size.x,self.field.size.y,new_input.m):
+                                         self.field.size.x,self.field.size.y/2.,new_input.m):
                         new_input.buttons.remove(b) # the slider should catch the event (unlike other elements)
                         self.selected = True
                         should_redraw = True
@@ -1084,7 +1084,7 @@ cdef class Thumb(UI_element):
         glfont.push_state()
         glfont.set_font(self.label_font)
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_CENTER)
-        glfont.set_size(max(1,int(min(self.button.size)+self.offset_size*ui_scale)-thumb_font_padding))
+        glfont.set_size(max(1,int(min(self.button.size)+self.offset_size*ui_scale)-thumb_font_padding*ui_scale))
         glfont.set_color_float((0,0,0,0.5))
         glfont.set_blur(10.5)
         cdef int text_x = self.button.center[0]+int(self.offset_x*ui_scale)
@@ -1231,7 +1231,7 @@ cdef class Icon(Thumb):
         glfont.push_state()
         glfont.set_font(self.label_font)
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_CENTER)
-        glfont.set_size(max(1,int(ref_size+self.offset_size*ui_scale)-thumb_font_padding))
+        glfont.set_size(max(1,int(ref_size+self.offset_size*ui_scale)-thumb_font_padding*ui_scale))
         glfont.set_color_float((*icon_color[:3], 0.3))
         glfont.set_blur(3)
         cdef int text_x = self.button.center[0]+int(self.offset_x*ui_scale)
