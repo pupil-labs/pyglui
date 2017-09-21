@@ -1,9 +1,11 @@
 from cython cimport view
 from libcpp.vector cimport vector
+import numpy as np
+cimport numpy as np
 cimport shader
 
 cpdef RGBA mix_smooth(RGBA first, RGBA second, float val, float min_, float max_):
-    cdef float pct = clamp((val - min_) / (max_ - min_), 0., 1.)
+    cdef float pct = np.clip((val - min_) / (max_ - min_), 0., 1.)
     pct = pct * pct * (3. - 2. * pct)
     return RGBA(first.r * (1. - pct) + second.r * pct,
                 first.g * (1. - pct) + second.g * pct,
