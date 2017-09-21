@@ -1330,8 +1330,44 @@ cdef class Hot_Key(UI_element):
                                     self.sync_val.value = self.on_val
                             break
 
+cdef class Seek_Bar(UI_element):
 
+    cdef int total
+    cdef FitBox bar
+    cdef Draggable seek_handle, trim_handle_left, trim_handle_right
+    cdef bint hovering, dragging
+    cdef Synced_Value trim_left, trim_right, current
 
+    def __cinit__(self, object ctx, int total, *args, **kwargs):
+        self.uid = id(self)
+        self.trim_left = Synced_Value('trim_left', ctx, trigger_overlay_only=True)
+        self.trim_right = Synced_Value('trim_right', ctx, trigger_overlay_only=True)
+        self.current = Synced_Value('current_index', ctx, trigger_overlay_only=True)
+        self.total = total
 
+        self.outline = FitBox(Vec2(0., -100.), Vec2(0., 100.))
+        self.bar = FitBox(Vec2(0., -25.), Vec2(0., 5.))
 
+    def __init__(self, *args, **kwargs):
+        pass
+
+    cpdef sync(self):
+        self.trim_left.sync()
+        self.trim_right.sync()
+        self.current.sync()
+
+    cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        self.outline.compute(parent)
+        self.bar.compute(self.outline)
+        rect(self.bar.org, self.bar.size, RGBA(1., 1., 1., 0.4))
+
+    cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        cdef float cur_x = clampmap(self.current.value, 0, self.total, 0, self.bar.size.x)
+        cdef Vec2 handle = Vec2(4., 2 * self.bar.size.y)
+        rect(Vec2(self.bar.org.x + cur_x - handle.x / 2., self.bar.org.y),
+             handle, RGBA(1., 1., 1., 0.8))
+
+        utils.draw_tooltip((self.bar.org.x + cur_x - handle.x / 2., self.bar.org.y),
+                           (handle.x, handle.y), padding=(0, 0),
+                           tooltip_color=RGBA(.8, .8, .8, .9), sharpness=.9)
 

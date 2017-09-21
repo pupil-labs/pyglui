@@ -654,3 +654,33 @@ cdef class Scrolling_Menu(Movable_Menu):
             self.set_submenu_config(new_conf.get('submenus',{}))
 
 
+cdef class Container(Base_Menu):
+
+    def __cinit__(self, pos=(0., 0.), size=(0., 0.), padding=(0., 0.)):
+        self.outline = FitBox(Vec2(*pos), Vec2(*size))
+        self.element_space = FitBox(Vec2(*padding), Vec2(0., 0.) - Vec2(*padding))
+        self.elements = []
+
+    def init(self, *args, **kwargs):
+        pass
+
+    cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
+        self.elements.sort(key=sort_key)
+        self.outline.compute(parent)
+        self.element_space.compute(self.outline)
+        if self.element_space.has_area():
+            for e in self.elements:
+                e.draw(self.element_space,nested= False, parent_read_only = parent_read_only or self._read_only)
+
+    cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        if self.element_space.has_area():
+            self.elements.sort(key=sort_key)
+            for e in self.elements:
+                (<UI_element>e).draw_overlay(self.element_space, nested=False,
+                                             parent_read_only=parent_read_only or self._read_only)
+
+    cpdef handle_input(self, Input new_input,bint visible,bint parent_read_only = False):
+        #if elements are not visible, no need to interact with them.
+        if self.element_space.has_area():
+            for e in self.elements:
+                e.handle_input(new_input, visible,self._read_only or parent_read_only)
