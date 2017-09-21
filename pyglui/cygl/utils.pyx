@@ -1,7 +1,16 @@
 from cython cimport view
 from libcpp.vector cimport vector
+import numpy as np
+cimport numpy as np
 cimport shader
-import math
+
+cpdef RGBA mix_smooth(RGBA first, RGBA second, float val, float min_, float max_):
+    cdef float pct = np.clip((val - min_) / (max_ - min_), 0., 1.)
+    pct = pct * pct * (3. - 2. * pct)
+    return RGBA(first.r * (1. - pct) + second.r * pct,
+                first.g * (1. - pct) + second.g * pct,
+                first.b * (1. - pct) + second.b * pct,
+                first.a * (1. - pct) + second.a * pct)
 
 cdef class RGBA:
     #cdef public float r,g,b,a
@@ -36,12 +45,10 @@ cdef class RGBA:
         else:
             raise IndexError()
 
-
-
-
 basic_shader = None
 simple_pt_shader = None
-progress_pt_shader = None
+progress_shader = None
+tooltip_shader = None
 simple_yuv422_shader = None
 simple_concentric_circle_shader = None
 simple_circle_shader = None
@@ -49,13 +56,15 @@ simple_circle_shader = None
 cpdef init():
     global basic_shader
     global simple_pt_shader
-    global progress_pt_shader
+    global progress_shader
+    global tooltip_shader
     global simple_yuv422_shader
     global simple_concentric_circle_shader
     global simple_circle_shader
     basic_shader = None
     simple_pt_shader = None
-    progress_pt_shader = None
+    progress_shader = None
+    tooltip_shader = None
     simple_yuv422_shader = None
     simple_concentric_circle_shader = None
     simple_circle_shader = None
@@ -144,8 +153,8 @@ cpdef draw_points(points,float size=20,RGBA color=RGBA(1.,0.5,0.5,.5),float shar
     simple_pt_shader.unbind()
 
 cpdef draw_progress(location, float start, float stop, float inner_radius=15., float outer_radius=20.0, RGBA color=RGBA(1., 0.5, 0.5, .5), float sharpness=0.8):
-    global progress_pt_shader
-    if not progress_pt_shader:
+    global progress_shader
+    if not progress_shader:
         VERT_SHADER = """
         #version 120
         varying vec4 f_color;
@@ -200,14 +209,14 @@ cpdef draw_progress(location, float start, float stop, float inner_radius=15., f
 
         GEOM_SHADER = """"""
         #shader link and compile
-        progress_pt_shader = shader.Shader(VERT_SHADER,FRAG_SHADER,GEOM_SHADER)
+        progress_shader = shader.Shader(VERT_SHADER,FRAG_SHADER,GEOM_SHADER)
 
-    progress_pt_shader.bind()
-    progress_pt_shader.uniform1f('inner_radius',inner_radius)
-    progress_pt_shader.uniform1f('outer_radius',outer_radius)
-    progress_pt_shader.uniform1f('sharpness',sharpness)
-    progress_pt_shader.uniform1f('start', start)
-    progress_pt_shader.uniform1f('stop', stop)
+    progress_shader.bind()
+    progress_shader.uniform1f('inner_radius',inner_radius)
+    progress_shader.uniform1f('outer_radius',outer_radius)
+    progress_shader.uniform1f('sharpness',sharpness)
+    progress_shader.uniform1f('start', start)
+    progress_shader.uniform1f('stop', stop)
     glColor4f(color.r,color.g,color.b,color.a)
     glBegin(GL_POINTS)
     if len(location) == 2:
@@ -215,7 +224,78 @@ cpdef draw_progress(location, float start, float stop, float inner_radius=15., f
     else:
         glVertex3f(location[0],location[1],location[2])
     glEnd()
-    progress_pt_shader.unbind()
+    progress_shader.unbind()
+
+
+cdef draw_tooltip(tip_location, text_size, padding=(0., 0.),
+                   RGBA tooltip_color=RGBA(1., 1., 1., .8), float sharpness=0.95):
+    global tooltip_shader
+    if not tooltip_shader:
+        VERT_SHADER = """
+        #version 120
+        varying vec4 f_color;
+        uniform float tip_width = 20.;
+        uniform float blur = 0.05;
+
+        void main () {
+            float xpos = gl_Vertex.x - tip_width/2.;
+            gl_Position = gl_ModelViewProjectionMatrix*vec4(xpos, gl_Vertex.yz, 1.);
+            gl_PointSize = tip_width;
+            f_color = gl_Color;
+        }
+        """
+
+        FRAG_SHADER = """
+        #version 120
+        varying vec4 f_color;
+        uniform float tip_width = 20.;
+        uniform float blur = 0.05;
+
+        uniform vec2 tip_anchor = vec2(.66,.5);
+
+        float f(in float x, vec2 a, vec2 b)
+        {
+            float m = (b.y - a.y)/(b.x - a.x);
+            return m*x + (b.y - m*b.x);
+        }
+
+        void main()
+        {
+            vec2 uv = gl_PointCoord.xy;
+            float bre = f(uv.x, tip_anchor, vec2(0.));
+            float tre = f(uv.x, vec2(0., 1.), tip_anchor);
+            float pct = smoothstep(bre-blur, bre, uv.y) -
+                        smoothstep(tre, tre+blur, uv.y);
+            gl_FragColor = mix(vec4(0.), f_color, pct);
+        }
+        """
+
+        GEOM_SHADER = """"""
+        #shader link and compile
+        tooltip_shader = shader.Shader(VERT_SHADER,FRAG_SHADER,GEOM_SHADER)
+
+    cdef float tip_width = text_size[1] + 2.*padding[1]
+
+    tooltip_shader.bind()
+    tooltip_shader.uniform1f('tip_width', tip_width)
+    tooltip_shader.uniform1f('blur', 1. - sharpness)
+    glColor4f(tooltip_color.r,tooltip_color.g,tooltip_color.b,tooltip_color.a)
+
+    glBegin(GL_POINTS)
+    glVertex2f(tip_location[0], tip_location[1])
+    glEnd()
+    tooltip_shader.unbind()
+
+    glBegin(GL_POLYGON)
+    glVertex2f(tip_location[0] - tip_width,
+               tip_location[1] + text_size[1] / 2. + padding[1])
+    glVertex2f(tip_location[0] - tip_width - text_size[0] - 2. * padding[0],
+               tip_location[1] + text_size[1] / 2. + padding[1])
+    glVertex2f(tip_location[0] - tip_width - text_size[0] - 2. * padding[0],
+               tip_location[1] - text_size[1] / 2. - padding[1])
+    glVertex2f(tip_location[0] - tip_width,
+               tip_location[1] - text_size[1] / 2. - padding[1])
+    glEnd()
 
 cpdef draw_circle( center_position = (0,0) ,float radius=20,float stroke_width= 2, RGBA color=RGBA(1.,0.5,0.5,0.5),float sharpness=0.8):
 
@@ -433,8 +513,8 @@ cdef class Sphere:
         pass
     def __init__(self,resolution=10):
         cdef int doubleRes = resolution*2
-        cdef float polarInc = math.pi/resolution
-        cdef float azimInc = math.pi*2.0/doubleRes
+        cdef float polarInc = np.pi/resolution
+        cdef float azimInc = np.pi*2.0/doubleRes
 
         cdef vector[GLfloat] vertices
         cdef vector[GLuint] indices
@@ -443,12 +523,12 @@ cdef class Sphere:
         cdef float tr
         for i in range(0, resolution+1):
 
-            tr = math.sin( math.pi-i * polarInc )
-            ny = math.cos( math.pi-i * polarInc )
+            tr = np.sin( np.pi-i * polarInc )
+            ny = np.cos( np.pi-i * polarInc )
 
             for j in range(0, doubleRes+1):
-                nx = tr * math.sin(j * azimInc)
-                nz = tr * math.cos(j * azimInc)
+                nx = tr * np.sin(j * azimInc)
+                nz = tr * np.cos(j * azimInc)
                 vertices.push_back(nx)
                 vertices.push_back(ny)
                 vertices.push_back(nz)

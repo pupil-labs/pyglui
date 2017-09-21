@@ -12,6 +12,8 @@ cpdef draw_polyline_norm(verts,float thickness=*,RGBA color=*,line_type =*)
 cpdef draw_points(points,float size=*,RGBA color=*,float sharpness=*)
 cpdef draw_progress(location, float start, float stop, float inner_radius=*,
                     float outer_radius=*, RGBA color=*, float sharpness=*)
+cdef draw_tooltip(tip_location, text_size, padding=*,
+                   RGBA tooltip_color=*, float sharpness=*)
 cpdef draw_circle(center_position=*,float radius=*,float stroke_width=*,
                   RGBA color=*,float sharpness=*)
 cpdef draw_points_norm(points,float size=*,RGBA color=*,float sharpness=*)

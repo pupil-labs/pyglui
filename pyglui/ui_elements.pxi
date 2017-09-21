@@ -71,7 +71,7 @@ cdef class UI_element:
 
 ########## Slider ##########
 #    +--------------------------------+
-#    | Label                    Value |
+#    | Label  Input Text              |
 #    | ------------------O----------- |
 #    +--------------------------------+
 
@@ -82,13 +82,17 @@ cdef class Slider(UI_element):
     cdef Vec2 slider_pos
     cdef Synced_Value sync_val
     cdef int steps
-    cdef public str display_format
     cdef RGBA line_default_color, line_highlight_color, text_color, button_color, button_selected_color, button_shadow_color,step_color
+    cdef Slider_Text_Input label_field
 
     def __cinit__(self,str attribute_name, object attribute_context = None, label = None, min = 0, max = 100, step = 0,setter= None,getter= None):
+
+        self.label_field = Slider_Text_Input(attribute_name, attribute_context,
+                                             label=label or attribute_name,
+                                             setter=setter, getter=getter)
+        self.label_field.validator = self.validate
         self.uid = id(self)
-        self._label = label or attribute_name
-        self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
+        self.sync_val = self.label_field.sync_val
         self.step = abs(step)
         self.minimum = min
         if self.step:
@@ -151,25 +155,6 @@ cdef class Slider(UI_element):
         gl.glPushMatrix()
         gl.glTranslatef(self.field.org.x,self.field.org.y,0)
 
-        glfont.push_state()
-        glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)
-        glfont.set_color_float(self.text_color[:])
-
-
-        if isinstance(self.sync_val.value, float):
-            glfont.draw_text(self.field.size.x-x_spacer,0,str(self.display_format%self.sync_val.value ))
-            glfont.pop_state()
-            used_x = glfont.text_bounds(0,0,str(self.display_format%self.sync_val.value))
-        else:
-            glfont.draw_text(self.field.size.x-x_spacer,0,str(self.sync_val.value ))
-            glfont.pop_state()
-            used_x = glfont.text_bounds(0,0,str(self.sync_val.value))
-
-        glfont.push_state()
-        glfont.set_color_float(self.text_color[:])
-        glfont.draw_limited_text(x_spacer,0,self._label,self.field.size.x-3*x_spacer-used_x)
-        glfont.pop_state()
-
         line(Vec2(0.,self.slider_pos.y),Vec2(self.field.size.x, self.slider_pos.y),self.line_default_color)
         line(Vec2(0.,self.slider_pos.y),self.slider_pos,self.line_highlight_color)
 
@@ -188,6 +173,7 @@ cdef class Slider(UI_element):
             utils.draw_points((self.slider_pos,),size=slider_button_size*ui_scale, color=self.button_color)
 
         gl.glPopMatrix()
+        self.label_field.draw(self.outline, nested=True, parent_read_only=(self._read_only or parent_read_only))
 
 
 
@@ -207,13 +193,28 @@ cdef class Slider(UI_element):
 
             for b in new_input.buttons[:]:#list copy for remove to work
                 if b[1] == 1 and visible:
-                    if mouse_over_center(self.slider_pos+self.field.org,self.field.size.y,self.field.size.y,new_input.m):
+                    if mouse_over_center(Vec2(self.field.org.x + self.field.size.x / 2.,
+                                              self.slider_pos.y + self.field.org.y),
+                                         self.field.size.x,self.field.size.y/2.,new_input.m):
                         new_input.buttons.remove(b) # the slider should catch the event (unlike other elements)
                         self.selected = True
                         should_redraw = True
                 if self.selected and b[1] == 0:
                     self.selected = False
                     should_redraw = True
+
+            self.label_field.handle_input(new_input, visible, False)
+
+    cpdef validate(self, val):
+        return step(clamp(val, self.minimum, self.maximum), self.minimum, self.maximum, self.step)
+
+    @property
+    def display_format(self):
+        return self.label_field.display_format
+
+    @display_format.setter
+    def display_format(self, val):
+        self.label_field.display_format = val
 
 
 ########## Switch ##########
@@ -485,7 +486,7 @@ cdef class Text_Input(UI_element):
     '''
     cdef FitBox field, textfield
     cdef bint selected,highlight, catch_input
-    cdef Synced_Value sync_val
+    cdef readonly Synced_Value sync_val
     cdef unicode preview
     cdef int caret,start_char_idx,end_char_idx,start_highlight_idx
     cdef RGBA text_color, text_input_highlight_color, text_input_line_highlight_color
@@ -561,7 +562,7 @@ cdef class Text_Input(UI_element):
                 self.abort_input()
                 return
 
-            elif key == 259 and action != 1: #Delete and key not released (key repeat)
+            elif key == 259 and action != 1: # Backspace and key not released (key repeat)
                 if self.caret > 0 and self.highlight is False:
                     self.preview = self.preview[:self.caret-1] + self.preview[self.caret:]
                     self.caret -=1
@@ -571,6 +572,17 @@ cdef class Text_Input(UI_element):
                     self.highlight = False
 
                 self.caret = max(0,self.caret)
+                should_redraw = True
+
+            elif key == 261 and action != 1: # Delete and key not released (key repeat)
+                if self.caret < len(self.preview) and self.highlight is False:
+                    self.preview = self.preview[:self.caret] + self.preview[self.caret+1:]
+                if self.highlight:
+                    self.preview = self.preview[:min(self.start_highlight_idx,self.caret)] + self.preview[max(self.start_highlight_idx,self.caret):]
+                    self.caret = min(self.start_highlight_idx,self.caret)
+                    self.highlight = False
+
+                self.caret = min(len(self.preview), self.caret)
                 should_redraw = True
 
             elif key == 263 and action != 1 and mods == 0: #key left and key not released without mod keys
@@ -608,7 +620,18 @@ cdef class Text_Input(UI_element):
                     self.caret = len(self.preview)
                     self.highlight = True
                 should_redraw = True
+            elif key in (268, 269) and action == 1:  # home on release
+                if mods != 1:
+                    self.highlight = False
+                elif self.highlight is False:
+                    self.start_highlight_idx = min(len(self.preview),self.caret)
+                    self.highlight = True
 
+                if key == 269:
+                    self.caret = len(self.preview)
+                else:
+                    self.caret = 0
+                should_redraw = True
 
         while new_input.chars:
             c = new_input.chars.pop(0)
@@ -776,34 +799,67 @@ cdef class Text_Input(UI_element):
             gl.glPopMatrix()
 
 
+cdef class Slider_Text_Input(Text_Input):
+
+    cdef public object validator
+    cdef public basestring display_format
+
+    def __cinit__(self, *args, **kwargs):
+        self.validator = lambda x: x
+        self.display_format = '%0.2f'
+
+    cdef update_input_val(self):
+        # turn string back into the data_type of the value in case of str always use unicode
+        if isinstance(self.sync_val.value, basestring):
+            typed_val = self.preview
+        else:
+            try:
+                typed_val = self.data_type(eval(self.preview))
+            except:
+                #failed to convert. Ignore user input.
+                return
+        self.sync_val.value = self.validator(typed_val)
+
+    cdef to_unicode(self,obj):
+        if type(obj) is unicode:
+            return obj
+        elif type(obj) is bytes:
+            return obj.decode('utf-8')
+        elif isinstance(obj, float):
+            return self.display_format % obj
+        else:
+            return unicode(obj)
+
 ########## Button ##########
 #
 #   +--------------------------------+
-#   | +----------------------------+ |
-#   | | Label                      | |
-#   | +----------------------------+ |
+#   |                      +-------+ |
+#   | Outer_Label          | Label | |
+#   |                      +-------+ |
 #   +--------------------------------+
 
 
 
 cdef class Button(UI_element):
-    cdef FitBox button
+    cdef FitBox field, button
     cdef bint selected
     cdef object function
     cdef RGBA text_color
+    cdef basestring _outer_label
 
-    def __cinit__(self,label, function):
+    def __cinit__(self,label, function, outer_label=''):
         self.uid = id(self)
         self._label = label
+        self._outer_label = outer_label
         self.outline = FitBox(Vec2(0,0),Vec2(0,button_outline_size_y)) # we only fix the height
-        self.button = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
+        self.field = FitBox(Vec2(0,0),Vec2(0,0))  # depends on string length
+        self.button = FitBox(Vec2(0,0),Vec2(0,0))  # will be computed on demand
         self.selected = False
         self.function = function
         self.text_color = RGBA(*color_text_default)
 
-    def __init__(self,label, setter):
+    def __init__(self, *args, **kwargs):
         pass
-
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         cdef tuple text_color
@@ -815,6 +871,18 @@ cdef class Button(UI_element):
 
         #update appearance:
         self.outline.compute(parent)
+
+        cdef float label_width = 0.
+        if self._outer_label:
+            label_width = glfont.text_bounds(0., 0., self._label) / ui_scale
+            self.field = FitBox(Vec2(outline_padding, outline_padding),
+                                Vec2(-label_width-outline_padding-3.*x_spacer, -outline_padding))
+            self.button = FitBox(Vec2(-label_width-outline_padding-2.*x_spacer, outline_padding),
+                                 Vec2(label_width+2.*x_spacer, -outline_padding))
+            self.field.compute(self.outline)
+        else:
+            self.button = FitBox(Vec2(outline_padding, outline_padding),
+                                 Vec2(-outline_padding, -outline_padding))
         self.button.compute(self.outline)
 
         # self.outline.sketch()
@@ -823,11 +891,20 @@ cdef class Button(UI_element):
         else:
             self.button.sketch()
 
+        if self._outer_label:
+            gl.glPushMatrix()
+            glfont.push_state()
+            gl.glTranslatef(self.field.org.x,self.field.org.y,0)
+            glfont.set_color_float(self.text_color[:])
+            glfont.draw_limited_text(0,0,self._outer_label,self.field.size.x)
+            glfont.pop_state()
+            gl.glPopMatrix()
+
         gl.glPushMatrix()
         glfont.push_state()
         gl.glTranslatef(self.button.org.x,self.button.org.y,0)
         glfont.set_color_float(self.text_color[:])
-        glfont.draw_limited_text(x_spacer,0,self._label,self.button.size.x-x_spacer)
+        glfont.draw_limited_text(x_spacer*ui_scale,0,self._label,self.button.size.x)
         glfont.pop_state()
         gl.glPopMatrix()
 
@@ -1007,7 +1084,7 @@ cdef class Thumb(UI_element):
         glfont.push_state()
         glfont.set_font(self.label_font)
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_CENTER)
-        glfont.set_size(max(1,int(min(self.button.size)+self.offset_size*ui_scale)-thumb_font_padding))
+        glfont.set_size(max(1,int(min(self.button.size)+self.offset_size*ui_scale)-thumb_font_padding*ui_scale))
         glfont.set_color_float((0,0,0,0.5))
         glfont.set_blur(10.5)
         cdef int text_x = self.button.center[0]+int(self.offset_x*ui_scale)
@@ -1072,10 +1149,25 @@ cdef class Thumb(UI_element):
 
 cdef class Icon(Thumb):
     cdef float _indicator_start, _indicator_stop
+    cdef basestring _tooltip
+    cdef bint being_hovered
 
     def __cinit__(self, *args, **kwargs):
         self._indicator_start = 0.
         self._indicator_stop = 0.
+        self._tooltip = ''
+        self.being_hovered = False
+
+    @property
+    def tooltip(self):
+        return self._tooltip
+
+    @tooltip.setter
+    def tooltip(self, val):
+        if self._tooltip != val:
+            global should_redraw_overlay
+            should_redraw_overlay = True
+            self._tooltip = val
 
     @property
     def indicator_start(self):
@@ -1103,6 +1195,18 @@ cdef class Icon(Thumb):
             global should_redraw_overlay
             should_redraw_overlay = True
 
+    cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
+        unused = super(Icon, self).handle_input(new_input, visible, parent_read_only)
+        global should_redraw_overlay
+        cdef bint hovering = visible and self.button.mouse_over(new_input.m)
+
+        if hovering != self.being_hovered:
+            self.being_hovered = hovering
+            should_redraw_overlay = True
+        elif new_input.s.y > 0.:
+            should_redraw_overlay = True
+        return unused
+
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         #update appearance
         self.outline.compute(parent)
@@ -1127,7 +1231,7 @@ cdef class Icon(Thumb):
         glfont.push_state()
         glfont.set_font(self.label_font)
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_CENTER)
-        glfont.set_size(max(1,int(ref_size+self.offset_size*ui_scale)-thumb_font_padding))
+        glfont.set_size(max(1,int(ref_size+self.offset_size*ui_scale)-thumb_font_padding*ui_scale))
         glfont.set_color_float((*icon_color[:3], 0.3))
         glfont.set_blur(3)
         cdef int text_x = self.button.center[0]+int(self.offset_x*ui_scale)
@@ -1139,6 +1243,7 @@ cdef class Icon(Thumb):
         glfont.pop_state()
 
     cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        cdef basestring T = self.tooltip
         cdef RGBA progress_color = RGBA(1., 1., 1., .3)
         cdef float ref_size = min(self.button.size)
         if self.indicator_start != self.indicator_stop:
@@ -1146,6 +1251,37 @@ cdef class Icon(Thumb):
                                 self.indicator_stop, inner_radius=int(ref_size*.625),
                                 outer_radius=int(ref_size*.9), color=progress_color,
                                 sharpness=0.9)
+
+        if self._tooltip == '' or not self.being_hovered:
+            return # only draw tooltip when set
+
+        cdef float text_height = max(1,int(0.25*ref_size))
+        cdef float pad_x = 0.25*text_height
+        cdef float pad_y = .5*pad_x
+        cdef float tip_width = text_height + pad_x  # == 2* pad_y
+
+        cdef float vert_loc = self.button.center[1]
+        cdef float tip_loc_x = self.button.org.x + 10.*ui_scale
+        cdef float text_loc_x = tip_loc_x - tip_width - pad_x
+        glfont.push_state()
+        glfont.set_font('opensans')
+        glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_RIGHT)
+        glfont.set_size(text_height)
+        glfont.set_blur(.0)
+        cdef float text_width = glfont.text_bounds(text_loc_x, vert_loc, T)
+
+        utils.draw_tooltip((tip_loc_x, vert_loc), (text_width, text_height),
+                           padding=(pad_x, pad_y), tooltip_color=RGBA(.8, .8, .8, .9),
+                           sharpness=.9)
+
+        # glfont.set_color_float((0., 0., 0., 0.3))
+        # glfont.set_blur(3)
+        # glfont.draw_text(text_loc_x, vert_loc, T)
+
+        glfont.set_color_float((0., 0., 0., 8.))
+        glfont.draw_text(text_loc_x, vert_loc, T)
+
+        glfont.pop_state()
 
 
 cdef class Hot_Key(UI_element):
