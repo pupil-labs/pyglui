@@ -133,7 +133,6 @@ cdef inline triangle_left(Vec2 org, Vec2 size):
     gl.glVertex3f(org.x + size.x/2 ,org.y+size.y-3*ui_scale,0)
     gl.glEnd()
 
-
 cdef inline line(Vec2 org, Vec2 end, RGBA color):
     gl.glColor4f(color.r, color.g, color.b, color.a)
     gl.glLineWidth(1.5*ui_scale) #thinner lines sometimes dont show on certain hardware.
@@ -142,6 +141,26 @@ cdef inline line(Vec2 org, Vec2 end, RGBA color):
     gl.glVertex3f(end.x, end.y,0)
     gl.glEnd()
 
+cdef inline FitBox draw_handle(Vec2 tip_loc, Vec2 handle_size, RGBA color):
+    ''' Draw a handle and return FitBox that corresponds draggable area
+    '''
+    cdef float tip_length = 10.*ui_scale
+    gl.glColor4f(color.r, color.g, color.b, color.a)
+
+    gl.glLineWidth(3.*ui_scale) #thinner lines sometimes dont show on certain hardware.
+    gl.glBegin(gl.GL_LINES)
+    gl.glVertex3f(tip_loc.x, tip_loc.y,0 )
+    gl.glVertex3f(tip_loc.x, tip_loc.y + tip_length, 0)
+    gl.glEnd()
+
+    gl.glBegin(gl.GL_POLYGON)
+    gl.glVertex3f(tip_loc.x - handle_size.x / 2., tip_loc.y + tip_length, 0)
+    gl.glVertex3f(tip_loc.x + handle_size.x / 2., tip_loc.y + tip_length, 0)
+    gl.glVertex3f(tip_loc.x + handle_size.x / 2., tip_loc.y + tip_length + handle_size.y, 0)
+    gl.glVertex3f(tip_loc.x - handle_size.x / 2., tip_loc.y + tip_length + handle_size.y, 0)
+    gl.glEnd()
+
+    return FitBox(Vec2(tip_loc.x - handle_size.x / 2., tip_loc.y + tip_length), handle_size)
 
 ### OpenGL funtions for rendering to texture.
 ### Using this saves us considerable cpu/gpu time when the UI remains static.

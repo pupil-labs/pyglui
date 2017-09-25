@@ -1333,20 +1333,24 @@ cdef class Hot_Key(UI_element):
 cdef class Seek_Bar(UI_element):
 
     cdef int total
-    cdef FitBox bar
-    cdef Draggable seek_handle, trim_handle_left, trim_handle_right
-    cdef bint hovering, dragging
+    cdef FitBox bar, seek_handle
+    cdef readonly bint hovering, dragging
     cdef Synced_Value trim_left, trim_right, current
+    cdef object seeking_cb
 
-    def __cinit__(self, object ctx, int total, *args, **kwargs):
+    def __cinit__(self, object ctx, int total, object seeking_cb, *args, **kwargs):
         self.uid = id(self)
         self.trim_left = Synced_Value('trim_left', ctx, trigger_overlay_only=True)
         self.trim_right = Synced_Value('trim_right', ctx, trigger_overlay_only=True)
         self.current = Synced_Value('current_index', ctx, trigger_overlay_only=True)
+        self.seeking_cb = seeking_cb
         self.total = total
+        self.dragging = False
+        self.hovering = False
 
         self.outline = FitBox(Vec2(0., -100.), Vec2(0., 100.))
-        self.bar = FitBox(Vec2(0., -25.), Vec2(0., 5.))
+        self.bar = FitBox(Vec2(0., -35.), Vec2(0., 5.))
+        self.seek_handle = FitBox(Vec2(0., 0.), Vec2(0.1, 0.1))
 
     def __init__(self, *args, **kwargs):
         pass
@@ -1358,16 +1362,61 @@ cdef class Seek_Bar(UI_element):
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         self.outline.compute(parent)
+        self.outline.sketch()
         self.bar.compute(self.outline)
         rect(self.bar.org, self.bar.size, RGBA(1., 1., 1., 0.4))
 
     cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
-        cdef float cur_x = clampmap(self.current.value, 0, self.total, 0, self.bar.size.x)
-        cdef Vec2 handle = Vec2(4., 2 * self.bar.size.y)
-        rect(Vec2(self.bar.org.x + cur_x - handle.x / 2., self.bar.org.y),
-             handle, RGBA(1., 1., 1., 0.8))
+        cdef int current_val = self.current.value
+        cdef float cur_x = clampmap(current_val, 0, self.total, 0, self.bar.size.x)
+        cdef FitBox handle = FitBox(Vec2(self.bar.org.x + cur_x, self.bar.org.y),
+                                    Vec2(3. * self.bar.size.y, 3. * self.bar.size.y))
+        self.seek_handle = draw_handle(handle.org, handle.size, RGBA(1., 1., 1., 0.8))
 
-        utils.draw_tooltip((self.bar.org.x + cur_x - handle.x / 2., self.bar.org.y),
-                           (handle.x, handle.y), padding=(0, 0),
-                           tooltip_color=RGBA(.8, .8, .8, .9), sharpness=.9)
+        cdef basestring current_str = str(current_val)
+        if self.hovering or self.dragging:
+            glfont.push_state()
+            glfont.set_font('opensans')
+            glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_CENTER)
+            glfont.set_size(1.25 * self.seek_handle.size.y)
 
+            glfont.set_blur(1.5)
+            glfont.set_color_float((0., 0., 0., .3))
+            glfont.draw_text(self.seek_handle.org.x+self.seek_handle.size.x/2,
+                             self.seek_handle.org.y+self.seek_handle.size.y + 3. * ui_scale,
+                             current_str)
+
+            glfont.set_blur(.1)
+            glfont.set_color_float((1., 1., 1., .8))
+            glfont.draw_text(self.seek_handle.org.x + self.seek_handle.size.x / 2,
+                             self.seek_handle.org.y + 1.15 * self.seek_handle.size.y,
+                             current_str)
+
+            glfont.pop_state()
+
+    cpdef handle_input(self,Input new_input, bint visible, bint parent_read_only = False):
+        global should_redraw_overlay
+        if not (self._read_only or parent_read_only):
+
+            if self.dragging and new_input.dm:
+                val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
+                               0, self.total)
+                self.current.value = int(val)
+                should_redraw_overlay = True
+
+            for b in new_input.buttons[:]:#list copy for remove to work
+                if b[1] == 1 and visible:
+                    if self.seek_handle.mouse_over(new_input.m):
+                        new_input.buttons.remove(b) # the slider should catch the event (unlike other elements)
+                        self.dragging = True
+                        should_redraw_overlay = True
+                        self.seeking_cb(True)
+                if self.dragging and b[1] == 0:
+                    self.dragging = False
+                    should_redraw_overlay = True
+                    self.seeking_cb(False)
+
+        cdef bint hover = self.outline.mouse_over(new_input.m)
+        if hover != self.hovering:
+            self.hovering = hover
+            should_redraw_overlay = True
