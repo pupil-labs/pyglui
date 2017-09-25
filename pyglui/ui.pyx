@@ -158,7 +158,6 @@ cdef class UI:
 
         if should_redraw:
 
-            should_redraw = False
             #print "UI is redrawing the screen"
             push_view(self.window.size)
             render_to_ui_texture(self.ui_layer)
@@ -178,7 +177,6 @@ cdef class UI:
         draw_ui_texture(self.ui_layer)
 
         if should_redraw or should_redraw_overlay:
-            should_redraw_overlay = False
             push_view(self.window.size)
             render_to_ui_texture(self.overlay_layer)
             glfont.clear_state()
@@ -195,6 +193,9 @@ cdef class UI:
             pop_view()
 
         draw_ui_texture(self.overlay_layer)
+
+        should_redraw = False
+        should_redraw_overlay = False
 
     def update(self):
         unused_Input = self.handle_input()
@@ -698,9 +699,14 @@ cdef class FitBox:
     cdef copy(self):
         return FitBox( Vec2(*self.design_org), Vec2(*self.design_size), Vec2(*self.min_size) )
 
+    cdef computed_copy(self):
+        cdef FitBox box = self.copy()
+        box.org = Vec2(*self.org[:])
+        box.size = Vec2(*self.size[:])
+        return box
+
     cdef has_area(self):
         return 1 < self.size.x*self.size.y
-
 
 
 cdef class Vec2:

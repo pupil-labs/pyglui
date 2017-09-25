@@ -141,13 +141,13 @@ cdef inline line(Vec2 org, Vec2 end, RGBA color):
     gl.glVertex3f(end.x, end.y,0)
     gl.glEnd()
 
-cdef inline FitBox draw_handle(Vec2 tip_loc, Vec2 handle_size, RGBA color):
+cdef inline FitBox draw_handle_bot_center(Vec2 tip_loc, Vec2 handle_size, RGBA color):
     ''' Draw a handle and return FitBox that corresponds draggable area
     '''
     cdef float tip_length = 10.*ui_scale
     gl.glColor4f(color.r, color.g, color.b, color.a)
 
-    gl.glLineWidth(3.*ui_scale) #thinner lines sometimes dont show on certain hardware.
+    gl.glLineWidth(4.*ui_scale) #thinner lines sometimes dont show on certain hardware.
     gl.glBegin(gl.GL_LINES)
     gl.glVertex3f(tip_loc.x, tip_loc.y,0 )
     gl.glVertex3f(tip_loc.x, tip_loc.y + tip_length, 0)
@@ -161,6 +161,51 @@ cdef inline FitBox draw_handle(Vec2 tip_loc, Vec2 handle_size, RGBA color):
     gl.glEnd()
 
     return FitBox(Vec2(tip_loc.x - handle_size.x / 2., tip_loc.y + tip_length), handle_size)
+
+cdef inline FitBox draw_handle_top_left(Vec2 tip_loc, Vec2 handle_size, RGBA color):
+    ''' Draw a handle and return FitBox that corresponds draggable area
+    '''
+    cdef float tip_length = 10.*ui_scale
+    cdef float half_line_width = 2. * ui_scale
+    gl.glColor4f(color.r, color.g, color.b, color.a)
+
+    gl.glLineWidth(2. * half_line_width)
+    gl.glBegin(gl.GL_LINES)
+    gl.glVertex3f(tip_loc.x, tip_loc.y,0 )
+    gl.glVertex3f(tip_loc.x, tip_loc.y - tip_length, 0)
+    gl.glEnd()
+
+    gl.glBegin(gl.GL_POLYGON)
+    gl.glVertex3f(tip_loc.x + half_line_width - handle_size.x, tip_loc.y - tip_length, 0)
+    gl.glVertex3f(tip_loc.x + half_line_width, tip_loc.y - tip_length, 0)
+    gl.glVertex3f(tip_loc.x + half_line_width, tip_loc.y - tip_length - handle_size.y, 0)
+    gl.glVertex3f(tip_loc.x + half_line_width - handle_size.x, tip_loc.y - tip_length - handle_size.y, 0)
+    gl.glEnd()
+
+    return FitBox(Vec2(tip_loc.x + half_line_width - handle_size.x, tip_loc.y - tip_length - handle_size.y), handle_size)
+
+
+cdef inline FitBox draw_handle_top_right(Vec2 tip_loc, Vec2 handle_size, RGBA color):
+    ''' Draw a handle and return FitBox that corresponds draggable area
+    '''
+    cdef float tip_length = 10.*ui_scale
+    cdef float half_line_width = 2. * ui_scale
+    gl.glColor4f(color.r, color.g, color.b, color.a)
+
+    gl.glLineWidth(2. * half_line_width)
+    gl.glBegin(gl.GL_LINES)
+    gl.glVertex3f(tip_loc.x, tip_loc.y,0 )
+    gl.glVertex3f(tip_loc.x, tip_loc.y - tip_length, 0)
+    gl.glEnd()
+
+    gl.glBegin(gl.GL_POLYGON)
+    gl.glVertex3f(tip_loc.x - half_line_width, tip_loc.y - tip_length, 0)
+    gl.glVertex3f(tip_loc.x - half_line_width + handle_size.x, tip_loc.y - tip_length, 0)
+    gl.glVertex3f(tip_loc.x - half_line_width + handle_size.x, tip_loc.y - tip_length - handle_size.y, 0)
+    gl.glVertex3f(tip_loc.x - half_line_width, tip_loc.y - tip_length - handle_size.y, 0)
+    gl.glEnd()
+
+    return FitBox(Vec2(tip_loc.x - half_line_width, tip_loc.y - tip_length - handle_size.y), handle_size)
 
 ### OpenGL funtions for rendering to texture.
 ### Using this saves us considerable cpu/gpu time when the UI remains static.

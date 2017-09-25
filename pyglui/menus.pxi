@@ -12,7 +12,7 @@ cdef class Base_Menu(UI_element):
 
     cdef public list elements
     cdef FitBox element_space
-    cdef int header_pos_id
+    cdef readonly int header_pos_id
     cdef Draggable menu_bar,minimize_corner, resize_corner
     cdef public RGBA color
 
@@ -656,18 +656,36 @@ cdef class Scrolling_Menu(Movable_Menu):
 
 cdef class Container(Base_Menu):
 
+    cdef public UI_element horizontal_constraint, vertical_contraint
+
     def __cinit__(self, pos=(0., 0.), size=(0., 0.), padding=(0., 0.)):
         self.outline = FitBox(Vec2(*pos), Vec2(*size))
         self.element_space = FitBox(Vec2(*padding), Vec2(0., 0.) - Vec2(*padding))
         self.elements = []
+        self.horizontal_constraint = None
+        self.vertical_contraint = None
 
     def init(self, *args, **kwargs):
         pass
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
-        self.elements.sort(key=sort_key)
-        self.outline.compute(parent)
+        # compute constraints
+        cdef float menu_offset = menu_pad * ui_scale
+        cdef FitBox copy = parent.computed_copy()
+        self.outline.compute(copy)
+        if self.horizontal_constraint is not None:
+            if 0 <= copy.org.x < self.horizontal_constraint.outline.org.x < copy.org.x + copy.size.x:
+                copy.size.x = self.horizontal_constraint.outline.org.x - copy.org.x
+                if isinstance(self.horizontal_constraint, Base_Menu) and self.horizontal_constraint.header_pos_id == 2:  # left header
+                    copy.size.x += menu_sidebar_pad * ui_scale
+            elif 0 <= self.horizontal_constraint.outline.org.x + self.horizontal_constraint.outline.size.x <= copy.org.x:
+                copy.size.x = self.horizontal_constraint.outline.org.x + self.horizontal_constraint.outline.size.x - copy.org.x
+                copy.org.x = self.horizontal_constraint.outline.org.x + self.horizontal_constraint.outline.size.x
+
+        self.outline.compute(copy)
         self.element_space.compute(self.outline)
+
+        self.elements.sort(key=sort_key)
         if self.element_space.has_area():
             for e in self.elements:
                 e.draw(self.element_space,nested= False, parent_read_only = parent_read_only or self._read_only)

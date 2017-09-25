@@ -1333,8 +1333,8 @@ cdef class Hot_Key(UI_element):
 cdef class Seek_Bar(UI_element):
 
     cdef int total
-    cdef FitBox bar, seek_handle
-    cdef readonly bint hovering, dragging
+    cdef FitBox bar, seek_handle, trim_left_handle, trim_right_handle
+    cdef readonly bint hovering, seeking, trimming_left, trimming_right
     cdef Synced_Value trim_left, trim_right, current
     cdef object seeking_cb
 
@@ -1345,12 +1345,16 @@ cdef class Seek_Bar(UI_element):
         self.current = Synced_Value('current_index', ctx, trigger_overlay_only=True)
         self.seeking_cb = seeking_cb
         self.total = total
-        self.dragging = False
         self.hovering = False
+        self.seeking = False
+        self.trimming_left = False
+        self.trimming_right = False
 
         self.outline = FitBox(Vec2(0., -100.), Vec2(0., 100.))
-        self.bar = FitBox(Vec2(0., -35.), Vec2(0., 5.))
-        self.seek_handle = FitBox(Vec2(0., 0.), Vec2(0.1, 0.1))
+        self.bar = FitBox(Vec2(30., -50.), Vec2(-30., 5.))
+        self.seek_handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
+        self.trim_left_handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
+        self.trim_right_handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
 
     def __init__(self, *args, **kwargs):
         pass
@@ -1362,35 +1366,78 @@ cdef class Seek_Bar(UI_element):
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         self.outline.compute(parent)
-        self.outline.sketch()
+        rect(self.outline.org, self.outline.size, RGBA(0., 0., 0., 0.4))
         self.bar.compute(self.outline)
-        rect(self.bar.org, self.bar.size, RGBA(1., 1., 1., 0.4))
+        rect(self.bar.org, self.bar.size, RGBA(1., 1., 1., 0.2))
 
     cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         cdef int current_val = self.current.value
-        cdef float cur_x = clampmap(current_val, 0, self.total, 0, self.bar.size.x)
-        cdef FitBox handle = FitBox(Vec2(self.bar.org.x + cur_x, self.bar.org.y),
+        cdef int trim_left_val = self.trim_left.value
+        cdef int trim_right_val = self.trim_right.value
+        cdef float screen_x = clampmap(current_val, 0, self.total, 0, self.bar.size.x)
+        cdef FitBox handle = FitBox(Vec2(int(self.bar.org.x + screen_x), self.bar.org.y),
                                     Vec2(3. * self.bar.size.y, 3. * self.bar.size.y))
-        self.seek_handle = draw_handle(handle.org, handle.size, RGBA(1., 1., 1., 0.8))
+        self.seek_handle = draw_handle_bot_center(handle.org, handle.size, RGBA(1., 1., 1., 0.8))
 
-        cdef basestring current_str = str(current_val)
-        if self.hovering or self.dragging:
+        screen_x = clampmap(trim_left_val, 0, self.total, 0, self.bar.size.x)
+        handle.org.x = int(self.bar.org.x + screen_x)
+        handle.org.y += self.bar.size.y
+        self.trim_left_handle = draw_handle_top_left(handle.org, handle.size, RGBA(1., 1., 1., 0.8))
+
+        screen_x = clampmap(trim_right_val, 0, self.total, 0, self.bar.size.x)
+        handle.org.x = int(self.bar.org.x + screen_x)
+        self.trim_right_handle = draw_handle_top_right(handle.org, handle.size, RGBA(1., 1., 1., 0.8))
+
+        # draw region between trim marks
+        cdef float start = self.trim_left_handle.org.x + self.trim_left_handle.size.x
+        cdef float end = self.trim_right_handle.org.x
+        rect(Vec2(start, self.bar.org.y), Vec2(end - start, self.bar.size.y), RGBA(1., 1., 1., 0.5))
+
+        cdef basestring current_str = str(current_val + 1)
+        cdef basestring trim_left_str = str(trim_left_val + 1)
+        cdef basestring trim_right_str = str(trim_right_val + 1)
+        if self.hovering or self.seeking or self.trimming_left or self.trimming_right:
             glfont.push_state()
             glfont.set_font('opensans')
-            glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_CENTER)
             glfont.set_size(1.25 * self.seek_handle.size.y)
 
-            glfont.set_blur(1.5)
-            glfont.set_color_float((0., 0., 0., .3))
+            # draw text shadows
+            glfont.set_blur(1.)
+            glfont.set_color_float((0., 0., 0., .6))
+
+            glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_CENTER)
             glfont.draw_text(self.seek_handle.org.x+self.seek_handle.size.x/2,
                              self.seek_handle.org.y+self.seek_handle.size.y + 3. * ui_scale,
                              current_str)
 
+            glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_RIGHT)
+            glfont.draw_text(self.trim_left_handle.org.x + self.trim_left_handle.size.x,
+                             self.trim_left_handle.org.y - 3. * ui_scale,
+                             trim_left_str)
+
+            glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_LEFT)
+            glfont.draw_text(self.trim_right_handle.org.x,
+                             self.trim_right_handle.org.y - 3. * ui_scale,
+                             trim_right_str)
+
+            # draw actual text
             glfont.set_blur(.1)
             glfont.set_color_float((1., 1., 1., .8))
-            glfont.draw_text(self.seek_handle.org.x + self.seek_handle.size.x / 2,
-                             self.seek_handle.org.y + 1.15 * self.seek_handle.size.y,
+
+            glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_CENTER)
+            glfont.draw_text(self.seek_handle.org.x+self.seek_handle.size.x/2,
+                             self.seek_handle.org.y+self.seek_handle.size.y + 3. * ui_scale,
                              current_str)
+
+            glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_RIGHT)
+            glfont.draw_text(self.trim_left_handle.org.x + self.trim_left_handle.size.x,
+                             self.trim_left_handle.org.y - 3. * ui_scale,
+                             trim_left_str)
+
+            glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_LEFT)
+            glfont.draw_text(self.trim_right_handle.org.x,
+                             self.trim_right_handle.org.y - 3. * ui_scale,
+                             trim_right_str)
 
             glfont.pop_state()
 
@@ -1398,23 +1445,48 @@ cdef class Seek_Bar(UI_element):
         global should_redraw_overlay
         if not (self._read_only or parent_read_only):
 
-            if self.dragging and new_input.dm:
+            if self.seeking and new_input.dm:
                 val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
                                0, self.total)
                 self.current.value = int(val)
+                should_redraw_overlay = True
+            elif self.trimming_left and new_input.dm:
+                val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
+                               0, self.total)
+                self.trim_left.value = int(val)
+                should_redraw_overlay = True
+            elif self.trimming_right and new_input.dm:
+                val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
+                               0, self.total)
+                self.trim_right.value = int(val)
                 should_redraw_overlay = True
 
             for b in new_input.buttons[:]:#list copy for remove to work
                 if b[1] == 1 and visible:
                     if self.seek_handle.mouse_over(new_input.m):
-                        new_input.buttons.remove(b) # the slider should catch the event (unlike other elements)
-                        self.dragging = True
+                        new_input.buttons.remove(b)
+                        self.seeking = True
                         should_redraw_overlay = True
                         self.seeking_cb(True)
-                if self.dragging and b[1] == 0:
-                    self.dragging = False
+                    elif self.trim_left_handle.mouse_over(new_input.m):
+                        new_input.buttons.remove(b)
+                        self.trimming_left = True
+                        should_redraw_overlay = True
+                    elif self.trim_right_handle.mouse_over(new_input.m):
+                        new_input.buttons.remove(b)
+                        self.trimming_right = True
+                        should_redraw_overlay = True
+
+                if self.seeking and b[1] == 0:
+                    self.seeking = False
                     should_redraw_overlay = True
                     self.seeking_cb(False)
+                elif self.trimming_left and b[1] == 0:
+                    self.trimming_left = False
+                    should_redraw_overlay = True
+                elif self.trimming_right and b[1] == 0:
+                    self.trimming_right = False
+                    should_redraw_overlay = True
 
         cdef bint hover = self.outline.mouse_over(new_input.m)
         if hover != self.hovering:
