@@ -727,7 +727,7 @@ cdef class Vec2:
 
 
     def __iadd__(self,Vec2 other):
-        self.x +=other.x
+        self.x += other.x
         self.y += other.y
         return self
 
@@ -735,8 +735,8 @@ cdef class Vec2:
         return Vec2(self.x * factor, self.y * factor)
 
     def __imul__(self,float factor):
-        self.x *=factor
-        self.y *=factor
+        self.x *= factor
+        self.y *= factor
         return self
 
     def __matmul__(self, Vec2 other):
@@ -746,7 +746,7 @@ cdef class Vec2:
         return Vec2(self.x-other.x,self.y-other.y)
 
     def __isub__(self,Vec2 other):
-        self.x -=other.x
+        self.x -= other.x
         self.y -= other.y
         return self
 

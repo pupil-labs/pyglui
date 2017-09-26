@@ -1100,7 +1100,7 @@ cdef class Thumb(UI_element):
         glfont.push_state()
         glfont.set_font('roboto')
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_LEFT)
-        glfont.set_size( max(1, int( (min(self.button.size) )-thumb_font_padding )/2.) )
+        glfont.set_size( max(1, int( (min(self.button.size) )-thumb_font_padding*ui_scale)/2.) )
         glfont.set_color_float((0,0,0,1))
         glfont.set_blur(10.5)
         glfont.draw_text(self.button.center[0]+self.button.size.x/2.,self.button.center[1],self._status_text)
@@ -1366,8 +1366,9 @@ cdef class Seek_Bar(UI_element):
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         self.outline.compute(parent)
-        rect(self.outline.org, self.outline.size, RGBA(0., 0., 0., 0.4))
         self.bar.compute(self.outline)
+        # rect(parent.org, parent.size, RGBA(0., 1., 0., 0.4))
+        rect(self.outline.org, self.outline.size, RGBA(0., 0., 0., 0.4))
         rect(self.bar.org, self.bar.size, RGBA(1., 1., 1., 0.2))
 
     cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
@@ -1375,8 +1376,8 @@ cdef class Seek_Bar(UI_element):
         cdef int trim_left_val = self.trim_left.value
         cdef int trim_right_val = self.trim_right.value
         cdef float screen_x = clampmap(current_val, 0, self.total, 0, self.bar.size.x)
-        cdef FitBox handle = FitBox(Vec2(int(self.bar.org.x + screen_x), self.bar.org.y),
-                                    Vec2(3. * self.bar.size.y, 3. * self.bar.size.y))
+        cdef FitBox handle = FitBox(Vec2(int(self.bar.org.x + screen_x), self.bar.org.y) / ui_scale,
+                                    Vec2(3. * self.bar.size.y, 3. * self.bar.size.y) / ui_scale)
         self.seek_handle = draw_handle_bot_center(handle.org, handle.size, RGBA(1., 1., 1., 0.8))
 
         screen_x = clampmap(trim_left_val, 0, self.total, 0, self.bar.size.x)

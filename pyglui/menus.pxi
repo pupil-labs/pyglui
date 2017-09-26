@@ -670,10 +670,10 @@ cdef class Container(Base_Menu):
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
         # compute constraints
-        cdef float menu_offset = menu_pad * ui_scale
         cdef FitBox copy = parent.computed_copy()
         self.outline.compute(copy)
         if self.horizontal_constraint is not None:
+            self.horizontal_constraint.precompute(parent)
             if 0 <= copy.org.x < self.horizontal_constraint.outline.org.x < copy.org.x + copy.size.x:
                 copy.size.x = self.horizontal_constraint.outline.org.x - copy.org.x
                 if isinstance(self.horizontal_constraint, Base_Menu) and self.horizontal_constraint.header_pos_id == 2:  # left header
