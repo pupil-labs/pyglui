@@ -725,15 +725,22 @@ cdef class Vec2:
     def __add__(self,Vec2 other):
         return Vec2(self.x+other.x,self.y+other.y)
 
-    def __imul__(self,float factor):
-        self.x *=factor
-        self.y *=factor
-        return self
 
     def __iadd__(self,Vec2 other):
         self.x +=other.x
         self.y += other.y
         return self
+
+    def __mul__(self,float factor):
+        return Vec2(self.x * factor, self.y * factor)
+
+    def __imul__(self,float factor):
+        self.x *=factor
+        self.y *=factor
+        return self
+
+    def __matmul__(self, Vec2 other):
+        return self.x * other.x + self.y * other.y
 
     def __sub__(self,Vec2 other):
         return Vec2(self.x-other.x,self.y-other.y)
@@ -741,6 +748,14 @@ cdef class Vec2:
     def __isub__(self,Vec2 other):
         self.x -=other.x
         self.y -= other.y
+        return self
+
+    def __truediv__(self, float divident):
+        return Vec2(self.x / divident, self.y / divident)
+
+    def __itruediv__(self,float divident):
+        self.x /= divident
+        self.y /= divident
         return self
 
     def __len__(self):
