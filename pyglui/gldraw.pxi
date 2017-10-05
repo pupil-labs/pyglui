@@ -141,33 +141,36 @@ cdef inline line(Vec2 org, Vec2 end, RGBA color):
     gl.glVertex3f(end.x, end.y,0)
     gl.glEnd()
 
-cdef inline FitBox draw_handle_bot_center(Vec2 tip_loc, Vec2 handle_size, RGBA color):
+cdef inline FitBox draw_seek_handle(FitBox handle, RGBA color):
+    ''' Draw the seek handle and return FitBox that corresponds to the draggable area
+    '''
+    rect(handle.org, handle.size, color)
+    cdef FitBox drag = handle.computed_copy()
+    drag.org.x -= 3 * drag.size.x
+    drag.size.x *= 7
+    return drag
+
+cdef inline FitBox draw_trim_handle(FitBox handle, float opening, RGBA color):
     ''' Draw a handle and return FitBox that corresponds draggable area
     '''
-    cdef float tip_length = 10.*ui_scale
-    cdef float half_line_width = 2. * ui_scale
-
-    rect_corners(Vec2(tip_loc.x - half_line_width, tip_loc.y),
-                 Vec2(tip_loc.x + half_line_width, tip_loc.y + tip_length), color)
-
-    rect_corners(Vec2(tip_loc.x - handle_size.x / 2., tip_loc.y + tip_length),
-                 Vec2(tip_loc.x + handle_size.x / 2., tip_loc.y + tip_length + handle_size.y), color)
-
-    return FitBox(Vec2(tip_loc.x - handle_size.x / 2., tip_loc.y + tip_length) / ui_scale, handle_size / ui_scale)
-
-cdef inline FitBox draw_handle_top_left(Vec2 tip_loc, Vec2 handle_size, RGBA color):
-    ''' Draw a handle and return FitBox that corresponds draggable area
-    '''
-    cdef float tip_length = 10.*ui_scale
-    cdef float half_line_width = 2. * ui_scale
-
-    rect_corners(Vec2(tip_loc.x - half_line_width, tip_loc.y),
-                 Vec2(tip_loc.x + half_line_width, tip_loc.y - tip_length), color)
-
-    rect_corners(Vec2(tip_loc.x + half_line_width - handle_size.x, tip_loc.y - tip_length),
-                 Vec2(tip_loc.x + half_line_width, tip_loc.y - tip_length - handle_size.y), color)
-
-    return FitBox(Vec2(tip_loc.x + half_line_width - handle_size.x, tip_loc.y - tip_length - handle_size.y) / ui_scale, handle_size / ui_scale)
+    # cdef Vec2 line_size = Vec2(2* ui_scale, handle.size.y * 3 / 4)
+    # cdef Vec2 line_org = Vec2(0., handle.org.y + handle.size.y / 2 - line_size.y / 2)
+    cdef tuple location
+    if opening == 0.25:  # left handle
+        location = handle.org.x + handle.size.x, handle.org.y + handle.size.y / 2
+        # line_org.x = handle.org.x + handle.size.x - line_size.x
+    elif opening == 0.75:  # right handle
+        location = handle.org.x, handle.org.y + handle.size.y / 2
+        # line_org.x = h andle.org.x
+    else:
+        location = handle.center
+    utils.draw_progress(location, (opening + 0.25) % 1., (opening - 0.25) % 1.,
+                        inner_radius=0., outer_radius=handle.size.y + ui_scale, color=color,
+                        sharpness=0.9)
+    cdef FitBox drag = handle.computed_copy()
+    drag.org = Vec2(location[0] - drag.size.x, location[1] - drag.size.y)
+    drag.size *= 2
+    return drag
 
 cdef inline FitBox draw_handle_top_right(Vec2 tip_loc, Vec2 handle_size, RGBA color):
     ''' Draw a handle and return FitBox that corresponds draggable area
