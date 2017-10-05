@@ -155,8 +155,13 @@ cdef class Slider(UI_element):
         gl.glPushMatrix()
         gl.glTranslatef(self.field.org.x,self.field.org.y,0)
 
-        line(Vec2(0.,self.slider_pos.y),Vec2(self.field.size.x, self.slider_pos.y),self.line_default_color)
-        line(Vec2(0.,self.slider_pos.y),self.slider_pos,self.line_highlight_color)
+
+        rect_corners(Vec2(self.slider_pos.x, self.slider_pos.y - 1. * ui_scale),
+                     Vec2(self.field.size.x, self.slider_pos.y +  1. * ui_scale),
+                     self.line_default_color)
+        rect_corners(Vec2(0., self.slider_pos.y - 1. * ui_scale),
+                     Vec2(self.slider_pos.x, self.slider_pos.y +  1. * ui_scale),
+                     self.line_highlight_color)
 
         cdef float step_pixel_size,x
         if self.steps>1:
@@ -410,8 +415,8 @@ cdef class Selector(UI_element):
         glfont.pop_state()
         gl.glPopMatrix()
 
-        self.select_field.org.x += label_text_space
-        self.select_field.size.x  = max(0.0,self.select_field.size.x-label_text_space)
+        self.select_field.org.x += label_text_space + x_spacer * ui_scale
+        self.select_field.size.x  = max(0.0,self.select_field.size.x-label_text_space - x_spacer * ui_scale)
         rect_outline(self.select_field.org, self.select_field.size, 2.*ui_scale, self.triangle_color)
         #self.select_field.sketch()
         # line(self.select_field.org+Vec2(0,self.select_field.size.y),self.select_field.org+self.select_field.size,color=self.triangle_color)
@@ -545,8 +550,8 @@ cdef class Text_Input(UI_element):
         dx = glfont.draw_text(x_spacer,0,self._label)
         gl.glPopMatrix()
 
-        self.textfield.org.x += dx
-        self.textfield.size.x -=dx
+        self.textfield.org.x += dx + x_spacer * ui_scale
+        self.textfield.size.x -= dx + x_spacer * ui_scale
 
         self.draw_text_field()
         glfont.pop_state()
@@ -776,14 +781,14 @@ cdef class Text_Input(UI_element):
             gl.glTranslatef(self.textfield.org.x,self.textfield.org.y,0)
             rect_outline(Vec2(0, 0), self.textfield.size, 2.*ui_scale, self.text_input_line_highlight_color)
 
-            glfont.draw_limited_text(x_spacer,0,self.preview[self.start_char_idx:],self.textfield.size.x-x_spacer)
-
             x = glfont.text_bounds(0,0,self.preview[self.start_char_idx:self.caret])+x_spacer
             # draw highlighted text if any
             if self.highlight:
                rect_corners(Vec2(x,0),Vec2(min(self.textfield.size.x-x_spacer,
                     glfont.text_bounds(0,0,highlight_text)+x_spacer),self.textfield.size.y),
                     self.text_input_highlight_color)
+
+            glfont.draw_limited_text(x_spacer,0,self.preview[self.start_char_idx:],self.textfield.size.x-x_spacer)
 
             # draw the caret
             gl.glColor4f(1,1,1,.5)
@@ -888,12 +893,12 @@ cdef class Button(UI_element):
             label_width = glfont.text_bounds(0., 0., self._label) / ui_scale
             self.field = FitBox(Vec2(outline_padding, outline_padding),
                                 Vec2(-label_width-outline_padding-3.*x_spacer, -outline_padding))
-            self.button = FitBox(Vec2(-label_width-outline_padding-2.*x_spacer, outline_padding),
-                                 Vec2(label_width+2.*x_spacer, -outline_padding))
+            self.button = FitBox(Vec2(-label_width-button_text_padding-button_outline_padding-2.*x_spacer, button_outline_padding),
+                                 Vec2(label_width+2.*x_spacer+2*button_text_padding, -button_outline_padding))
             self.field.compute(self.outline)
         else:
-            self.button = FitBox(Vec2(outline_padding, outline_padding),
-                                 Vec2(-outline_padding, -outline_padding))
+            self.button = FitBox(Vec2(button_outline_padding, button_outline_padding),
+                                 Vec2(-button_outline_padding, -button_outline_padding))
         self.button.compute(self.outline)
 
         cdef FitBox shadow = self.button.computed_copy()
@@ -911,7 +916,8 @@ cdef class Button(UI_element):
         if self._outer_label:
             gl.glPushMatrix()
             glfont.push_state()
-            gl.glTranslatef(self.field.org.x,self.field.org.y,0)
+            gl.glTranslatef(self.field.org.x + button_text_padding * ui_scale,
+                            self.field.org.y + button_text_padding * ui_scale,0)
             glfont.set_color_float(color_text_default)
             glfont.draw_limited_text(0,0,self._outer_label,self.field.size.x)
             glfont.pop_state()
@@ -919,9 +925,10 @@ cdef class Button(UI_element):
 
         gl.glPushMatrix()
         glfont.push_state()
-        gl.glTranslatef(self.button.org.x,self.button.org.y,0)
+        gl.glTranslatef(self.button.org.x + button_text_padding * ui_scale,
+                        self.button.org.y + button_text_padding * ui_scale,0)
         glfont.set_color_float(self.text_color[:])
-        glfont.draw_limited_text(x_spacer*ui_scale,0,self._label,self.button.size.x)
+        glfont.draw_limited_text(x_spacer*ui_scale,0,self._label,self.button.size.x - 2. *  button_text_padding * ui_scale)
         glfont.pop_state()
         gl.glPopMatrix()
 

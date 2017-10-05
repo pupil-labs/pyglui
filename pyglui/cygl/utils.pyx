@@ -277,7 +277,7 @@ cdef draw_tooltip(tip_location, text_size, padding=(0., 0.),
         #shader link and compile
         tooltip_shader = shader.Shader(VERT_SHADER,FRAG_SHADER,GEOM_SHADER)
 
-    cdef float tip_width = text_size[1] + 2.*padding[1]
+    cdef int tip_width = int(text_size[1] + 2. * padding[1])
 
     tooltip_shader.bind()
     tooltip_shader.uniform1f('tip_width', tip_width)
