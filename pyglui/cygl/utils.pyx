@@ -52,6 +52,7 @@ tooltip_shader = None
 simple_yuv422_shader = None
 simple_concentric_circle_shader = None
 simple_circle_shader = None
+rounded_rect_shader = None
 
 cpdef init():
     global basic_shader
@@ -61,6 +62,7 @@ cpdef init():
     global simple_yuv422_shader
     global simple_concentric_circle_shader
     global simple_circle_shader
+    global rounded_rect_shader
     basic_shader = None
     simple_pt_shader = None
     progress_shader = None
@@ -68,6 +70,7 @@ cpdef init():
     simple_yuv422_shader = None
     simple_concentric_circle_shader = None
     simple_circle_shader = None
+    rounded_rect_shader = None
 
     if glewInit() != GLEW_OK:
         raise Exception("GLEW could not be initialized!")
@@ -458,6 +461,92 @@ cpdef draw_concentric_circles( center_position = (0,0), radius = 10 , circle_cou
     simple_concentric_circle_shader.unbind()
 
 
+cpdef draw_rounded_rect(origin, size, float corner_radius, RGBA color=RGBA(1.,0.5,0.5,.5), float sharpness=0.8):
+    global rounded_rect_shader
+    if not rounded_rect_shader:
+        VERT_SHADER = """
+        #version 120
+
+        varying vec4 f_color;
+        uniform vec2 origin; // position in screen coordinates
+        uniform vec2 size; // size in screen coordinates
+        uniform float corner_radius = 10;
+        uniform float sharpness = 0.9;
+
+        void main () {
+            f_color = gl_Color;
+            gl_Position =  gl_ModelViewProjectionMatrix * vec4(gl_Vertex.xy, 0.0, 1.0);
+            gl_TexCoord[0] = gl_MultiTexCoord0;
+        }
+        """
+
+        FRAG_SHADER = """
+        #version 120
+
+        varying vec4 f_color;
+        uniform vec2 origin; // position in screen coordinates
+        uniform vec2 size; // size in screen coordinates
+        uniform float corner_radius = 10;
+        uniform float sharpness = 0.9;
+        float blur = min(size.y * (1. - sharpness), corner_radius);
+
+        void main()
+        {
+            vec2 uv = gl_TexCoord[0].st - origin;
+
+            float dist;
+            gl_FragColor = f_color;
+            if (uv.x <= corner_radius && uv.y <= corner_radius) {
+                float dist = distance(uv, vec2(corner_radius));
+                gl_FragColor.w *= smoothstep(corner_radius, corner_radius - blur, dist);
+            }
+            else if (uv.x <= corner_radius && uv.y >= size.y - corner_radius) {
+                float dist = distance(uv, vec2(corner_radius, size.y - corner_radius));
+                gl_FragColor.w *= smoothstep(corner_radius, corner_radius - blur, dist);
+            }
+            else if (uv.x >= size.x - corner_radius && uv.y >= size.y - corner_radius) {
+                float dist = distance(uv, vec2(size.x - corner_radius, size.y - corner_radius));
+                gl_FragColor.w *= smoothstep(corner_radius, corner_radius - blur, dist);
+            }
+            else if (uv.x >= size.x - corner_radius && uv.y <= corner_radius) {
+                float dist = distance(uv, vec2(size.x - corner_radius, corner_radius));
+                gl_FragColor.w *= smoothstep(corner_radius, corner_radius - blur, dist);
+            }
+            else if (uv.x >= size.x - blur) {
+                gl_FragColor.w = smoothstep(size.x, size.x - blur, uv.x);
+            }
+            else if (uv.y >= size.y - blur) {
+                gl_FragColor.w = smoothstep(size.y, size.y - blur, uv.y);
+            }
+            else if (uv.x <= blur) {
+                gl_FragColor.w = smoothstep(0., blur, uv.x);
+            }
+            else if (uv.y <= blur) {
+                gl_FragColor.w = smoothstep(0., blur, uv.y);
+            }
+        }
+        """
+
+        GEOM_SHADER = """"""
+        rounded_rect_shader = shader.Shader(VERT_SHADER,FRAG_SHADER,GEOM_SHADER)
+
+    rounded_rect_shader.bind()
+    glColor4f(color.r,color.g,color.b,color.a)
+    rounded_rect_shader.uniform1f('corner_radius', corner_radius)
+    rounded_rect_shader.uniform1f('sharpness', sharpness)
+    rounded_rect_shader.uniformf('origin', origin)
+    rounded_rect_shader.uniformf('size', size )
+
+    top_right = origin[0] + size[0], origin[1]
+    bot_right = origin[0] + size[0], origin[1] + size[1]
+    bot_left = origin[0], origin[1] + size[1]
+
+    glBegin(GL_QUADS)
+    for x,y in (origin, top_right, bot_right, bot_left):
+        glTexCoord2f(x, y)
+        glVertex2f(x, y)
+    glEnd()
+    rounded_rect_shader.unbind()
 
 cpdef draw_points_norm(points,float size=20,RGBA color=RGBA(1.,0.5,0.5,.5),float sharpness=0.8):
 

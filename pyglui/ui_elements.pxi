@@ -868,11 +868,17 @@ cdef class Button(UI_element):
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         cdef tuple text_color
+        cdef RGBA bg_color
         # read only rendering rules
         if self._read_only or parent_read_only:
-            self.text_color = RGBA(*color_text_read_only)
+            self.text_color = RGBA(*button_read_only_text_color)
+            bg_color = RGBA(*button_read_only_color)
+        elif self.selected:
+            self.text_color = RGBA(*button_active_text_color)
+            bg_color = RGBA(*button_active_color)
         else:
-            self.text_color = RGBA(*color_text_default)
+            self.text_color = RGBA(*button_default_text_color)
+            bg_color = RGBA(*button_default_color)
 
         #update appearance:
         self.outline.compute(parent)
@@ -890,17 +896,23 @@ cdef class Button(UI_element):
                                  Vec2(-outline_padding, -outline_padding))
         self.button.compute(self.outline)
 
-        # self.outline.sketch()
-        if self.selected:
-            pass
-        else:
-            self.button.sketch()
+        cdef FitBox shadow = self.button.computed_copy()
+        if not self.selected:
+            shadow.org -= Vec2(2. * ui_scale, 2. * ui_scale)
+            shadow.size += Vec2(4. * ui_scale, 4. * ui_scale)
+            utils.draw_rounded_rect(shadow.org, shadow.size,
+                                    button_corner_radius * ui_scale,
+                                    color=RGBA(*color_shadow), sharpness=shadow_sharpness)
+
+        utils.draw_rounded_rect(self.button.org, self.button.size,
+                                button_corner_radius * ui_scale,
+                                color=bg_color, sharpness=0.9)
 
         if self._outer_label:
             gl.glPushMatrix()
             glfont.push_state()
             gl.glTranslatef(self.field.org.x,self.field.org.y,0)
-            glfont.set_color_float(self.text_color[:])
+            glfont.set_color_float(color_text_default)
             glfont.draw_limited_text(0,0,self._outer_label,self.field.size.x)
             glfont.pop_state()
             gl.glPopMatrix()
