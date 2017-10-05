@@ -1162,6 +1162,7 @@ cdef class Icon(Thumb):
         self._indicator_stop = 0.
         self._tooltip = ''
         self.being_hovered = False
+        self.outline = FitBox(Vec2(0,0),Vec2(icon_outline_size, icon_outline_size))
 
     @property
     def tooltip(self):
@@ -1236,7 +1237,7 @@ cdef class Icon(Thumb):
         glfont.push_state()
         glfont.set_font(self.label_font)
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_CENTER)
-        glfont.set_size(max(1,int(ref_size+self.offset_size*ui_scale)-thumb_font_padding*ui_scale))
+        glfont.set_size(max(1,int(ref_size+self.offset_size*ui_scale)-icon_font_padding*ui_scale))
         glfont.set_color_float((*icon_color[:3], 0.3))
         glfont.set_blur(3)
         cdef int text_x = self.button.center[0]+int(self.offset_x*ui_scale)
@@ -1260,7 +1261,7 @@ cdef class Icon(Thumb):
         if self._tooltip == '' or not self.being_hovered:
             return # only draw tooltip when set
 
-        cdef float text_height = max(1,int(0.25*ref_size))
+        cdef float text_height = tooltip_text_size * ui_scale
         cdef float pad_x = 0.25*text_height
         cdef float pad_y = .5*pad_x
         cdef float tip_width = text_height + pad_x  # == 2* pad_y

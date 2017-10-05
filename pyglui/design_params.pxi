@@ -81,6 +81,11 @@ DEF thumb_button_sharpness = 0.8
 DEF thumb_button_shadow_sharpness = 0.5
 DEF thumb_font_padding = 30.
 
+DEF icon_outline_size = 50.
+DEF icon_font_padding = 20.
+
+DEF tooltip_text_size = 18.
+
 # Menu - design parameters
 DEF menu_pad = 10.
 DEF menu_move_corner_height = text_size
