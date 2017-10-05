@@ -324,7 +324,7 @@ cdef class Switch(UI_element):
 #
 #   +--------------------------------+
 #   |       +----------------------+ |
-#   | Label | Selection            | |
+#   | Label | Selection          v | |
 #   |       +----------------------+ |
 #   +--------------------------------+
 
@@ -396,7 +396,10 @@ cdef class Selector(UI_element):
             self.triangle_color = RGBA(*selector_triangle_color_read_only)
         else:
             self.text_color = RGBA(*color_text_default)
-            self.triangle_color = RGBA(*selector_triangle_color_default)
+            if self.selected:
+                self.triangle_color = RGBA(*color_on)
+            else:
+                self.triangle_color = RGBA(*selector_triangle_color_default)
 
         gl.glPushMatrix()
         gl.glTranslatef(self.field.org.x,self.field.org.y,0)
@@ -409,8 +412,10 @@ cdef class Selector(UI_element):
 
         self.select_field.org.x += label_text_space
         self.select_field.size.x  = max(0.0,self.select_field.size.x-label_text_space)
+        rect_outline(self.select_field.org, self.select_field.size, 2.*ui_scale, self.triangle_color)
         #self.select_field.sketch()
-        line(self.select_field.org+Vec2(0,self.select_field.size.y),self.select_field.org+self.select_field.size,color=self.triangle_color)
+        # line(self.select_field.org+Vec2(0,self.select_field.size.y),self.select_field.org+self.select_field.size,color=self.triangle_color)
+
 
         gl.glPushMatrix()
         gl.glTranslatef(self.select_field.org.x,self.select_field.org.y,0)
@@ -449,7 +454,6 @@ cdef class Selector(UI_element):
         cdef h = line_height * len(self.selection_labels)
         h+= self.field.design_org.y - self.field.design_size.y #double neg
         h+= self.select_field.design_org.y - self.select_field.design_size.y
-        h+= line_height*.5
          #double neg
         self.outline.design_size.y = h
 
@@ -770,7 +774,7 @@ cdef class Text_Input(UI_element):
             gl.glPushMatrix()
             #then transform locally and render the UI element
             gl.glTranslatef(self.textfield.org.x,self.textfield.org.y,0)
-            line(Vec2(0,self.textfield.size.y), self.textfield.size,self.text_input_line_highlight_color)
+            rect_outline(Vec2(0, 0), self.textfield.size, 2.*ui_scale, self.text_input_line_highlight_color)
 
             glfont.draw_limited_text(x_spacer,0,self.preview[self.start_char_idx:],self.textfield.size.x-x_spacer)
 
@@ -795,6 +799,7 @@ cdef class Text_Input(UI_element):
             #then transform locally and render the UI element
             #self.textfield.sketch()
             gl.glTranslatef(self.textfield.org.x,self.textfield.org.y,0)
+            rect_outline(Vec2(0, 0), self.textfield.size, 2.*ui_scale, RGBA(*color_line_default))
             glfont.draw_limited_text(x_spacer,0,self.to_unicode(self.sync_val.value),self.textfield.size.x-x_spacer)
             gl.glPopMatrix()
 
