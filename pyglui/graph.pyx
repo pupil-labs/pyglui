@@ -119,7 +119,7 @@ cdef class Bar_Graph:
         gl.glTranslatef(self.x*self.scale,self.y*self.scale,0)
         #scale such that a bar at max val is 100px high
         gl.glPushMatrix()
-        gl.glScalef(1,-100.*self.scale/self.max_val,1)
+        gl.glScalef(1,-30.*self.scale/self.max_val,1)
         gl.glTranslatef(0,self.min_val*self.scale,0)
 
         ##draw background
