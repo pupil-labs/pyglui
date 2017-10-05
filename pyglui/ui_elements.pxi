@@ -1389,7 +1389,7 @@ cdef class Seek_Bar(UI_element):
         self.outline.compute(parent)
         self.bar.compute(self.outline)
         # rect(parent.org, parent.size, RGBA(0., 1., 0., 0.4))
-        rect(self.outline.org, self.outline.size, RGBA(0., 0., 0., 0.4))
+        # rect(self.outline.org, self.outline.size, RGBA(0., 0., 0., 0.4))
         rect(self.bar.org, self.bar.size, RGBA(1., 1., 1., 0.2))
 
     cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):

@@ -16,9 +16,9 @@ DEF circle_button_size = 20
 DEF circle_button_size_selected = 25
 DEF circle_button_shadow = 10
 
-DEF color_selected = (.5,.9,.9,.9)
-DEF color_on = (.5,.5,.9,.9)
-DEF color_on_read_only = (.5,.5,.9,.75)
+DEF color_selected = (0.5, 0.8, 0.75,.9)
+DEF color_on = (0.5, 0.8, 0.75,.9)
+DEF color_on_read_only = (0.5, 0.8, 0.75,.75)
 DEF color_default = (.5,.5,.5,.9)
 DEF color_default_read_only = (.5,.5,.5,.75)
 DEF color_shadow = (.0,.0,.0,.8)
@@ -41,9 +41,9 @@ DEF slider_button_shadow = circle_button_shadow
 DEF slider_step_mark_size = 8.
 DEF slider_color_step = (.8,.8,.8,.6)
 DEF slider_line_color_default = color_line_default
-DEF slider_line_color_highlight = (.5,.5,.9,.9)
-DEF slider_line_color_default_read_only = (1.,1.,1.,.5)
-DEF slider_line_color_highlight_read_only = (.5,.5,.9,.6)
+DEF slider_line_color_highlight = color_on
+DEF slider_line_color_default_read_only = color_line_default
+DEF slider_line_color_highlight_read_only = color_on_read_only
 
 # Switch - design parameters
 DEF switch_outline_size_y = 40
@@ -66,7 +66,16 @@ DEF text_input_highlight_color = (.5,.5,.9,.5)
 DEF text_input_line_highlight_color = slider_line_color_highlight
 
 # Button - design parameters
-DEF button_outline_size_y = 40.
+DEF button_corner_radius = 5.
+DEF button_outline_size_y = 44.
+DEF button_outline_padding = outline_padding
+DEF button_text_padding = 2.
+DEF button_default_color = color_default
+DEF button_read_only_color = color_on_read_only
+DEF button_active_color = color_selected
+DEF button_default_text_color = color_text_default
+DEF button_read_only_text_color = color_text_read_only
+DEF button_active_text_color = color_shadow
 
 # Thumb - design parameters
 DEF thumb_outline_size = 80.
@@ -100,5 +109,5 @@ DEF menu_sidebar_pad = menu_topbar_pad
 DEF menu_sidebar_min_height = 20.
 DEF menu_line = (1.,1.,1.,.8)
 
-
-
+DEF seekbar_trim_color = color_on
+DEF seekbar_seek_color = color_on
