@@ -23,6 +23,16 @@ cdef inline rect(Vec2 org, Vec2 size, RGBA color):
     gl.glVertex3f(org.x+size.x,org.y,0.0)
     gl.glEnd()
 
+cdef inline rect_outline(Vec2 org, Vec2 size, float line_width, RGBA color):
+    gl.glColor4f(color.r, color.g, color.b, color.a)
+    gl.glLineWidth(line_width)
+    gl.glBegin(gl.GL_LINE_LOOP)
+    gl.glVertex3f(org.x - line_width, org.y - line_width,0.0)
+    gl.glVertex3f(org.x - line_width,org.y+size.y + line_width,0.0)
+    gl.glVertex3f(org.x+size.x + line_width,org.y+size.y + line_width,0.0)
+    gl.glVertex3f(org.x+size.x + line_width,org.y - line_width,0.0)
+    gl.glEnd()
+
 cdef inline rect_corners(Vec2 org, Vec2 end, RGBA color):
     gl.glColor4f(color.r, color.g, color.b, color.a)
     gl.glBegin(gl.GL_POLYGON)
@@ -146,8 +156,9 @@ cdef inline FitBox draw_seek_handle(FitBox handle, RGBA color):
     '''
     rect(handle.org, handle.size, color)
     cdef FitBox drag = handle.computed_copy()
-    drag.org.x -= 3 * drag.size.x
-    drag.size.x *= 7
+    drag.org.x -= 10 * drag.size.x
+    drag.size.x *= 21
+    drag.size.y += 20 * ui_scale
     return drag
 
 cdef inline FitBox draw_trim_handle(FitBox handle, float opening, RGBA color):

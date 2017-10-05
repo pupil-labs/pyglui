@@ -1375,6 +1375,7 @@ cdef class Seek_Bar(UI_element):
         rect(self.bar.org, self.bar.size, RGBA(1., 1., 1., 0.2))
 
     cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        cdef FitBox handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
         cdef int current_val = self.current.value
         cdef int trim_left_val = self.trim_left.value
         cdef int trim_right_val = self.trim_right.value
@@ -1383,40 +1384,40 @@ cdef class Seek_Bar(UI_element):
         cdef float top_ext = 20 * ui_scale
         cdef float selection_height = 5 * self.bar.size.y
 
-        cdef FitBox handle = FitBox(Vec2(int(self.bar.org.x + seek_x - self.bar.size.y / 2), self.bar.org.y - bot_ext) / ui_scale,
-                                    Vec2(self.bar.size.y, bot_ext + self.bar.size.y + top_ext) / ui_scale)
-        self.seek_handle = draw_seek_handle(handle, RGBA(1., 1., 1., 0.8))
-
         cdef float trim_l_x = clampmap(trim_left_val, 0, self.total, 0, self.bar.size.x)
         handle.org.x = int(self.bar.org.x + trim_l_x - selection_height)
         handle.org.y = self.bar.org.y + self.bar.size.y / 2 - selection_height / 2
         handle.size.x = selection_height
         handle.size.y = selection_height
-        self.trim_left_handle = draw_trim_handle(handle, 0.25, RGBA(1., 1., 1., 0.5))
+        self.trim_left_handle = draw_trim_handle(handle, 0.25, RGBA(*seekbar_trim_color))
 
         cdef float trim_r_x = clampmap(trim_right_val, 0, self.total, 0, self.bar.size.x)
         handle.org.x = int(self.bar.org.x + trim_r_x)
         handle.org.y = self.bar.org.y + self.bar.size.y / 2 - selection_height / 2
-        self.trim_right_handle = draw_trim_handle(handle, 0.75, RGBA(1., 1., 1., 0.5))
+        self.trim_right_handle = draw_trim_handle(handle, 0.75, RGBA(*seekbar_trim_color))
 
         # draw region between trim marks
         handle.size.x = handle.org.x - int(self.bar.org.x + trim_l_x)
         handle.org.x = int(self.bar.org.x + trim_l_x)
         handle.size.y = self.bar.size.y
-        rect(handle.org, handle.size, RGBA(1., 1., 1., 0.5))
+        rect(handle.org, handle.size, RGBA(*seekbar_trim_color))
 
         handle.org.y += selection_height - handle.size.y
-        rect(handle.org, handle.size, RGBA(1., 1., 1., 0.5))
+        rect(handle.org, handle.size, RGBA(*seekbar_trim_color))
+
+        handle.org = Vec2(int(self.bar.org.x + seek_x - self.bar.size.y / 4), self.bar.org.y - top_ext)
+        handle.size = Vec2(self.bar.size.y / 2, bot_ext + self.bar.size.y + top_ext)
+        self.seek_handle = draw_seek_handle(handle, RGBA(*seekbar_seek_color))
 
         # debug draggable areas
-        # rect(self.seek_handle.org, self.seek_handle.size, RGBA(1., 0., 0., 0.1))
-        # rect(self.trim_left_handle.org, self.trim_left_handle.size, RGBA(1., 0., 0., 0.1))
-        # rect(self.trim_right_handle.org, self.trim_right_handle.size, RGBA(1., 0., 0., 0.1))
+        # rect(self.seek_handle.org, self.seek_handle.size, RGBA(1., 0., 0., 0.2))
+        # rect(self.trim_left_handle.org, self.trim_left_handle.size, RGBA(1., 0., 0., 0.2))
+        # rect(self.trim_right_handle.org, self.trim_right_handle.size, RGBA(1., 0., 0., 0.2))
 
         cdef basestring current_str = str(current_val + 1)
         cdef basestring trim_left_str = str(trim_left_val + 1)
         cdef basestring trim_right_str = str(trim_right_val + 1)
-        cdef float trim_num_offset = 1. * ui_scale
+        cdef float trim_num_offset = 5. * ui_scale
         if self.hovering or self.seeking or self.trimming_left or self.trimming_right:
             glfont.push_state()
             glfont.set_font('opensans')
@@ -1426,38 +1427,38 @@ cdef class Seek_Bar(UI_element):
             glfont.set_blur(1.)
             glfont.set_color_float((0., 0., 0., .6))
 
-            glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_CENTER)
+            glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_CENTER)
             glfont.draw_text(self.seek_handle.org.x+self.seek_handle.size.x/2,
                              self.seek_handle.org.y+self.seek_handle.size.y + 3. * ui_scale,
                              current_str)
 
             glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_RIGHT)
-            glfont.draw_text(self.trim_left_handle.org.x + self.trim_left_handle.size.x / 2 - trim_num_offset,
-                             self.trim_left_handle.org.y - trim_num_offset,
+            glfont.draw_text(self.trim_left_handle.center[0] - trim_num_offset,
+                             self.trim_left_handle.center[1] - 2 * trim_num_offset,
                              trim_left_str)
 
             glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_LEFT)
-            glfont.draw_text(self.trim_right_handle.org.x + self.trim_right_handle.size.x / 2 + trim_num_offset,
-                             self.trim_right_handle.org.y - trim_num_offset,
+            glfont.draw_text(self.trim_right_handle.center[0] + trim_num_offset,
+                             self.trim_right_handle.center[1] - 2 * trim_num_offset,
                              trim_right_str)
 
             # draw actual text
             glfont.set_blur(.1)
             glfont.set_color_float((1., 1., 1., .8))
 
-            glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_CENTER)
+            glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_CENTER)
             glfont.draw_text(self.seek_handle.org.x+self.seek_handle.size.x/2,
                              self.seek_handle.org.y+self.seek_handle.size.y + 3. * ui_scale,
                              current_str)
 
             glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_RIGHT)
-            glfont.draw_text(self.trim_left_handle.org.x + self.trim_left_handle.size.x / 2 - trim_num_offset,
-                             self.trim_left_handle.org.y - trim_num_offset,
+            glfont.draw_text(self.trim_left_handle.center[0] - trim_num_offset,
+                             self.trim_left_handle.center[1] - 2 * trim_num_offset,
                              trim_left_str)
 
             glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_LEFT)
-            glfont.draw_text(self.trim_right_handle.org.x + self.trim_right_handle.size.x / 2 + trim_num_offset,
-                             self.trim_right_handle.org.y - trim_num_offset,
+            glfont.draw_text(self.trim_right_handle.center[0] + trim_num_offset,
+                             self.trim_right_handle.center[1] - 2 * trim_num_offset,
                              trim_right_str)
 
             glfont.pop_state()
@@ -1469,15 +1470,15 @@ cdef class Seek_Bar(UI_element):
                            0, self.total)
             self.current.value = int(val)
             should_redraw_overlay = True
-        elif self.trimming_left and new_input.dm:
-            val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
-                           0, self.total)
-            self.trim_left.value = int(val)
-            should_redraw_overlay = True
         elif self.trimming_right and new_input.dm:
             val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
                            0, self.total)
             self.trim_right.value = int(val)
+            should_redraw_overlay = True
+        elif self.trimming_left and new_input.dm:
+            val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
+                           0, self.total)
+            self.trim_left.value = int(val)
             should_redraw_overlay = True
 
         for b in new_input.buttons[:]:#list copy for remove to work
