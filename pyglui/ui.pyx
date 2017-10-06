@@ -158,7 +158,6 @@ cdef class UI:
 
         if should_redraw:
 
-            should_redraw = False
             #print "UI is redrawing the screen"
             push_view(self.window.size)
             render_to_ui_texture(self.ui_layer)
@@ -178,7 +177,6 @@ cdef class UI:
         draw_ui_texture(self.ui_layer)
 
         if should_redraw or should_redraw_overlay:
-            should_redraw_overlay = False
             push_view(self.window.size)
             render_to_ui_texture(self.overlay_layer)
             glfont.clear_state()
@@ -195,6 +193,9 @@ cdef class UI:
             pop_view()
 
         draw_ui_texture(self.overlay_layer)
+
+        should_redraw = False
+        should_redraw_overlay = False
 
     def update(self):
         unused_Input = self.handle_input()
@@ -296,14 +297,14 @@ cdef class Synced_Value:
     attributes will be accecd through the attribute context unless you supply a getter.
     '''
     cdef object attribute_context
-    cdef bint use_dict
+    cdef bint use_dict, trigger_overlay_only
     cdef str attribute_name
     cdef object _value
     cdef object getter
     cdef object setter
     cdef object on_change
 
-    def __cinit__(self,str attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None):
+    def __cinit__(self,str attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None, trigger_overlay_only=False):
         assert attribute_context is not None or getter is not None
         self.attribute_context = attribute_context
 
@@ -316,8 +317,9 @@ cdef class Synced_Value:
         self.getter = getter
         self.setter = setter
         self.on_change = on_change
+        self.trigger_overlay_only = trigger_overlay_only
 
-    def __init__(self,str attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None):
+    def __init__(self,str attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None, trigger_overlay_only=False):
         if self.attribute_context is not None:
             if self.use_dict:
                 try:
@@ -335,24 +337,34 @@ cdef class Synced_Value:
 
     cdef sync(self):
         global should_redraw
+        global should_redraw_overlay
         if self.getter is not None:
             val = self.getter()
             if val != self._value:
                 self._value = val
-                should_redraw = True
+                if self.trigger_overlay_only:
+                    should_redraw_overlay = True
+                else:
+                    should_redraw = True
                 if self.on_change is not None:
                     self.on_change(self.value)
 
         elif self.use_dict:
             if self._value != self.attribute_context[self.attribute_name]:
                 self._value = self.attribute_context[self.attribute_name]
-                should_redraw = True
+                if self.trigger_overlay_only:
+                    should_redraw_overlay = True
+                else:
+                    should_redraw = True
                 if self.on_change is not None:
                     self.on_change(self._value)
 
         elif self._value != getattr(self.attribute_context,self.attribute_name):
             self._value = getattr(self.attribute_context,self.attribute_name)
-            should_redraw = True
+            if self.trigger_overlay_only:
+                should_redraw_overlay = True
+            else:
+                should_redraw = True
             if self.on_change is not None:
                 self.on_change(self._value)
 
@@ -687,9 +699,14 @@ cdef class FitBox:
     cdef copy(self):
         return FitBox( Vec2(*self.design_org), Vec2(*self.design_size), Vec2(*self.min_size) )
 
+    cdef computed_copy(self):
+        cdef FitBox box = self.copy()
+        box.org = Vec2(*self.org[:])
+        box.size = Vec2(*self.size[:])
+        return box
+
     cdef has_area(self):
         return 1 < self.size.x*self.size.y
-
 
 
 cdef class Vec2:
@@ -708,22 +725,37 @@ cdef class Vec2:
     def __add__(self,Vec2 other):
         return Vec2(self.x+other.x,self.y+other.y)
 
-    def __imul__(self,float factor):
-        self.x *=factor
-        self.y *=factor
-        return self
 
     def __iadd__(self,Vec2 other):
-        self.x +=other.x
+        self.x += other.x
         self.y += other.y
         return self
+
+    def __mul__(self,float factor):
+        return Vec2(self.x * factor, self.y * factor)
+
+    def __imul__(self,float factor):
+        self.x *= factor
+        self.y *= factor
+        return self
+
+    def __matmul__(self, Vec2 other):
+        return self.x * other.x + self.y * other.y
 
     def __sub__(self,Vec2 other):
         return Vec2(self.x-other.x,self.y-other.y)
 
     def __isub__(self,Vec2 other):
-        self.x -=other.x
+        self.x -= other.x
         self.y -= other.y
+        return self
+
+    def __truediv__(self, float divident):
+        return Vec2(self.x / divident, self.y / divident)
+
+    def __itruediv__(self,float divident):
+        self.x /= divident
+        self.y /= divident
         return self
 
     def __len__(self):

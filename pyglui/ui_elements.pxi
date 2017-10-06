@@ -155,8 +155,13 @@ cdef class Slider(UI_element):
         gl.glPushMatrix()
         gl.glTranslatef(self.field.org.x,self.field.org.y,0)
 
-        line(Vec2(0.,self.slider_pos.y),Vec2(self.field.size.x, self.slider_pos.y),self.line_default_color)
-        line(Vec2(0.,self.slider_pos.y),self.slider_pos,self.line_highlight_color)
+
+        rect_corners(Vec2(self.slider_pos.x, self.slider_pos.y - 1. * ui_scale),
+                     Vec2(self.field.size.x, self.slider_pos.y +  1. * ui_scale),
+                     self.line_default_color)
+        rect_corners(Vec2(0., self.slider_pos.y - 1. * ui_scale),
+                     Vec2(self.slider_pos.x, self.slider_pos.y +  1. * ui_scale),
+                     self.line_highlight_color)
 
         cdef float step_pixel_size,x
         if self.steps>1:
@@ -324,7 +329,7 @@ cdef class Switch(UI_element):
 #
 #   +--------------------------------+
 #   |       +----------------------+ |
-#   | Label | Selection            | |
+#   | Label | Selection          v | |
 #   |       +----------------------+ |
 #   +--------------------------------+
 
@@ -396,7 +401,10 @@ cdef class Selector(UI_element):
             self.triangle_color = RGBA(*selector_triangle_color_read_only)
         else:
             self.text_color = RGBA(*color_text_default)
-            self.triangle_color = RGBA(*selector_triangle_color_default)
+            if self.selected:
+                self.triangle_color = RGBA(*color_on)
+            else:
+                self.triangle_color = RGBA(*selector_triangle_color_default)
 
         gl.glPushMatrix()
         gl.glTranslatef(self.field.org.x,self.field.org.y,0)
@@ -407,10 +415,12 @@ cdef class Selector(UI_element):
         glfont.pop_state()
         gl.glPopMatrix()
 
-        self.select_field.org.x += label_text_space
-        self.select_field.size.x  = max(0.0,self.select_field.size.x-label_text_space)
+        self.select_field.org.x += label_text_space + x_spacer * ui_scale
+        self.select_field.size.x  = max(0.0,self.select_field.size.x-label_text_space - x_spacer * ui_scale)
+        rect_outline(self.select_field.org, self.select_field.size, 2.*ui_scale, self.triangle_color)
         #self.select_field.sketch()
-        line(self.select_field.org+Vec2(0,self.select_field.size.y),self.select_field.org+self.select_field.size,color=self.triangle_color)
+        # line(self.select_field.org+Vec2(0,self.select_field.size.y),self.select_field.org+self.select_field.size,color=self.triangle_color)
+
 
         gl.glPushMatrix()
         gl.glTranslatef(self.select_field.org.x,self.select_field.org.y,0)
@@ -449,7 +459,6 @@ cdef class Selector(UI_element):
         cdef h = line_height * len(self.selection_labels)
         h+= self.field.design_org.y - self.field.design_size.y #double neg
         h+= self.select_field.design_org.y - self.select_field.design_size.y
-        h+= line_height*.5
          #double neg
         self.outline.design_size.y = h
 
@@ -541,8 +550,8 @@ cdef class Text_Input(UI_element):
         dx = glfont.draw_text(x_spacer,0,self._label)
         gl.glPopMatrix()
 
-        self.textfield.org.x += dx
-        self.textfield.size.x -=dx
+        self.textfield.org.x += dx + x_spacer * ui_scale
+        self.textfield.size.x -= dx + x_spacer * ui_scale
 
         self.draw_text_field()
         glfont.pop_state()
@@ -770,9 +779,7 @@ cdef class Text_Input(UI_element):
             gl.glPushMatrix()
             #then transform locally and render the UI element
             gl.glTranslatef(self.textfield.org.x,self.textfield.org.y,0)
-            line(Vec2(0,self.textfield.size.y), self.textfield.size,self.text_input_line_highlight_color)
-
-            glfont.draw_limited_text(x_spacer,0,self.preview[self.start_char_idx:],self.textfield.size.x-x_spacer)
+            rect_outline(Vec2(0, 0), self.textfield.size, 2.*ui_scale, self.text_input_line_highlight_color)
 
             x = glfont.text_bounds(0,0,self.preview[self.start_char_idx:self.caret])+x_spacer
             # draw highlighted text if any
@@ -780,6 +787,8 @@ cdef class Text_Input(UI_element):
                rect_corners(Vec2(x,0),Vec2(min(self.textfield.size.x-x_spacer,
                     glfont.text_bounds(0,0,highlight_text)+x_spacer),self.textfield.size.y),
                     self.text_input_highlight_color)
+
+            glfont.draw_limited_text(x_spacer,0,self.preview[self.start_char_idx:],self.textfield.size.x-x_spacer)
 
             # draw the caret
             gl.glColor4f(1,1,1,.5)
@@ -795,6 +804,7 @@ cdef class Text_Input(UI_element):
             #then transform locally and render the UI element
             #self.textfield.sketch()
             gl.glTranslatef(self.textfield.org.x,self.textfield.org.y,0)
+            rect_outline(Vec2(0, 0), self.textfield.size, 2.*ui_scale, RGBA(*color_line_default))
             glfont.draw_limited_text(x_spacer,0,self.to_unicode(self.sync_val.value),self.textfield.size.x-x_spacer)
             gl.glPopMatrix()
 
@@ -863,11 +873,17 @@ cdef class Button(UI_element):
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         cdef tuple text_color
+        cdef RGBA bg_color
         # read only rendering rules
         if self._read_only or parent_read_only:
-            self.text_color = RGBA(*color_text_read_only)
+            self.text_color = RGBA(*button_read_only_text_color)
+            bg_color = RGBA(*button_read_only_color)
+        elif self.selected:
+            self.text_color = RGBA(*button_active_text_color)
+            bg_color = RGBA(*button_active_color)
         else:
-            self.text_color = RGBA(*color_text_default)
+            self.text_color = RGBA(*button_default_text_color)
+            bg_color = RGBA(*button_default_color)
 
         #update appearance:
         self.outline.compute(parent)
@@ -877,34 +893,42 @@ cdef class Button(UI_element):
             label_width = glfont.text_bounds(0., 0., self._label) / ui_scale
             self.field = FitBox(Vec2(outline_padding, outline_padding),
                                 Vec2(-label_width-outline_padding-3.*x_spacer, -outline_padding))
-            self.button = FitBox(Vec2(-label_width-outline_padding-2.*x_spacer, outline_padding),
-                                 Vec2(label_width+2.*x_spacer, -outline_padding))
+            self.button = FitBox(Vec2(-label_width-button_text_padding-button_outline_padding-2.*x_spacer, button_outline_padding),
+                                 Vec2(label_width+2.*x_spacer+2*button_text_padding, -button_outline_padding))
             self.field.compute(self.outline)
         else:
-            self.button = FitBox(Vec2(outline_padding, outline_padding),
-                                 Vec2(-outline_padding, -outline_padding))
+            self.button = FitBox(Vec2(button_outline_padding, button_outline_padding),
+                                 Vec2(-button_outline_padding, -button_outline_padding))
         self.button.compute(self.outline)
 
-        # self.outline.sketch()
-        if self.selected:
-            pass
-        else:
-            self.button.sketch()
+        cdef FitBox shadow = self.button.computed_copy()
+        if not self.selected:
+            shadow.org -= Vec2(2. * ui_scale, 2. * ui_scale)
+            shadow.size += Vec2(4. * ui_scale, 4. * ui_scale)
+            utils.draw_rounded_rect(shadow.org, shadow.size,
+                                    button_corner_radius * ui_scale,
+                                    color=RGBA(*color_shadow), sharpness=shadow_sharpness)
+
+        utils.draw_rounded_rect(self.button.org, self.button.size,
+                                button_corner_radius * ui_scale,
+                                color=bg_color, sharpness=0.9)
 
         if self._outer_label:
             gl.glPushMatrix()
             glfont.push_state()
-            gl.glTranslatef(self.field.org.x,self.field.org.y,0)
-            glfont.set_color_float(self.text_color[:])
+            gl.glTranslatef(self.field.org.x + button_text_padding * ui_scale,
+                            self.field.org.y + button_text_padding * ui_scale,0)
+            glfont.set_color_float(color_text_default)
             glfont.draw_limited_text(0,0,self._outer_label,self.field.size.x)
             glfont.pop_state()
             gl.glPopMatrix()
 
         gl.glPushMatrix()
         glfont.push_state()
-        gl.glTranslatef(self.button.org.x,self.button.org.y,0)
+        gl.glTranslatef(self.button.org.x + button_text_padding * ui_scale,
+                        self.button.org.y + button_text_padding * ui_scale,0)
         glfont.set_color_float(self.text_color[:])
-        glfont.draw_limited_text(x_spacer*ui_scale,0,self._label,self.button.size.x)
+        glfont.draw_limited_text(x_spacer*ui_scale,0,self._label,self.button.size.x - 2. *  button_text_padding * ui_scale)
         glfont.pop_state()
         gl.glPopMatrix()
 
@@ -1100,7 +1124,7 @@ cdef class Thumb(UI_element):
         glfont.push_state()
         glfont.set_font('roboto')
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_LEFT)
-        glfont.set_size( max(1, int( (min(self.button.size) )-thumb_font_padding )/2.) )
+        glfont.set_size( max(1, int( (min(self.button.size) )-thumb_font_padding*ui_scale)/2.) )
         glfont.set_color_float((0,0,0,1))
         glfont.set_blur(10.5)
         glfont.draw_text(self.button.center[0]+self.button.size.x/2.,self.button.center[1],self._status_text)
@@ -1157,6 +1181,7 @@ cdef class Icon(Thumb):
         self._indicator_stop = 0.
         self._tooltip = ''
         self.being_hovered = False
+        self.outline = FitBox(Vec2(0,0),Vec2(icon_outline_size, icon_outline_size))
 
     @property
     def tooltip(self):
@@ -1231,7 +1256,7 @@ cdef class Icon(Thumb):
         glfont.push_state()
         glfont.set_font(self.label_font)
         glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_CENTER)
-        glfont.set_size(max(1,int(ref_size+self.offset_size*ui_scale)-thumb_font_padding*ui_scale))
+        glfont.set_size(max(1,int(ref_size+self.offset_size*ui_scale)-icon_font_padding*ui_scale))
         glfont.set_color_float((*icon_color[:3], 0.3))
         glfont.set_blur(3)
         cdef int text_x = self.button.center[0]+int(self.offset_x*ui_scale)
@@ -1255,7 +1280,7 @@ cdef class Icon(Thumb):
         if self._tooltip == '' or not self.being_hovered:
             return # only draw tooltip when set
 
-        cdef float text_height = max(1,int(0.25*ref_size))
+        cdef float text_height = tooltip_text_size * ui_scale
         cdef float pad_x = 0.25*text_height
         cdef float pad_y = .5*pad_x
         cdef float tip_width = text_height + pad_x  # == 2* pad_y
@@ -1306,32 +1331,212 @@ cdef class Hot_Key(UI_element):
     def __init__(self,str attribute_name, object attribute_context = None,label = None, on_val = True, off_val = False ,setter= None,getter= None, hotkey = None):
         pass
 
-
     cpdef sync(self):
         self.sync_val.sync()
 
-
     cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
+        global should_redraw
         if not (self._read_only or parent_read_only):
             if self.hotkey is not None:
                 for c in new_input.chars:
                     if c == self.hotkey:
                         if self.sync_val.value == self.on_val:
                             self.sync_val.value = self.off_val
+                            should_redraw = True
                         elif self.sync_val.value == self.off_val:
-                                self.sync_val.value = self.on_val
+                            self.sync_val.value = self.on_val
+                            should_redraw = True
                         break
                 for k in new_input.keys:
                     if k[2]  in (1,2):  #keydown
                         if k[0] == self.hotkey:
                             if self.sync_val.value == self.on_val:
                                 self.sync_val.value = self.off_val
+                                should_redraw = True
                             elif self.sync_val.value == self.off_val:
-                                    self.sync_val.value = self.on_val
+                                self.sync_val.value = self.on_val
+                                should_redraw = True
                             break
 
+cdef class Seek_Bar(UI_element):
 
+    cdef int total
+    cdef FitBox bar, seek_handle, trim_left_handle, trim_right_handle
+    cdef readonly bint hovering, seeking, trimming_left, trimming_right
+    cdef Synced_Value trim_left, trim_right, current
+    cdef object seeking_cb
 
+    def __cinit__(self, object ctx, int total, object seeking_cb, *args, **kwargs):
+        self.uid = id(self)
+        self.trim_left = Synced_Value('trim_left', ctx, trigger_overlay_only=True)
+        self.trim_right = Synced_Value('trim_right', ctx, trigger_overlay_only=True)
+        self.current = Synced_Value('current_index', ctx, trigger_overlay_only=True)
+        self.seeking_cb = seeking_cb
+        self.total = total
+        self.hovering = False
+        self.seeking = False
+        self.trimming_left = False
+        self.trimming_right = False
 
+        self.outline = FitBox(Vec2(0., -100.), Vec2(0., 100.))
+        self.bar = FitBox(Vec2(30., 40.), Vec2(-30., 3.))
+        self.seek_handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
+        self.trim_left_handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
+        self.trim_right_handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
 
+    def __init__(self, *args, **kwargs):
+        pass
 
+    cpdef sync(self):
+        self.trim_left.sync()
+        self.trim_right.sync()
+        self.current.sync()
+
+    cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        self.outline.compute(parent)
+        self.bar.compute(self.outline)
+        # rect(parent.org, parent.size, RGBA(0., 1., 0., 0.4))
+        # rect(self.outline.org, self.outline.size, RGBA(0., 0., 0., 0.4))
+        rect(self.bar.org, self.bar.size, RGBA(1., 1., 1., 0.2))
+
+    cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        cdef FitBox handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
+        cdef int current_val = self.current.value
+        cdef int trim_left_val = self.trim_left.value
+        cdef int trim_right_val = self.trim_right.value
+        cdef float seek_x = clampmap(current_val, 0, self.total, 0, self.bar.size.x)
+        cdef float bot_ext = (parent.org.y + parent.size.y - self.bar.org.y - self.bar.size.y) / 2
+        cdef float top_ext = 20 * ui_scale
+        cdef float selection_height = 5 * self.bar.size.y
+
+        cdef float trim_l_x = clampmap(trim_left_val, 0, self.total, 0, self.bar.size.x)
+        handle.org.x = int(self.bar.org.x + trim_l_x - selection_height)
+        handle.org.y = self.bar.org.y + self.bar.size.y / 2 - selection_height / 2
+        handle.size.x = selection_height
+        handle.size.y = selection_height
+        self.trim_left_handle = draw_trim_handle(handle, 0.25, RGBA(*seekbar_trim_color))
+
+        cdef float trim_r_x = clampmap(trim_right_val, 0, self.total, 0, self.bar.size.x)
+        handle.org.x = int(self.bar.org.x + trim_r_x)
+        handle.org.y = self.bar.org.y + self.bar.size.y / 2 - selection_height / 2
+        self.trim_right_handle = draw_trim_handle(handle, 0.75, RGBA(*seekbar_trim_color))
+
+        # draw region between trim marks
+        handle.size.x = handle.org.x - int(self.bar.org.x + trim_l_x)
+        handle.org.x = int(self.bar.org.x + trim_l_x)
+        handle.size.y = self.bar.size.y
+        rect(handle.org, handle.size, RGBA(*seekbar_trim_color))
+
+        handle.org.y += selection_height - handle.size.y
+        rect(handle.org, handle.size, RGBA(*seekbar_trim_color))
+
+        handle.org = Vec2(int(self.bar.org.x + seek_x - self.bar.size.y / 4), self.bar.org.y - top_ext)
+        handle.size = Vec2(self.bar.size.y / 2, bot_ext + self.bar.size.y + top_ext)
+        self.seek_handle = draw_seek_handle(handle, RGBA(*seekbar_seek_color))
+
+        # debug draggable areas
+        # rect(self.seek_handle.org, self.seek_handle.size, RGBA(1., 0., 0., 0.2))
+        # rect(self.trim_left_handle.org, self.trim_left_handle.size, RGBA(1., 0., 0., 0.2))
+        # rect(self.trim_right_handle.org, self.trim_right_handle.size, RGBA(1., 0., 0., 0.2))
+
+        cdef basestring current_str = str(current_val + 1)
+        cdef basestring trim_left_str = str(trim_left_val + 1)
+        cdef basestring trim_right_str = str(trim_right_val + 1)
+        cdef float trim_num_offset = 5. * ui_scale
+        if self.hovering or self.seeking or self.trimming_left or self.trimming_right:
+            glfont.push_state()
+            glfont.set_font('opensans')
+            glfont.set_size(bot_ext * 3 / 4)
+
+            # draw text shadows
+            glfont.set_blur(1.)
+            glfont.set_color_float((0., 0., 0., .6))
+
+            glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_CENTER)
+            glfont.draw_text(self.seek_handle.org.x+self.seek_handle.size.x/2,
+                             self.seek_handle.org.y+self.seek_handle.size.y + 3. * ui_scale,
+                             current_str)
+
+            glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_RIGHT)
+            glfont.draw_text(self.trim_left_handle.center[0] - trim_num_offset,
+                             self.trim_left_handle.center[1] - 2 * trim_num_offset,
+                             trim_left_str)
+
+            glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_LEFT)
+            glfont.draw_text(self.trim_right_handle.center[0] + trim_num_offset,
+                             self.trim_right_handle.center[1] - 2 * trim_num_offset,
+                             trim_right_str)
+
+            # draw actual text
+            glfont.set_blur(.1)
+            glfont.set_color_float((1., 1., 1., .8))
+
+            glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_CENTER)
+            glfont.draw_text(self.seek_handle.org.x+self.seek_handle.size.x/2,
+                             self.seek_handle.org.y+self.seek_handle.size.y + 3. * ui_scale,
+                             current_str)
+
+            glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_RIGHT)
+            glfont.draw_text(self.trim_left_handle.center[0] - trim_num_offset,
+                             self.trim_left_handle.center[1] - 2 * trim_num_offset,
+                             trim_left_str)
+
+            glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_LEFT)
+            glfont.draw_text(self.trim_right_handle.center[0] + trim_num_offset,
+                             self.trim_right_handle.center[1] - 2 * trim_num_offset,
+                             trim_right_str)
+
+            glfont.pop_state()
+
+    cpdef pre_handle_input(self,Input new_input):
+        global should_redraw_overlay
+        if self.seeking and new_input.dm:
+            val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
+                           0, self.total)
+            self.current.value = int(val)
+            should_redraw_overlay = True
+        elif self.trimming_right and new_input.dm:
+            val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
+                           0, self.total)
+            self.trim_right.value = int(val)
+            should_redraw_overlay = True
+        elif self.trimming_left and new_input.dm:
+            val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
+                           0, self.total)
+            self.trim_left.value = int(val)
+            should_redraw_overlay = True
+
+        for b in new_input.buttons[:]:#list copy for remove to work
+            if b[1] == 1:
+                if self.seek_handle.mouse_over(new_input.m):
+                    new_input.buttons.remove(b)
+                    self.seeking = True
+                    should_redraw_overlay = True
+                    self.seeking_cb(True)
+                elif self.trim_left_handle.mouse_over(new_input.m):
+                    new_input.buttons.remove(b)
+                    self.trimming_left = True
+                    should_redraw_overlay = True
+                elif self.trim_right_handle.mouse_over(new_input.m):
+                    new_input.buttons.remove(b)
+                    self.trimming_right = True
+                    should_redraw_overlay = True
+
+            if self.seeking and b[1] == 0:
+                self.seeking = False
+                should_redraw_overlay = True
+                self.seeking_cb(False)
+            elif self.trimming_left and b[1] == 0:
+                self.trimming_left = False
+                should_redraw_overlay = True
+            elif self.trimming_right and b[1] == 0:
+                self.trimming_right = False
+                should_redraw_overlay = True
+
+        cdef bint hover = self.outline.mouse_over(new_input.m)
+        if hover != self.hovering:
+            self.hovering = hover
+            should_redraw_overlay = True
+
+    cpdef handle_input(self,Input new_input, bint visible, bint parent_read_only = False):
+        new_input.active_ui_elements.append(self)

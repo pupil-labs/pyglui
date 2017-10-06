@@ -23,6 +23,16 @@ cdef inline rect(Vec2 org, Vec2 size, RGBA color):
     gl.glVertex3f(org.x+size.x,org.y,0.0)
     gl.glEnd()
 
+cdef inline rect_outline(Vec2 org, Vec2 size, float line_width, RGBA color):
+    gl.glColor4f(color.r, color.g, color.b, color.a)
+    gl.glLineWidth(line_width)
+    gl.glBegin(gl.GL_LINE_LOOP)
+    gl.glVertex3f(org.x - line_width, org.y - line_width,0.0)
+    gl.glVertex3f(org.x - line_width,org.y+size.y + line_width,0.0)
+    gl.glVertex3f(org.x+size.x + line_width,org.y+size.y + line_width,0.0)
+    gl.glVertex3f(org.x+size.x + line_width,org.y - line_width,0.0)
+    gl.glEnd()
+
 cdef inline rect_corners(Vec2 org, Vec2 end, RGBA color):
     gl.glColor4f(color.r, color.g, color.b, color.a)
     gl.glBegin(gl.GL_POLYGON)
@@ -133,7 +143,6 @@ cdef inline triangle_left(Vec2 org, Vec2 size):
     gl.glVertex3f(org.x + size.x/2 ,org.y+size.y-3*ui_scale,0)
     gl.glEnd()
 
-
 cdef inline line(Vec2 org, Vec2 end, RGBA color):
     gl.glColor4f(color.r, color.g, color.b, color.a)
     gl.glLineWidth(1.5*ui_scale) #thinner lines sometimes dont show on certain hardware.
@@ -142,6 +151,51 @@ cdef inline line(Vec2 org, Vec2 end, RGBA color):
     gl.glVertex3f(end.x, end.y,0)
     gl.glEnd()
 
+cdef inline FitBox draw_seek_handle(FitBox handle, RGBA color):
+    ''' Draw the seek handle and return FitBox that corresponds to the draggable area
+    '''
+    rect(handle.org, handle.size, color)
+    cdef FitBox drag = handle.computed_copy()
+    drag.org.x -= 10 * drag.size.x
+    drag.size.x *= 21
+    drag.size.y += 20 * ui_scale
+    return drag
+
+cdef inline FitBox draw_trim_handle(FitBox handle, float opening, RGBA color):
+    ''' Draw a handle and return FitBox that corresponds draggable area
+    '''
+    # cdef Vec2 line_size = Vec2(2* ui_scale, handle.size.y * 3 / 4)
+    # cdef Vec2 line_org = Vec2(0., handle.org.y + handle.size.y / 2 - line_size.y / 2)
+    cdef tuple location
+    if opening == 0.25:  # left handle
+        location = handle.org.x + handle.size.x, handle.org.y + handle.size.y / 2
+        # line_org.x = handle.org.x + handle.size.x - line_size.x
+    elif opening == 0.75:  # right handle
+        location = handle.org.x, handle.org.y + handle.size.y / 2
+        # line_org.x = h andle.org.x
+    else:
+        location = handle.center
+    utils.draw_progress(location, (opening + 0.25) % 1., (opening - 0.25) % 1.,
+                        inner_radius=0., outer_radius=handle.size.y + ui_scale, color=color,
+                        sharpness=0.9)
+    cdef FitBox drag = handle.computed_copy()
+    drag.org = Vec2(location[0] - drag.size.x, location[1] - drag.size.y)
+    drag.size *= 2
+    return drag
+
+cdef inline FitBox draw_handle_top_right(Vec2 tip_loc, Vec2 handle_size, RGBA color):
+    ''' Draw a handle and return FitBox that corresponds draggable area
+    '''
+    cdef float tip_length = 10.*ui_scale
+    cdef float half_line_width = 2. * ui_scale
+
+    rect_corners(Vec2(tip_loc.x - half_line_width, tip_loc.y),
+                 Vec2(tip_loc.x + half_line_width, tip_loc.y - tip_length), color)
+
+    rect_corners(Vec2(tip_loc.x - half_line_width + handle_size.x, tip_loc.y - tip_length),
+                 Vec2(tip_loc.x - half_line_width, tip_loc.y - tip_length - handle_size.y), color)
+
+    return FitBox(Vec2(tip_loc.x - half_line_width, tip_loc.y - tip_length - handle_size.y) / ui_scale, handle_size / ui_scale)
 
 ### OpenGL funtions for rendering to texture.
 ### Using this saves us considerable cpu/gpu time when the UI remains static.

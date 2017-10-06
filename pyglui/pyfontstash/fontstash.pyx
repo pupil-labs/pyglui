@@ -190,8 +190,10 @@ cdef class Context:
         # now we draw words
         while words:
             clip = ' '.join(words[:idx+1])
-            if idx >= max_idx or fs.fonsTextBounds(self.ctx, 0,0, _to_utf8_bytes(clip), NULL, NULL) > width:
+            if idx >= max_idx or fs.fonsTextBounds(self.ctx, 0,0, _to_utf8_bytes(clip), NULL, NULL) > width or u'\n' in clip[:-1]:
                 clip = u' '.join(words[:idx])
+                if clip and clip[-1] == u'\n':
+                    clip = clip[:-1]
                 fs.fonsDrawText(self.ctx,x,y,_to_utf8_bytes(clip),NULL)
                 words = words[idx:]
                 idx = 1 #always draw the first word.

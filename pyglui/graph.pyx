@@ -40,7 +40,7 @@ cdef class Bar_Graph:
         self.glfont = fs.Context()
         self.glfont.add_font('opensans', get_opensans_font_path())
         self.glfont.set_size(int(18*self.scale))
-        self.color = RGBA(.1,.1,.7,.5)
+        self.color = RGBA(0.5, 0.8, 0.75,.5)
 
     def __init__(self,int data_points = 25,float min_val = 0, float max_val = 100):
         cdef int x
@@ -119,7 +119,7 @@ cdef class Bar_Graph:
         gl.glTranslatef(self.x*self.scale,self.y*self.scale,0)
         #scale such that a bar at max val is 100px high
         gl.glPushMatrix()
-        gl.glScalef(1,-100.*self.scale/self.max_val,1)
+        gl.glScalef(1,-30.*self.scale/self.max_val,1)
         gl.glTranslatef(0,self.min_val*self.scale,0)
 
         ##draw background
@@ -187,7 +187,7 @@ cdef class Line_Graph:
         self.glfont.add_font('opensans',get_opensans_font_path())
         self.glfont.set_size(int(18*self.scale))
         self.glfont.set_align(fs.FONS_ALIGN_LEFT | fs.FONS_ALIGN_MIDDLE)
-        self.color = RGBA(.1,.1,.7,.5)
+        self.color = RGBA(0.5, 0.8, 0.75,.5)
 
     def __init__(self,int data_points = 25,float min_val = 0, float max_val = 100):
         cdef int x
