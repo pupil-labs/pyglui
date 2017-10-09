@@ -481,8 +481,10 @@ cdef class Scrolling_Menu(Movable_Menu):
 
         if header_pos in ('top','bottom'):
             min_size = Vec2(menu_topbar_min_width,menu_topbar_pad)
-        elif header_pos in ('left','right'):
+        elif header_pos in ('right'):
             min_size = Vec2(menu_sidebar_pad,menu_sidebar_min_height)
+        elif header_pos in ('left'):
+            min_size = Vec2(menu_topbar_min_width,menu_sidebar_min_height)
         else:
             min_size = Vec2(0,0)
         self.outline = FitBox(position=Vec2(*pos),size=Vec2(*size),min_size=min_size)
@@ -614,8 +616,10 @@ cdef class Scrolling_Menu(Movable_Menu):
 
         if self.collapsed:
             self.outline.inflate(self.uncollapsed_outline)
+            self.outline.min_size = self.uncollapsed_outline.min_size
         else:
             self.uncollapsed_outline = self.outline.copy()
+            self.outline.min_size = Vec2(0., 0.)
             self.outline.collapse()
 
 
