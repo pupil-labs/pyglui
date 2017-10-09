@@ -568,7 +568,7 @@ cdef class FitBox:
         #object is positioned from right (resp. bottom) and sized from context size
         elif self.design_org.x < 0 and self.design_size.x <= 0:
             self.design_org.x = self.design_size.x - self.min_size.x
-            #self.design_size.x = self.min_size.x
+            # self.design_size.x = self.min_size.x
         #object is positioned from left (top) and sized from context size:
         elif self.design_org.x >= 0 and self.design_size.x <= 0:
             pass
@@ -584,7 +584,7 @@ cdef class FitBox:
         #object is positions from right (resp. bottom) and sized from context size
         elif self.design_org.y < 0 and self.design_size.y <= 0:
             self.design_org.y = self.design_size.y -self.min_size.y
-            #self.design_size.y = self.min_size.y
+            # self.design_size.y = self.min_size.y
         #object is positioned from left (top) and sized from context size:
         elif self.design_org.y >= 0 and self.design_size.y <= 0:
             pass
@@ -603,7 +603,7 @@ cdef class FitBox:
         #object is positioned from right (resp. bottom) and sized from context size
         elif self.design_org.x < 0 and self.design_size.x <= 0:
             self.design_org.x = target.design_org.x
-            #self.design_size.x = self.min_size.x
+            self.design_size.x = target.design_size.x
         #object is positioned from left (top) and sized from context size:
         elif self.design_org.x >= 0 and self.design_size.x <= 0:
             pass
@@ -619,7 +619,7 @@ cdef class FitBox:
         #object is positioned from right (resp. bottom) and sized from context size
         elif self.design_org.y < 0 and self.design_size.y <= 0:
             self.design_org.y = target.design_org.y
-            #self.design_size.y = self.min_size.y
+            self.design_size.y = target.design_org.y
         #object is positioned from left (top) and sized from context size:
         elif self.design_org.y >= 0 and self.design_size.y <= 0:
             pass
@@ -645,7 +645,7 @@ cdef class FitBox:
             self.size.x = context.size.x - self.org.x + self.design_size.x * ui_scale #design size is negative - double subtraction
 
         self.size.x = max(self.min_size.x * ui_scale, self.size.x)
-        if self.design_org.x < 0 and self.design_size.x < 0:
+        if self.design_org.x < 0 and self.design_size.x <= 0:
             overflow = self.org.x + self.size.x - context.size.x - self.design_size.x * ui_scale
             if overflow > 0:
                 self.org.x -= overflow
@@ -666,7 +666,7 @@ cdef class FitBox:
 
 
         self.size.y = max(self.min_size.y * ui_scale,self.size.y)
-        if self.design_org.y < 0 and self.design_size.y < 0:
+        if self.design_org.y < 0 and self.design_size.y <= 0:
             overflow = self.org.y + self.size.y - context.size.y - self.design_size.y * ui_scale
             if overflow > 0:
                 self.org.y -= overflow

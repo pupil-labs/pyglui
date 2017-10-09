@@ -504,6 +504,8 @@ cdef class Scrolling_Menu(Movable_Menu):
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
         self.outline.compute(parent)
+        if self.header_pos_id == 2:
+            nested = nested or self.collapsed
         self.element_space.compute(self.outline)
         self.draw_menu(nested)
 
@@ -615,13 +617,12 @@ cdef class Scrolling_Menu(Movable_Menu):
         should_redraw = True
 
         if self.collapsed:
+            self.outline.min_size[:] = self.uncollapsed_outline.min_size[:]
             self.outline.inflate(self.uncollapsed_outline)
-            self.outline.min_size = self.uncollapsed_outline.min_size
         else:
             self.uncollapsed_outline = self.outline.copy()
             self.outline.min_size = Vec2(0., 0.)
             self.outline.collapse()
-
 
     property collapsed:
         def __get__(self):
@@ -634,24 +635,31 @@ cdef class Scrolling_Menu(Movable_Menu):
     property configuration:
         def __get__(self):
             cdef dict submenus = self.get_submenu_config()
-            if not self.element_space.has_area():
-                return {'pos':self.outline.design_org[:],
+            if self.collapsed:
+                return {'label': self.label,
+                        'pos':self.outline.design_org[:],
                         'size':self.outline.design_size[:],
                         'scrollstate':self.scrollstate[:],
                         'collapsed':True,
+                        'min_size': self.outline.min_size[:],
+                        'uncollapsed_min_size': self.uncollapsed_outline.min_size[:],
                         'uncollapsed_pos':self.uncollapsed_outline.design_org[:],
                         'uncollapsed_size':self.uncollapsed_outline.design_size[:],
                         'submenus':submenus}
             else:
-                return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':False,'submenus':submenus,'scrollstate':self.scrollstate[:]}
+                return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],
+                        'collapsed':False,'submenus':submenus,'scrollstate':self.scrollstate[:],
+                        'min_size': self.outline.min_size[:]}
         def __set__(self,new_conf):
-
-            self.outline.design_org[:] = new_conf.get('pos',self.outline.design_org[:])
-            self.outline.design_size[:] = new_conf.get('size',self.outline.design_size[:])
+            self.outline.design_org[:] = new_conf.get('pos', self.outline.design_org[:])
+            self.outline.design_size[:] = new_conf.get('size', self.outline.design_size[:])
+            self.outline.min_size[:] = new_conf.get('min_size', None)
 
             if new_conf.get('collapsed',False):
+
                 self.uncollapsed_outline.design_org[:] = new_conf.get('uncollapsed_pos',self.outline.design_org[:])
                 self.uncollapsed_outline.design_size[:] = new_conf.get('uncollapsed_size',self.outline.design_size[:])
+                self.uncollapsed_outline.min_size[:] = new_conf.get('uncollapsed_min_size',None)
 
             self.header_pos = self.header_pos #update layout
             self.scrollstate[:] = new_conf.get('scrollstate',(0,0))
