@@ -123,8 +123,8 @@ cdef class Base_Menu(UI_element):
             if 2 == self.header_pos_id: #left
                 if self.element_space.has_area():
                     tripple_v(self.menu_bar.outline.org+menu_offset,tripple_v_size)
-                else:
-                    triangle_right(self.menu_bar.outline.org+menu_offset,tripple_v_size)
+                # else:
+                #     triangle_right(self.menu_bar.outline.org+menu_offset,tripple_v_size)
             elif 3 == self.header_pos_id: #right
                 if self.element_space.has_area():
                     tripple_v(self.menu_bar.outline.org+menu_offset,tripple_v_size)
@@ -232,9 +232,9 @@ cdef class Movable_Menu(Base_Menu):
                                             arrest_axis=0,zero_crossing = False,
                                             catch_input = catch_input  )
                 self.minimize_corner = Draggable(Vec2(0,0),Vec2(0,menu_topbar_pad),
-                                            self.outline.design_org,
-                                            arrest_axis=0,zero_crossing = False,
-                                            click_cb=self.toggle_iconified,catch_input = catch_input )
+                                                 self.outline.design_org, arrest_axis=0,
+                                                 zero_crossing = False, catch_input = catch_input)
+                # remove click_cb to prevent interaction conflict in new Pupil ui
 
                 if self.outline.design_size.x > 0:
                     self.resize_corner = Draggable(Vec2(-resize_corner_size,-resize_corner_size),Vec2(0,0),
@@ -585,7 +585,7 @@ cdef class Scrolling_Menu(Movable_Menu):
 
         if self.resize_corner is not None:
             self.resize_corner.handle_input(new_input,visible)
-        if self.minimize_corner is not None:
+        if self.minimize_corner is not None and not (2 == self.header_pos_id and not self.element_space.has_area()):
             self.minimize_corner.handle_input(new_input,visible)
         if self.menu_bar is not None:
             self.menu_bar.handle_input(new_input,visible)
