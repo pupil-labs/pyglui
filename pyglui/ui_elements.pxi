@@ -1269,12 +1269,11 @@ cdef class Icon(Thumb):
 
     cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         cdef basestring T = self.tooltip
-        cdef RGBA progress_color = RGBA(1., 1., 1., .3)
         cdef float ref_size = min(self.button.size)
         if self.indicator_start != self.indicator_stop:
             utils.draw_progress(self.button.center, self.indicator_start,
                                 self.indicator_stop, inner_radius=int(ref_size*.625),
-                                outer_radius=int(ref_size*.9), color=progress_color,
+                                outer_radius=int(ref_size*.9), color=RGBA(*icon_progress_color),
                                 sharpness=0.9)
 
         if self._tooltip == '' or not self.being_hovered:

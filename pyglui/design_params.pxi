@@ -92,6 +92,7 @@ DEF thumb_font_padding = 30.
 
 DEF icon_outline_size = 50.
 DEF icon_font_padding = 20.
+DEF icon_progress_color = color_on
 
 DEF tooltip_text_size = 18.
 
