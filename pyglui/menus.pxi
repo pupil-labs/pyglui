@@ -504,9 +504,9 @@ cdef class Scrolling_Menu(Movable_Menu):
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
         self.outline.compute(parent)
+        self.element_space.compute(self.outline)
         if self.header_pos_id == 2:
             nested = nested or self.collapsed
-        self.element_space.compute(self.outline)
         self.draw_menu(nested)
 
         #if elements are not visible, no need to draw them.
@@ -688,7 +688,7 @@ cdef class Container(Base_Menu):
             self.horizontal_constraint.precompute(parent)
             if 0 <= copy.org.x < self.horizontal_constraint.outline.org.x < copy.org.x + copy.size.x:
                 copy.size.x = self.horizontal_constraint.outline.org.x - copy.org.x
-                if isinstance(self.horizontal_constraint, Base_Menu) and self.horizontal_constraint.header_pos_id == 2:  # left header
+                if isinstance(self.horizontal_constraint, Base_Menu) and self.horizontal_constraint.header_pos_id == 2 and not self.horizontal_constraint.collapsed:  # left header
                     copy.size.x += menu_sidebar_pad * ui_scale
             elif 0 <= self.horizontal_constraint.outline.org.x + self.horizontal_constraint.outline.size.x <= copy.org.x:
                 copy.size.x = self.horizontal_constraint.outline.org.x + self.horizontal_constraint.outline.size.x - copy.org.x
