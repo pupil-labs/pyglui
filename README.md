@@ -44,33 +44,19 @@ pip install . -U
 
 ### Update from v1.7 to v1.8
 We moved `cygl` and `pyfontstash` into `pyglui` and removed the git submodules.
-You will either need to redo the install instructions from scratch or follow
-these instructions:
+You will need to redo the install instructions from scratch:
 
 ```
 cd <your pyglui folder>
-# Make sure that you do not have any uncommited changes
-git submodule deinit --all -f
-rm -rf .git/modules/pyglui/cygl/
-rm -rf .git/modules/pyglui/pyfontstash/
+# now we delete this dir!
+cd ../
+sudo rm -r pylgui
 
-# Note: No trailing slash!
-git rm -f pyglui/cygl
-git rm -f pyglui/pyfontstash
+#clone the latest version
+git clone --recursive  https://github.com/pupil-labs/pyglui
 
-# Commit changes before merging v1.8
-git commit -m "Remove submodules"
-
-# We merge using the changes of the master. This prevents an merge issue
-# in the `.gitmodules` file.
-git merge origin/master -Xtheirs
-
-# Re-init fontstash submodule
-git submodule init
-git submodule update
-
-# Upgrade installation to v1.8
-pip install . -U
+#and install it.
+pip install pyglui -U
 ```
 
 ![](https://raw.github.com/wiki/pupil-labs/pyglui/media/demo_screenshot_20141221.png)
