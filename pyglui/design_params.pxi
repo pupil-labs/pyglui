@@ -92,6 +92,7 @@ DEF thumb_font_padding = 30.
 
 DEF icon_outline_size = 50.
 DEF icon_font_padding = 20.
+DEF icon_progress_color = color_on
 
 DEF tooltip_text_size = 18.
 
@@ -102,7 +103,7 @@ DEF menu_move_corner_width = menu_move_corner_height
 DEF menu_topbar_pad = 2 * menu_pad + menu_move_corner_height
 DEF menu_topbar_text_x_org =  menu_move_corner_width + x_spacer
 DEF resize_corner_size = 20.
-DEF menu_topbar_min_width = 200.
+DEF menu_topbar_min_width = 300.
 DEF menu_bottom_pad = 20.
 
 DEF menu_sidebar_pad = menu_topbar_pad
