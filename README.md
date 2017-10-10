@@ -22,8 +22,7 @@ Cython powered OpenGL gui.
 ```shell
 cd ~/
 git clone http://github.com/pupil-labs/pyglui --recursive
-cd pyglui
-sudo python setup.py install
+pip install pyglui -U
 ```
 
 (for Windows Microsoft Visual Studio 2008 is required)
