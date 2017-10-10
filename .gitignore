@@ -56,3 +56,9 @@ docs/_build/
 
 # PyBuilder
 target/
+
+pyglui/cygl/glew\.pxd
+
+pyglui/cygl/unhandled_glew\.h
+
+pip-*-build/
