@@ -29,15 +29,48 @@ sudo python setup.py install
 ## Demo
 * `pip install psutil` (psutil is used in the demo to show cpu load)
 * `cd /example`
-* `python example.py` 
+* `python example.py`
 
 
 ## Update
+**See the special instructions below if you upgrade from v1.7 to v1.8**
+
 Since we use submodules please do get and install updates:
 ```shell
 git pull --recurse-submodules
 git submodule update --recursive
-python setup.py install
+pip install . -U
+```
+
+### Update from v1.7 to v1.8
+We moved `cygl` and `pyfontstash` into `pyglui` and removed the git submodules.
+You will either need to redo the install instructions from scratch or follow
+these instructions:
+
+```
+cd <your pyglui folder>
+# Make sure that you do not have any uncommited changes
+git submodule deinit --all -f
+rm -rf .git/modules/pyglui/cygl/
+rm -rf .git/modules/pyglui/pyfontstash/
+
+# Note: No trailing slash!
+git rm -f pyglui/cygl
+git rm -f pyglui/pyfontstash
+
+# Commit changes before merging v1.8
+git commit -m "Remove submodules"
+
+# We merge using the changes of the master. This prevents an merge issue
+# in the `.gitmodules` file.
+git merge origin/master -Xtheirs
+
+# Re-init fontstash submodule
+git submodule init
+git submodule update
+
+# Upgrade installation to v1.8
+pip install . -U
 ```
 
 ![](https://raw.github.com/wiki/pupil-labs/pyglui/media/demo_screenshot_20141221.png)
