@@ -1,3 +1,4 @@
-[submodule "fontstash"]
-    path = pyglui/pyfontstash/fontstash
-    url = https://github.com/memononen/fontstash
+[submodule "pyglui/pyfontstash"]
+	path = pyglui/pyfontstash
+	url = https://github.com/pupil-labs/pyfontstash
+	branch = master
