@@ -1,6 +1,7 @@
 from __future__ import print_function
 import os, platform
 from stat import ST_MTIME
+import numpy
 
 if platform.system() == 'Windows':
     from setuptools import setup, Extension
@@ -13,7 +14,7 @@ from Cython.Build import cythonize
 from pyglui.cygl.glew_pxd import generate_pxd
 
 
-includes = ['pyglui/cygl/','.']
+includes = ['pyglui/cygl/', '.', numpy.get_include()]
 glew_binaries =[]
 lib_dir = []
 fontstash_compile_args = ['-D FONTSTASH_IMPLEMENTATION','-D GLFONTSTASH_IMPLEMENTATION']

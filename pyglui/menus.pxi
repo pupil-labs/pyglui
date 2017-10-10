@@ -12,7 +12,7 @@ cdef class Base_Menu(UI_element):
 
     cdef public list elements
     cdef FitBox element_space
-    cdef int header_pos_id
+    cdef readonly int header_pos_id
     cdef Draggable menu_bar,minimize_corner, resize_corner
     cdef public RGBA color
 
@@ -123,8 +123,8 @@ cdef class Base_Menu(UI_element):
             if 2 == self.header_pos_id: #left
                 if self.element_space.has_area():
                     tripple_v(self.menu_bar.outline.org+menu_offset,tripple_v_size)
-                else:
-                    triangle_right(self.menu_bar.outline.org+menu_offset,tripple_v_size)
+                # else:
+                #     triangle_right(self.menu_bar.outline.org+menu_offset,tripple_v_size)
             elif 3 == self.header_pos_id: #right
                 if self.element_space.has_area():
                     tripple_v(self.menu_bar.outline.org+menu_offset,tripple_v_size)
@@ -232,9 +232,9 @@ cdef class Movable_Menu(Base_Menu):
                                             arrest_axis=0,zero_crossing = False,
                                             catch_input = catch_input  )
                 self.minimize_corner = Draggable(Vec2(0,0),Vec2(0,menu_topbar_pad),
-                                            self.outline.design_org,
-                                            arrest_axis=0,zero_crossing = False,
-                                            click_cb=self.toggle_iconified,catch_input = catch_input )
+                                                 self.outline.design_org, arrest_axis=0,
+                                                 zero_crossing = False, catch_input = catch_input)
+                # remove click_cb to prevent interaction conflict in new Pupil ui
 
                 if self.outline.design_size.x > 0:
                     self.resize_corner = Draggable(Vec2(-resize_corner_size,-resize_corner_size),Vec2(0,0),
@@ -302,6 +302,12 @@ cdef class Stretching_Menu(Base_Menu):
                     self.element_space.org.y+= e.height + y_spacing
                 self.outline.org.y = org_y
 
+    cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        if not self.collapsed and self.element_space.has_area():
+            self.elements.sort(key=sort_key)
+            for e in self.elements:
+                (<UI_element>e).draw_overlay(self.element_space, nested=False,
+                                             parent_read_only=parent_read_only or self._read_only)
 
     cpdef handle_input(self, Input new_input,bint visible,bint parent_read_only = False):
         #if elements are not visible, no need to interact with them.
@@ -376,6 +382,12 @@ cdef class Growing_Menu(Movable_Menu):
                 e.draw(self.element_space,parent_read_only = parent_read_only or self._read_only)
                 self.element_space.org.y+= e.height
             self.outline.org.y = org_y
+
+    cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        if self.element_space.has_area():
+            self.elements.sort(key=sort_key)
+            for e in self.elements:
+                (<UI_element>e).draw_overlay(self.element_space, parent_read_only=parent_read_only or self._read_only)
 
 
     cpdef handle_input(self, Input new_input,bint visible,bint parent_read_only = False):
@@ -469,8 +481,10 @@ cdef class Scrolling_Menu(Movable_Menu):
 
         if header_pos in ('top','bottom'):
             min_size = Vec2(menu_topbar_min_width,menu_topbar_pad)
-        elif header_pos in ('left','right'):
+        elif header_pos in ('right'):
             min_size = Vec2(menu_sidebar_pad,menu_sidebar_min_height)
+        elif header_pos in ('left'):
+            min_size = Vec2(menu_topbar_min_width,menu_sidebar_min_height)
         else:
             min_size = Vec2(0,0)
         self.outline = FitBox(position=Vec2(*pos),size=Vec2(*size),min_size=min_size)
@@ -491,12 +505,20 @@ cdef class Scrolling_Menu(Movable_Menu):
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
         self.outline.compute(parent)
         self.element_space.compute(self.outline)
+        if self.header_pos_id == 2:
+            nested = nested or self.collapsed
         self.draw_menu(nested)
 
         #if elements are not visible, no need to draw them.
         if self.element_space.has_area():
             self.elements.sort(key=sort_key)
             self.draw_scroll_window_elements(parent_read_only)
+
+    cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        if self.element_space.has_area():
+            self.elements.sort(key=sort_key)
+            for e in self.elements:
+                (<UI_element>e).draw_overlay(self.element_space, parent_read_only=parent_read_only or self._read_only)
 
     cdef draw_scroll_window_elements(self, bint parent_read_only):
 
@@ -565,7 +587,7 @@ cdef class Scrolling_Menu(Movable_Menu):
 
         if self.resize_corner is not None:
             self.resize_corner.handle_input(new_input,visible)
-        if self.minimize_corner is not None:
+        if self.minimize_corner is not None and not (2 == self.header_pos_id and not self.element_space.has_area()):
             self.minimize_corner.handle_input(new_input,visible)
         if self.menu_bar is not None:
             self.menu_bar.handle_input(new_input,visible)
@@ -595,11 +617,12 @@ cdef class Scrolling_Menu(Movable_Menu):
         should_redraw = True
 
         if self.collapsed:
+            self.outline.min_size[:] = self.uncollapsed_outline.min_size[:]
             self.outline.inflate(self.uncollapsed_outline)
         else:
             self.uncollapsed_outline = self.outline.copy()
+            self.outline.min_size = Vec2(0., 0.)
             self.outline.collapse()
-
 
     property collapsed:
         def __get__(self):
@@ -612,27 +635,82 @@ cdef class Scrolling_Menu(Movable_Menu):
     property configuration:
         def __get__(self):
             cdef dict submenus = self.get_submenu_config()
-            if not self.element_space.has_area():
-                return {'pos':self.outline.design_org[:],
+            if self.collapsed:
+                return {'label': self.label,
+                        'pos':self.outline.design_org[:],
                         'size':self.outline.design_size[:],
                         'scrollstate':self.scrollstate[:],
                         'collapsed':True,
+                        'min_size': self.outline.min_size[:],
+                        'uncollapsed_min_size': self.uncollapsed_outline.min_size[:],
                         'uncollapsed_pos':self.uncollapsed_outline.design_org[:],
                         'uncollapsed_size':self.uncollapsed_outline.design_size[:],
                         'submenus':submenus}
             else:
-                return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':False,'submenus':submenus,'scrollstate':self.scrollstate[:]}
+                return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],
+                        'collapsed':False,'submenus':submenus,'scrollstate':self.scrollstate[:],
+                        'min_size': self.outline.min_size[:]}
         def __set__(self,new_conf):
-
-            self.outline.design_org[:] = new_conf.get('pos',self.outline.design_org[:])
-            self.outline.design_size[:] = new_conf.get('size',self.outline.design_size[:])
+            self.outline.design_org[:] = new_conf.get('pos', self.outline.design_org[:])
+            self.outline.design_size[:] = new_conf.get('size', self.outline.design_size[:])
+            self.outline.min_size[:] = new_conf.get('min_size', None)
 
             if new_conf.get('collapsed',False):
+
                 self.uncollapsed_outline.design_org[:] = new_conf.get('uncollapsed_pos',self.outline.design_org[:])
                 self.uncollapsed_outline.design_size[:] = new_conf.get('uncollapsed_size',self.outline.design_size[:])
+                self.uncollapsed_outline.min_size[:] = new_conf.get('uncollapsed_min_size',None)
 
             self.header_pos = self.header_pos #update layout
             self.scrollstate[:] = new_conf.get('scrollstate',(0,0))
             self.set_submenu_config(new_conf.get('submenus',{}))
 
 
+cdef class Container(Base_Menu):
+
+    cdef public UI_element horizontal_constraint, vertical_contraint
+
+    def __cinit__(self, pos=(0., 0.), size=(0., 0.), padding=(0., 0.)):
+        self.outline = FitBox(Vec2(*pos), Vec2(*size))
+        self.element_space = FitBox(Vec2(*padding), Vec2(0., 0.) - Vec2(*padding))
+        self.elements = []
+        self.horizontal_constraint = None
+        self.vertical_contraint = None
+
+    def init(self, *args, **kwargs):
+        pass
+
+    cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
+        # compute constraints
+        cdef FitBox copy = parent.computed_copy()
+        self.outline.compute(copy)
+        if self.horizontal_constraint is not None:
+            self.horizontal_constraint.precompute(parent)
+            if 0 <= copy.org.x < self.horizontal_constraint.outline.org.x < copy.org.x + copy.size.x:
+                copy.size.x = self.horizontal_constraint.outline.org.x - copy.org.x
+                if isinstance(self.horizontal_constraint, Base_Menu) and self.horizontal_constraint.header_pos_id == 2 and not self.horizontal_constraint.collapsed:  # left header
+                    copy.size.x += menu_sidebar_pad * ui_scale
+            elif 0 <= self.horizontal_constraint.outline.org.x + self.horizontal_constraint.outline.size.x <= copy.org.x:
+                copy.size.x = self.horizontal_constraint.outline.org.x + self.horizontal_constraint.outline.size.x - copy.org.x
+                copy.org.x = self.horizontal_constraint.outline.org.x + self.horizontal_constraint.outline.size.x
+
+        self.outline.compute(copy)
+        self.element_space.compute(self.outline)
+
+        self.elements.sort(key=sort_key)
+        if self.element_space.has_area():
+            for e in self.elements:
+                e.draw(self.element_space,nested= False, parent_read_only = parent_read_only or self._read_only)
+
+    cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        if self.element_space.has_area():
+            self.elements.sort(key=sort_key)
+            for e in self.elements:
+                (<UI_element>e).draw_overlay(self.element_space, nested=False,
+                                             parent_read_only=parent_read_only or self._read_only)
+
+    cpdef handle_input(self, Input new_input,bint visible,bint parent_read_only = False):
+        #if elements are not visible, no need to interact with them.
+        if self.element_space.has_area():
+            for e in self.elements:
+                e.handle_input(new_input, visible,self._read_only or parent_read_only)

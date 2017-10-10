@@ -19,6 +19,7 @@ from collections import namedtuple
 cdef fs.Context glfont
 cdef double ui_scale = 1.0
 cdef bint should_redraw = True
+cdef bint should_redraw_overlay = True
 
 def get_roboto_font_path():
     return path.join(path.dirname(__file__),'Roboto-Regular.ttf')
@@ -45,16 +46,18 @@ cdef class UI:
     The UI context for a glfw window.
     '''
     cdef Input new_input
-    cdef bint should_redraw
+    # cdef bint should_redraw
     cdef public list elements
     cdef FitBox window
     cdef fbo_tex_id ui_layer
+    cdef fbo_tex_id overlay_layer
 
     def __cinit__(self):
         self.elements = []
         self.new_input = Input()
         self.window = FitBox(Vec2(0,0),Vec2(0,0))
         self.ui_layer = create_ui_texture(Vec2(200,200))
+        self.overlay_layer = create_ui_texture(Vec2(200,200))
 
         #global init of gl fonts
         global glfont
@@ -74,6 +77,7 @@ cdef class UI:
         global glfont
         glfont = None
         destroy_ui_texture(self.ui_layer)
+        destroy_ui_texture(self.overlay_layer)
         self.elements = []
 
     def update_mouse(self,mx,my):
@@ -88,7 +92,7 @@ cdef class UI:
         self.window.size.x,self.window.size.y = w,h
         gl.glScissor(0,0,int(w),int(h))
         resize_ui_texture(self.ui_layer,self.window.size)
-
+        resize_ui_texture(self.overlay_layer,self.window.size)
 
     def update_scroll(self, sx,sy):
         self.new_input.s.x = sx
@@ -148,12 +152,12 @@ cdef class UI:
 
     cdef draw(self):
         global should_redraw
+        global should_redraw_overlay
         global window_size
         window_size = self.window.size
 
         if should_redraw:
 
-            should_redraw = False
             #print "UI is redrawing the screen"
             push_view(self.window.size)
             render_to_ui_texture(self.ui_layer)
@@ -165,14 +169,33 @@ cdef class UI:
             glfont.set_align(fs.FONS_ALIGN_TOP)
 
             for e in self.elements:
-                e.draw(self.window,nested=False)
+                e.draw(self.window, nested=False)
 
             render_to_screen()
             pop_view()
 
-
         draw_ui_texture(self.ui_layer)
 
+        if should_redraw or should_redraw_overlay:
+            push_view(self.window.size)
+            render_to_ui_texture(self.overlay_layer)
+            glfont.clear_state()
+            glfont.set_font('opensans')
+            glfont.set_size(int(ui_scale * text_size))
+            glfont.set_color_float(color_text_default)
+            glfont.set_blur(.1)
+            glfont.set_align(fs.FONS_ALIGN_TOP)
+
+            for e in self.elements:
+                e.draw_overlay(self.window, nested=False)
+
+            render_to_screen()
+            pop_view()
+
+        draw_ui_texture(self.overlay_layer)
+
+        should_redraw = False
+        should_redraw_overlay = False
 
     def update(self):
         unused_Input = self.handle_input()
@@ -274,14 +297,14 @@ cdef class Synced_Value:
     attributes will be accecd through the attribute context unless you supply a getter.
     '''
     cdef object attribute_context
-    cdef bint use_dict
+    cdef bint use_dict, trigger_overlay_only
     cdef str attribute_name
     cdef object _value
     cdef object getter
     cdef object setter
     cdef object on_change
 
-    def __cinit__(self,str attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None):
+    def __cinit__(self,str attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None, trigger_overlay_only=False):
         assert attribute_context is not None or getter is not None
         self.attribute_context = attribute_context
 
@@ -294,8 +317,9 @@ cdef class Synced_Value:
         self.getter = getter
         self.setter = setter
         self.on_change = on_change
+        self.trigger_overlay_only = trigger_overlay_only
 
-    def __init__(self,str attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None):
+    def __init__(self,str attribute_name, object attribute_context = None, getter=None, setter=None, on_change=None, trigger_overlay_only=False):
         if self.attribute_context is not None:
             if self.use_dict:
                 try:
@@ -313,24 +337,34 @@ cdef class Synced_Value:
 
     cdef sync(self):
         global should_redraw
+        global should_redraw_overlay
         if self.getter is not None:
             val = self.getter()
             if val != self._value:
                 self._value = val
-                should_redraw = True
+                if self.trigger_overlay_only:
+                    should_redraw_overlay = True
+                else:
+                    should_redraw = True
                 if self.on_change is not None:
                     self.on_change(self.value)
 
         elif self.use_dict:
             if self._value != self.attribute_context[self.attribute_name]:
                 self._value = self.attribute_context[self.attribute_name]
-                should_redraw = True
+                if self.trigger_overlay_only:
+                    should_redraw_overlay = True
+                else:
+                    should_redraw = True
                 if self.on_change is not None:
                     self.on_change(self._value)
 
         elif self._value != getattr(self.attribute_context,self.attribute_name):
             self._value = getattr(self.attribute_context,self.attribute_name)
-            should_redraw = True
+            if self.trigger_overlay_only:
+                should_redraw_overlay = True
+            else:
+                should_redraw = True
             if self.on_change is not None:
                 self.on_change(self._value)
 
@@ -534,7 +568,7 @@ cdef class FitBox:
         #object is positioned from right (resp. bottom) and sized from context size
         elif self.design_org.x < 0 and self.design_size.x <= 0:
             self.design_org.x = self.design_size.x - self.min_size.x
-            #self.design_size.x = self.min_size.x
+            # self.design_size.x = self.min_size.x
         #object is positioned from left (top) and sized from context size:
         elif self.design_org.x >= 0 and self.design_size.x <= 0:
             pass
@@ -550,7 +584,7 @@ cdef class FitBox:
         #object is positions from right (resp. bottom) and sized from context size
         elif self.design_org.y < 0 and self.design_size.y <= 0:
             self.design_org.y = self.design_size.y -self.min_size.y
-            #self.design_size.y = self.min_size.y
+            # self.design_size.y = self.min_size.y
         #object is positioned from left (top) and sized from context size:
         elif self.design_org.y >= 0 and self.design_size.y <= 0:
             pass
@@ -569,7 +603,7 @@ cdef class FitBox:
         #object is positioned from right (resp. bottom) and sized from context size
         elif self.design_org.x < 0 and self.design_size.x <= 0:
             self.design_org.x = target.design_org.x
-            #self.design_size.x = self.min_size.x
+            self.design_size.x = target.design_size.x
         #object is positioned from left (top) and sized from context size:
         elif self.design_org.x >= 0 and self.design_size.x <= 0:
             pass
@@ -585,7 +619,7 @@ cdef class FitBox:
         #object is positioned from right (resp. bottom) and sized from context size
         elif self.design_org.y < 0 and self.design_size.y <= 0:
             self.design_org.y = target.design_org.y
-            #self.design_size.y = self.min_size.y
+            self.design_size.y = target.design_org.y
         #object is positioned from left (top) and sized from context size:
         elif self.design_org.y >= 0 and self.design_size.y <= 0:
             pass
@@ -597,6 +631,7 @@ cdef class FitBox:
 
 
     cdef compute(self,FitBox context):
+        cdef float overflow
 
         # all x
         if self.design_org.x >=0:
@@ -609,7 +644,12 @@ cdef class FitBox:
         else:
             self.size.x = context.size.x - self.org.x + self.design_size.x * ui_scale #design size is negative - double subtraction
 
-        self.size.x = max(self.min_size.x * ui_scale,self.size.x)
+        self.size.x = max(self.min_size.x * ui_scale, self.size.x)
+        if self.design_org.x < 0 and self.design_size.x <= 0:
+            overflow = self.org.x + self.size.x - context.size.x - self.design_size.x * ui_scale
+            if overflow > 0:
+                self.org.x -= overflow
+
         # finally translate into scene by parent org
         self.org.x +=context.org.x
 
@@ -626,6 +666,11 @@ cdef class FitBox:
 
 
         self.size.y = max(self.min_size.y * ui_scale,self.size.y)
+        if self.design_org.y < 0 and self.design_size.y <= 0:
+            overflow = self.org.y + self.size.y - context.size.y - self.design_size.y * ui_scale
+            if overflow > 0:
+                self.org.y -= overflow
+
         # finally translate into scene by parent org
         self.org.y +=context.org.y
 
@@ -665,9 +710,14 @@ cdef class FitBox:
     cdef copy(self):
         return FitBox( Vec2(*self.design_org), Vec2(*self.design_size), Vec2(*self.min_size) )
 
+    cdef computed_copy(self):
+        cdef FitBox box = self.copy()
+        box.org = Vec2(*self.org[:])
+        box.size = Vec2(*self.size[:])
+        return box
+
     cdef has_area(self):
         return 1 < self.size.x*self.size.y
-
 
 
 cdef class Vec2:
@@ -686,22 +736,37 @@ cdef class Vec2:
     def __add__(self,Vec2 other):
         return Vec2(self.x+other.x,self.y+other.y)
 
-    def __imul__(self,float factor):
-        self.x *=factor
-        self.y *=factor
-        return self
 
     def __iadd__(self,Vec2 other):
-        self.x +=other.x
+        self.x += other.x
         self.y += other.y
         return self
+
+    def __mul__(self,float factor):
+        return Vec2(self.x * factor, self.y * factor)
+
+    def __imul__(self,float factor):
+        self.x *= factor
+        self.y *= factor
+        return self
+
+    def __matmul__(self, Vec2 other):
+        return self.x * other.x + self.y * other.y
 
     def __sub__(self,Vec2 other):
         return Vec2(self.x-other.x,self.y-other.y)
 
     def __isub__(self,Vec2 other):
-        self.x -=other.x
+        self.x -= other.x
         self.y -= other.y
+        return self
+
+    def __truediv__(self, float divident):
+        return Vec2(self.x / divident, self.y / divident)
+
+    def __itruediv__(self,float divident):
+        self.x /= divident
+        self.y /= divident
         return self
 
     def __len__(self):
