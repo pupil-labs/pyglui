@@ -20,9 +20,7 @@ Cython powered OpenGL gui.
 ## Install
 * install `glew` (instructions can be found [here](https://github.com/pupil-labs/cygl/blob/master/README.md))
 ```shell
-cd ~/
-git clone http://github.com/pupil-labs/pyglui --recursive
-pip install pyglui -U
+sudo pip3 install git+https://github.com/pupil-labs/pyglui
 ```
 
 (for Windows Microsoft Visual Studio 2008 is required)
@@ -31,34 +29,6 @@ pip install pyglui -U
 * `pip install psutil` (psutil is used in the demo to show cpu load)
 * `cd /example`
 * `python example.py`
-
-
-## Update
-**See the special instructions below if you upgrade from v1.7 to v1.8**
-
-Since we use submodules please do get and install updates:
-```shell
-git pull --recurse-submodules
-git submodule update --recursive
-pip install . -U
-```
-
-### Update from v1.7 to v1.8
-We moved `cygl` and `pyfontstash` into `pyglui` and removed the git submodules.
-You will need to redo the install instructions from scratch:
-
-```
-cd <your pyglui folder>
-# now we delete this dir!
-cd ../
-sudo rm -r pylgui
-
-#clone the latest version
-git clone --recursive  https://github.com/pupil-labs/pyglui
-
-#and install it.
-pip install pyglui -U
-```
 
 ![](https://raw.github.com/wiki/pupil-labs/pyglui/media/demo_screenshot_20141221.png)
 *Demo screenshot as of 2014-12-05*
