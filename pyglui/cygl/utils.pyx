@@ -553,7 +553,7 @@ cpdef draw_points_norm(points,float size=20,RGBA color=RGBA(1.,0.5,0.5,.5),float
     glMatrixMode(GL_PROJECTION)
     glPushMatrix()
     glLoadIdentity()
-    glOrtho(0, 1, 0, 1, -1, 1) # gl coord convention
+    glOrtho(0, 1, 0, 1, -1, 1)  # gl coord convention
     glMatrixMode(GL_MODELVIEW)
     glPushMatrix()
     glLoadIdentity()

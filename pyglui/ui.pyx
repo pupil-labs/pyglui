@@ -288,6 +288,8 @@ cdef class UI:
             ui_scale = val
 
 include 'ui_elements.pxi'
+include 'custom.pxi'
+include 'timelines.pxi'
 include 'menus.pxi'
 
 #below are classes used by menu and ui_elements.

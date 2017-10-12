@@ -115,3 +115,4 @@ DEF seekbar_seek_color = color_on
 DEF seekbar_number_size = 15.
 
 DEF timelines_draggable_size = resize_corner_size
+DEF timeline_label_size = text_size

@@ -146,23 +146,27 @@ cdef class Base_Menu(UI_element):
             elif isinstance(self, Timeline_Menu):
                 size = Vec2(2. * timelines_draggable_size * ui_scale, timelines_draggable_size * ui_scale)
                 org = Vec2(*self.menu_bar.outline.center) - size / 2.
-                bg_dif = org.y - self.menu_bar.outline.org.y
                 border_color = RGBA(*color_line_default)
-                rect_corners(org - Vec2(bg_dif, bg_dif), org + size + Vec2(bg_dif, bg_dif), border_color)
-                tripple_h(org, size, RGBA(0.,0.,0.,.5))
+
+                gl.glColor4f(border_color.r, border_color.g, border_color.b, border_color.a)
 
                 line_w = 2. * ui_scale
-                gl.glColor4f(border_color.r, border_color.g, border_color.b, border_color.a)
-                gl.glLineWidth(2.*line_w)
-                gl.glBegin(gl.GL_LINE_STRIP)
-                gl.glVertex3f(self.element_space.org.x - line_w,
-                              self.element_space.org.y + self.element_space.size.y, 0)
-                gl.glVertex3f(self.element_space.org.x - line_w, self.element_space.org.y - line_w, 0)
-                gl.glVertex3f(self.element_space.org.x + self.element_space.size.x + line_w,
-                              self.element_space.org.y - line_w,0)
-                gl.glVertex3f(self.element_space.org.x + self.element_space.size.x + line_w,
-                              self.element_space.org.y + self.element_space.size.y,0)
+                gl.glLineWidth(line_w)
+                gl.glBegin(gl.GL_LINES)
+                gl.glVertex3f(org.x, org.y, 0)
+                gl.glVertex3f(org.x + size.x, org.y, 0)
+                gl.glVertex3f(org.x, org.y + size.y / 2 - 2 * line_w, 0)
+                gl.glVertex3f(org.x + size.x, org.y + size.y / 2 - 2 * line_w, 0)
                 gl.glEnd()
+
+                line_w *= 2
+                gl.glLineWidth(line_w)
+                gl.glBegin(gl.GL_LINES)
+                gl.glVertex3f(self.element_space.org.x, self.element_space.org.y - line_w, 0)
+                gl.glVertex3f(self.element_space.org.x + self.element_space.size.x,
+                              self.element_space.org.y - line_w, 0)
+                gl.glEnd()
+
 
             elif 5 == self.header_pos_id:  #headline
                 if not self.collapsed:
