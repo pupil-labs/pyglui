@@ -270,18 +270,11 @@ cdef class Movable_Menu(Base_Menu):
                 self.resize_corner = None
                 self.menu_bar = None
             elif header_pos == 'headline':
-                if isinstance(self, Timeline_Menu):
-                    self.menu_bar = Draggable(Vec2(0,0),Vec2(0,menu_topbar_pad / 2),
-                                                self.outline.design_org,
-                                                arrest_axis=1,zero_crossing = False,
-                                                catch_input = catch_input  )
-                    self.element_space = FitBox(Vec2(0,menu_topbar_pad / 2),Vec2(0,0))
-                else:
-                    self.menu_bar = Draggable(Vec2(0,0),Vec2(0,menu_topbar_pad),
-                                                self.outline.design_org,
-                                                arrest_axis=1,zero_crossing = False,
-                                                catch_input = catch_input  )
-                    self.element_space = FitBox(Vec2(0,menu_topbar_pad),Vec2(0,0))
+                self.menu_bar = Draggable(Vec2(0,0),Vec2(0,menu_topbar_pad),
+                                            self.outline.design_org,
+                                            arrest_axis=1,zero_crossing = False,
+                                            catch_input = catch_input  )
+                self.element_space = FitBox(Vec2(0,menu_topbar_pad),Vec2(0,0))
                 self.resize_corner = None
 
             else:
@@ -510,7 +503,7 @@ cdef class Scrolling_Menu(Movable_Menu):
         self.uid = id(self)
         self._label = label
 
-        if header_pos in ('top','bottom'):
+        if header_pos in ('top', 'bottom', 'headline'):
             min_size = Vec2(menu_topbar_min_width,menu_topbar_pad)
         elif header_pos in ('right'):
             min_size = Vec2(menu_sidebar_pad,menu_sidebar_min_height)

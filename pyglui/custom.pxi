@@ -23,7 +23,7 @@ cdef class Seek_Bar(UI_element):
         self.handle_start_reference = handle_start_reference.element_space
 
         self.outline = FitBox(Vec2(0., -50.), Vec2(0., 0.))
-        self.bar = FitBox(Vec2(130., 20.), Vec2(-30., 3.))
+        self.bar = FitBox(Vec2(130., 18.), Vec2(-30., 3.))
         self.seek_handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
         self.trim_left_handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
         self.trim_right_handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
