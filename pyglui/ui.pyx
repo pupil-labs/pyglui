@@ -288,6 +288,8 @@ cdef class UI:
             ui_scale = val
 
 include 'ui_elements.pxi'
+include 'custom.pxi'
+include 'timelines.pxi'
 include 'menus.pxi'
 
 #below are classes used by menu and ui_elements.
@@ -704,8 +706,8 @@ cdef class FitBox:
         d += abs(self.design_org.y-other.design_org.y)
         return d
 
-    cdef sketch(self):
-        rect(self.org,self.size,RGBA(*rect_color_default))
+    cdef sketch(self, RGBA color=RGBA(*rect_color_default)):
+        rect(self.org, self.size, color)
 
     cdef copy(self):
         return FitBox( Vec2(*self.design_org), Vec2(*self.design_size), Vec2(*self.min_size) )

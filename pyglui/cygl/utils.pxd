@@ -6,6 +6,8 @@ cdef class RGBA:
 
 cpdef init()
 
+cpdef draw_bars(verts, float height, float thickness=*,RGBA color=*)
+cpdef draw_x(verts, float size, float thickness=*,RGBA color=*)
 cpdef draw_polyline(verts,float thickness=*,RGBA color=*,line_type =*)
 cpdef draw_polyline_norm(verts,float thickness=*,RGBA color=*,line_type =*)
 

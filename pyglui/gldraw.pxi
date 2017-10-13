@@ -42,8 +42,8 @@ cdef inline rect_corners(Vec2 org, Vec2 end, RGBA color):
     gl.glVertex3f(end.x,org.y,0.0)
     gl.glEnd()
 
-cdef inline tripple_h(Vec2 org, Vec2 size):
-    gl.glColor4f(1,1,1,.5)
+cdef inline tripple_h(Vec2 org, Vec2 size, RGBA color=RGBA(1.,1.,1.,.5)):
+    gl.glColor4f(color.r, color.g, color.b, color.a)
     gl.glLineWidth(1.6*ui_scale)
     gl.glBegin(gl.GL_LINES)
     gl.glVertex3f(org.x + 3*ui_scale         ,org.y+5*ui_scale,0)

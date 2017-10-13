@@ -13,7 +13,6 @@ from Cython.Build import cythonize
 
 from pyglui.cygl.glew_pxd import generate_pxd
 
-
 includes = ['pyglui/cygl/', '.', numpy.get_include()]
 glew_binaries =[]
 lib_dir = []

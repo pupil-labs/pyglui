@@ -73,7 +73,7 @@ cdef class Base_Menu(UI_element):
         '''
         cdef dict submenus = {}
         for e in self.elements:
-            if isinstance(e,(Growing_Menu,Scrolling_Menu,Stretching_Menu)):
+            if isinstance(e,(Growing_Menu,Scrolling_Menu,Stretching_Menu,Container)):
                 submenus[e.label] = submenus.get(e.label,[]) + [e.configuration] #we could have two submenues with same label so we use a list for each submenu label cotaining the conf dicts for each menu
         return submenus
 
@@ -83,7 +83,7 @@ cdef class Base_Menu(UI_element):
         '''
         if submenus:
             for e in self.elements:
-                if isinstance(e,(Growing_Menu,Scrolling_Menu,Stretching_Menu)):
+                if isinstance(e,(Growing_Menu,Scrolling_Menu,Stretching_Menu,Container)):
                     e.configuration = submenus.get(e.label,[{}]).pop(0) #pop of the first menu conf dict in the list.
 
 
@@ -100,16 +100,16 @@ cdef class Base_Menu(UI_element):
             if self.header_pos_id == 2: #left
                 self.outline.org.x += menu_sidebar_pad*ui_scale
                 self.outline.size.x -= menu_sidebar_pad*ui_scale
-                self.outline.sketch()
+                self.outline.sketch(self.color)
                 self.outline.org.x -= menu_sidebar_pad*ui_scale
                 self.outline.size.x += menu_sidebar_pad*ui_scale
 
             elif self.header_pos_id == 3: #right
                 self.outline.size.x -= menu_sidebar_pad*ui_scale
-                self.outline.sketch()
+                self.outline.sketch(self.color)
                 self.outline.size.x += menu_sidebar_pad*ui_scale
             else:
-                self.outline.sketch()
+                self.outline.sketch(self.color)
 
         if self.resize_corner is not None:
             self.resize_corner.outline.compute(self.outline)
@@ -143,6 +143,30 @@ cdef class Base_Menu(UI_element):
                 line(Vec2(self.menu_bar.outline.org.x+menu_offset.x,self.menu_bar.outline.org.y+self.menu_bar.outline.size.y),
                      Vec2(self.menu_bar.outline.org.x+self.menu_bar.outline.size.x-menu_offset.x,self.menu_bar.outline.org.y+self.menu_bar.outline.size.y),
                      RGBA(*menu_line))
+            elif isinstance(self, Timeline_Menu):
+                size = Vec2(2. * timelines_draggable_size * ui_scale, timelines_draggable_size * ui_scale)
+                org = Vec2(*self.menu_bar.outline.center) - size / 2.
+                border_color = RGBA(*color_line_default)
+
+                gl.glColor4f(border_color.r, border_color.g, border_color.b, border_color.a)
+
+                line_w = 2. * ui_scale
+                gl.glLineWidth(line_w)
+                gl.glBegin(gl.GL_LINES)
+                gl.glVertex3f(org.x, org.y, 0)
+                gl.glVertex3f(org.x + size.x, org.y, 0)
+                gl.glVertex3f(org.x, org.y + size.y / 2 - 2 * line_w, 0)
+                gl.glVertex3f(org.x + size.x, org.y + size.y / 2 - 2 * line_w, 0)
+                gl.glEnd()
+
+                line_w *= 2
+                gl.glLineWidth(line_w)
+                gl.glBegin(gl.GL_LINES)
+                gl.glVertex3f(self.element_space.org.x, self.element_space.org.y - line_w, 0)
+                gl.glVertex3f(self.element_space.org.x + self.element_space.size.x,
+                              self.element_space.org.y - line_w, 0)
+                gl.glEnd()
+
 
             elif 5 == self.header_pos_id:  #headline
                 if not self.collapsed:
@@ -248,7 +272,7 @@ cdef class Movable_Menu(Base_Menu):
             elif header_pos == 'headline':
                 self.menu_bar = Draggable(Vec2(0,0),Vec2(0,menu_topbar_pad),
                                             self.outline.design_org,
-                                            arrest_axis=0,zero_crossing = False,
+                                            arrest_axis=1,zero_crossing = False,
                                             catch_input = catch_input  )
                 self.element_space = FitBox(Vec2(0,menu_topbar_pad),Vec2(0,0))
                 self.resize_corner = None
@@ -275,7 +299,7 @@ cdef class Stretching_Menu(Base_Menu):
         self.outline = FitBox(position=Vec2(*pos),size=Vec2(*size),min_size=Vec2(0,0))
         self.element_space = FitBox(position=Vec2(menu_pad,menu_pad),size=Vec2(-menu_pad,-menu_pad))
         self.elements = []
-        self.color = RGBA(0,0,0,0)
+        self.color = RGBA(*rect_color_default)
         self.collapsed = False
 
     def __init__(self,label,pos=(0,0),size=(200,100)):
@@ -358,7 +382,7 @@ cdef class Growing_Menu(Movable_Menu):
 
         self.elements = []
         self.header_pos = header_pos
-        self.color = RGBA(0,0,0,.3)
+        self.color = RGBA(*rect_color_default)
 
     def __init__(self,label, pos=(0,0),size=(0,0),header_pos = 'top'):
         pass
@@ -479,7 +503,7 @@ cdef class Scrolling_Menu(Movable_Menu):
         self.uid = id(self)
         self._label = label
 
-        if header_pos in ('top','bottom'):
+        if header_pos in ('top', 'bottom', 'headline'):
             min_size = Vec2(menu_topbar_min_width,menu_topbar_pad)
         elif header_pos in ('right'):
             min_size = Vec2(menu_sidebar_pad,menu_sidebar_min_height)
@@ -494,7 +518,7 @@ cdef class Scrolling_Menu(Movable_Menu):
         self.scrollstate = Vec2(0,0)
         self.scrollbar = Draggable(Vec2(0,0),Vec2(0,0),self.scrollstate,arrest_axis=1,zero_crossing=True)
         self.header_pos = header_pos
-        self.color = RGBA(0,0,0,.3)
+        self.color = RGBA(*rect_color_default)
 
     def __init__(self,label,pos=(100,100),size=(200,100),header_pos = 'top'):
         pass
@@ -668,14 +692,14 @@ cdef class Scrolling_Menu(Movable_Menu):
 
 cdef class Container(Base_Menu):
 
-    cdef public UI_element horizontal_constraint, vertical_contraint
+    cdef public UI_element horizontal_constraint, vertical_constraint
 
     def __cinit__(self, pos=(0., 0.), size=(0., 0.), padding=(0., 0.)):
         self.outline = FitBox(Vec2(*pos), Vec2(*size))
         self.element_space = FitBox(Vec2(*padding), Vec2(0., 0.) - Vec2(*padding))
         self.elements = []
         self.horizontal_constraint = None
-        self.vertical_contraint = None
+        self.vertical_constraint = None
 
     def init(self, *args, **kwargs):
         pass
@@ -714,3 +738,6 @@ cdef class Container(Base_Menu):
         if self.element_space.has_area():
             for e in self.elements:
                 e.handle_input(new_input, visible,self._read_only or parent_read_only)
+
+cdef class Timeline_Menu(Scrolling_Menu):
+    pass

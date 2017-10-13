@@ -553,7 +553,7 @@ cpdef draw_points_norm(points,float size=20,RGBA color=RGBA(1.,0.5,0.5,.5),float
     glMatrixMode(GL_PROJECTION)
     glPushMatrix()
     glLoadIdentity()
-    glOrtho(0, 1, 0, 1, -1, 1) # gl coord convention
+    glOrtho(0, 1, 0, 1, -1, 1)  # gl coord convention
     glMatrixMode(GL_MODELVIEW)
     glPushMatrix()
     glLoadIdentity()
@@ -564,6 +564,29 @@ cpdef draw_points_norm(points,float size=20,RGBA color=RGBA(1.,0.5,0.5,.5),float
     glPopMatrix()
     glMatrixMode(GL_MODELVIEW)
     glPopMatrix()
+
+cpdef draw_bars(verts, float height, float thickness=1,RGBA color=RGBA(1.,0.5,0.5,.5)):
+    glColor4f(color.r,color.g,color.b,color.a)
+    glLineWidth(thickness)
+    glBegin(GL_LINES)
+    for pt in verts:
+        glVertex2f(pt[0],pt[1] - height/2)
+        glVertex2f(pt[0],pt[1] + height/2)
+    glEnd()
+
+cpdef draw_x(verts, float size, float thickness=1,RGBA color=RGBA(1.,0.5,0.5,.5)):
+    glColor4f(color.r,color.g,color.b,color.a)
+    glLineWidth(thickness)
+    glBegin(GL_LINES)
+    for pt in verts:
+        # top left -> bot right
+        glVertex2f(pt[0] - size/2, pt[1] - size/2)
+        glVertex2f(pt[0] + size/2, pt[1] + size/2)
+        # bot left -> top right
+        glVertex2f(pt[0] - size/2, pt[1] + size/2)
+        glVertex2f(pt[0] + size/2, pt[1] - size/2)
+    glEnd()
+
 
 cpdef draw_polyline(verts,float thickness=1,RGBA color=RGBA(1.,0.5,0.5,.5),line_type = GL_LINE_STRIP):
     glColor4f(color.r,color.g,color.b,color.a)
