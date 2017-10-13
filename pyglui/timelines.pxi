@@ -69,9 +69,9 @@ cdef class Timeline(UI_element):
         gl.glPopMatrix()
         gl.glPopAttrib()
 
-    cpdef update(self):
-        global should_draw
-        should_draw = True
+    cpdef refresh(self):
+        global should_redraw
+        should_redraw = True
 
     @property
     def height(self):
@@ -81,7 +81,7 @@ cdef class Timeline(UI_element):
     def height(self, val):
         if val != self.height:
             self.outline.design_size.y = val
-            self.update()
+            self.refresh()
 
     cpdef draw_label_default(self, width, height):
         glfont.push_state()
