@@ -153,10 +153,10 @@ cdef class Base_Menu(UI_element):
                 line_w = 2. * ui_scale
                 gl.glLineWidth(line_w)
                 gl.glBegin(gl.GL_LINES)
-                gl.glVertex3f(org.x, org.y, 0)
-                gl.glVertex3f(org.x + size.x, org.y, 0)
-                gl.glVertex3f(org.x, org.y + size.y / 2 - 2 * line_w, 0)
-                gl.glVertex3f(org.x + size.x, org.y + size.y / 2 - 2 * line_w, 0)
+                gl.glVertex3f(org.x, org.y + size.y / 4, 0)
+                gl.glVertex3f(org.x + size.x, org.y + size.y / 4, 0)
+                gl.glVertex3f(org.x, org.y + size.y / 2, 0)
+                gl.glVertex3f(org.x + size.x, org.y + size.y / 2, 0)
                 gl.glEnd()
 
                 line_w *= 2
