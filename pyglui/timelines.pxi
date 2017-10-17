@@ -75,11 +75,11 @@ cdef class Timeline(UI_element):
 
     @property
     def height(self):
-        return self.outline.design_size.y
+        return self.outline.design_size.y * ui_scale
 
     @height.setter
     def height(self, val):
-        if val != self.height:
+        if val != self.height / ui_scale:
             self.outline.design_size.y = val
             self.refresh()
 
