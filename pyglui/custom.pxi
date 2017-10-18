@@ -2,10 +2,11 @@
 cdef class Seek_Bar(UI_element):
 
     cdef int total
-    cdef FitBox bar, seek_handle, trim_left_handle, trim_right_handle, handle_start_reference
+    cdef FitBox bar, seek_handle, trim_left_handle, trim_right_handle
     cdef readonly bint hovering, seeking, trimming_left, trimming_right
     cdef Synced_Value trim_left, trim_right, current
     cdef object seeking_cb
+    cdef Timeline_Menu handle_start_reference
     cdef Icon backwards, play, forwards
 
     def __cinit__(self, object ctx, int total, object seeking_cb,
@@ -20,7 +21,7 @@ cdef class Seek_Bar(UI_element):
         self.seeking = False
         self.trimming_left = False
         self.trimming_right = False
-        self.handle_start_reference = handle_start_reference.element_space
+        self.handle_start_reference = handle_start_reference
 
         self.outline = FitBox(Vec2(0., -50.), Vec2(0., 0.))
         self.bar = FitBox(Vec2(130., 18.), Vec2(-30., 3.))
@@ -59,8 +60,9 @@ cdef class Seek_Bar(UI_element):
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         self.outline.compute(parent)
+        self.outline.sketch(RGBA(0., 0., 0., 0.3))
         self.bar.compute(self.outline)
-        self.bar.sketch(RGBA(1., 1., 1., 0.2))
+        self.bar.sketch(RGBA(1., 1., 1., 0.4))
 
     cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
 
@@ -73,7 +75,7 @@ cdef class Seek_Bar(UI_element):
         cdef int trim_left_val = self.trim_left.value
         cdef int trim_right_val = self.trim_right.value
         cdef float seek_x = clampmap(current_val, 0, self.total, 0, self.bar.size.x)
-        cdef float top_ext = self.handle_start_reference.org.y
+        cdef float top_ext = self.handle_start_reference.element_space.org.y
         cdef float bot_ext = self.bar.org.y + self.bar.size.y + 20 * ui_scale
         cdef float selection_height = 5 * self.bar.size.y
 

@@ -39,7 +39,7 @@ cdef class Timeline(UI_element):
         gl.glPushMatrix()
         gl.glLoadIdentity()
 
-        self.draw_data(width, height)
+        self.draw_data(width, height, ui_scale)
 
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glPopMatrix()
@@ -59,9 +59,9 @@ cdef class Timeline(UI_element):
         gl.glLoadIdentity()
 
         if self.draw_label is None:
-            self.draw_label_default(width, height)
+            self.draw_label_default(width, height, ui_scale)
         else:
-            self.draw_label(width, height)
+            self.draw_label(width, height, ui_scale)
 
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glPopMatrix()
@@ -75,18 +75,18 @@ cdef class Timeline(UI_element):
 
     @property
     def height(self):
-        return self.outline.design_size.y
+        return self.outline.design_size.y * ui_scale
 
     @height.setter
     def height(self, val):
-        if val != self.height:
+        if val != self.height / ui_scale:
             self.outline.design_size.y = val
             self.refresh()
 
-    cpdef draw_label_default(self, width, height):
+    cpdef draw_label_default(self, width, height, scale):
         glfont.push_state()
         glfont.set_font('opensans')
-        glfont.set_size(timeline_label_size * ui_scale)
+        glfont.set_size(timeline_label_size * scale)
         glfont.set_blur(.1)
         glfont.set_color_float((1., 1., 1., .8))
         glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)

@@ -239,7 +239,7 @@ cdef class UI:
         '''
         cdef dict submenus = {}
         for e in self.elements:
-            if isinstance(e,(Growing_Menu,Scrolling_Menu,Stretching_Menu)):
+            if isinstance(e,(Growing_Menu,Scrolling_Menu,Stretching_Menu,Container)):
                 submenus[e.label] = submenus.get(e.label,[]) + [e.configuration] #we could have two submenues with same label so we use a list for each submenu label cotaining the conf dicts for each menu
         return submenus
 
@@ -250,7 +250,7 @@ cdef class UI:
         '''
         if submenus:
             for e in self.elements:
-                if isinstance(e,(Growing_Menu,Scrolling_Menu,Stretching_Menu)):
+                if isinstance(e,(Growing_Menu,Scrolling_Menu,Stretching_Menu,Container)):
                     e.configuration = submenus.get(e.label,[{}]).pop(0) #pop of the first menu conf dict in the list.
 
     property configuration:
