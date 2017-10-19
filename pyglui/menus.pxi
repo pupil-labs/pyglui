@@ -650,13 +650,14 @@ cdef class Scrolling_Menu(Movable_Menu):
             self.outline.min_size = Vec2(0., 0.)
             self.outline.collapse()
 
-    property collapsed:
-        def __get__(self):
-            return not self.element_space.has_area()
+    @property
+    def collapsed(self):
+        return not self.element_space.has_area()
 
-        def __set__(self,collapsed):
-            if collapsed != self.collapsed:
-                self.toggle_iconified()
+    @collapsed.setter
+    def collapsed(self,collapsed):
+        if collapsed != self.collapsed:
+            self.toggle_iconified()
 
     @property
     def configuration(self):
@@ -762,3 +763,42 @@ cdef class Timeline_Menu(Scrolling_Menu):
         self.element_space.compute(self.outline)
         self.element_space.sketch(RGBA(0., 0., 0., 0.3))
         super(Timeline_Menu, self).draw(parent, nested, parent_read_only)
+
+    @property
+    def collapsed(self):
+        return self.outline.design_org.y >= -menu_topbar_pad
+
+    @collapsed.setter
+    def collapsed(self,collapsed):
+        if collapsed != self.collapsed:
+            self.toggle_iconified()
+
+    def toggle_iconified(self):
+        global should_redraw
+        should_redraw = True
+
+        if self.collapsed:
+            self.outline.inflate(self.uncollapsed_outline)
+        else:
+            self.uncollapsed_outline = self.outline.copy()
+            self.outline.collapse()
+
+    def append(self, obj):
+        if len(self.elements) == 0:
+            self.collapsed = False
+        super(Timeline_Menu, self).append(obj)
+
+    def insert(self, idx, obj):
+        if len(self.elements) == 0:
+            self.collapsed = False
+        super(Timeline_Menu, self).insert(idx, obj)
+
+    def extend(self, objs):
+        if len(self.elements) == 0:
+            self.collapsed = False
+        super(Timeline_Menu, self).extend(objs)
+
+    def remove(self, obj):
+        super(Timeline_Menu, self).remove(obj)
+        if len(self.elements) == 0:
+            self.collapsed = True
