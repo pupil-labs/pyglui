@@ -621,7 +621,7 @@ cdef class FitBox:
         #object is positioned from right (resp. bottom) and sized from context size
         elif self.design_org.y < 0 and self.design_size.y <= 0:
             self.design_org.y = target.design_org.y
-            self.design_size.y = target.design_org.y
+            self.design_size.y = target.design_size.y
         #object is positioned from left (top) and sized from context size:
         elif self.design_org.y >= 0 and self.design_size.y <= 0:
             pass
