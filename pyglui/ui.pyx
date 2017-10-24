@@ -116,23 +116,6 @@ cdef class UI:
 
     cdef handle_input(self):
         if self.new_input:
-            #print self.new_input
-
-            # Bring clicked element to front.
-            # Fix https://github.com/pupil-labs/pupil/issues/363
-            for e in self.elements[::-1]:
-                if self.new_input.buttons and e.outline.mouse_over(self.new_input.m):
-                    self.elements.insert(
-                        len(self.elements),
-                        self.elements.pop(
-                            self.elements.index(e)
-                        )
-                    )
-                    global should_redraw
-                    should_redraw = True
-                    break
-
-
             #let active elements deal with input first:
             for e in self.new_input.active_ui_elements:
                 e.pre_handle_input(self.new_input)
