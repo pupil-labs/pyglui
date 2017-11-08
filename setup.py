@@ -36,7 +36,7 @@ elif platform.system() == 'Linux':
     extra_compile_args = ["-Wno-strict-aliasing", "-O2"]
 elif platform.system() == 'Windows':
     glew_header = 'pyglui/cygl/win_glew/gl/glew.h'
-    includes = ['pyglui/cygl/', numpy.get_include(), 'pyglui/cygl/win_glew']
+    includes += ['pyglui/cygl/win_glew']
     libs = ['glew32', 'OpenGL32']
     lib_dir = ['pyglui/cygl/win_glew']
     link_args = []
