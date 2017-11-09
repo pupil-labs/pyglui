@@ -137,7 +137,7 @@ cdef class Seek_Bar(UI_element):
 
             glfont.pop_state()
 
-    cpdef pre_handle_input(self,Input new_input):
+    cpdef handle_input(self,Input new_input, bint visible, bint parent_read_only = False):
         self.backwards.handle_input(new_input, True, parent_read_only=False)
         self.play.handle_input(new_input, True, parent_read_only=False)
         self.forwards.handle_input(new_input, True, parent_read_only=False)
@@ -190,8 +190,3 @@ cdef class Seek_Bar(UI_element):
         if hover != self.hovering:
             self.hovering = hover
             should_redraw_overlay = True
-
-    cpdef handle_input(self,Input new_input, bint visible, bint parent_read_only = False):
-        new_input.active_ui_elements.append(self)
-
-
