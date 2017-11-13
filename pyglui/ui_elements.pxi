@@ -946,6 +946,17 @@ cdef class Button(UI_element):
                     should_redraw = True
                     self.function()
 
+    @property
+    def outer_label(self):
+        return self._outer_label
+
+    @outer_label.setter
+    def outer_label(self,basestring val):
+        if self._outer_label != val:
+            self._outer_label = val
+            global should_redraw
+            should_redraw = True
+
 
 cdef class Separator(UI_element):
     cdef float separator_height
