@@ -20,14 +20,16 @@ cdef class Timeline(UI_element):
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         self.outline.compute(parent)
         self.data_area.compute(self.outline)
+        cdef int width, height
+        width = int(self.data_area.size.x)
+        height = int(self.data_area.size.y)
+        if width < 1 or height < 1:
+            return
 
         cdef int vp[4]  # current view port data
         gl.glGetIntegerv(gl.GL_VIEWPORT, &vp[0])
         gl.glPushAttrib(gl.GL_VIEWPORT_BIT)
         cdef int org_y = vp[3] - int(self.data_area.org.y) - int(self.data_area.size.y)
-        cdef int width, height
-        width = int(self.data_area.size.x)
-        height = int(self.data_area.size.y)
 
         # setup gl
         gl.glViewport(int(self.data_area.org.x), org_y, width, height)
