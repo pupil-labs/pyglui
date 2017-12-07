@@ -125,6 +125,8 @@ cdef class Base_Menu(UI_element):
                     tripple_v(self.menu_bar.outline.org+menu_offset,tripple_v_size)
                 # else:
                 #     triangle_right(self.menu_bar.outline.org+menu_offset,tripple_v_size)
+
+                rect(self.menu_bar.outline.org - Vec2(50.,0.), self.menu_bar.outline.size, RGBA(0.,0.,1.,.3))
                 rect(self.menu_bar.outline.org, self.menu_bar.outline.size, RGBA(1.,0.,0.,.3))
             elif 3 == self.header_pos_id: #right
                 if self.element_space.has_area():
