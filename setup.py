@@ -23,7 +23,7 @@ if platform.system() == 'Darwin':
     for root, dirs, files in os.walk('/usr/local/Cellar/glew'):
         if 'glew.h' in files:
             glew_header = os.path.join(root,'glew.h')
-    includes += ['/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/']
+    includes += ['/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/']
     link_args = []
     libs = ['GLEW']
     libglew = [] #we are using the dylib
