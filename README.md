@@ -55,5 +55,5 @@ sudo python3 setup.py install
 * `cd /example`
 * `python3 example.py`
 
-![](https://raw.github.com/wiki/pupil-labs/pyglui/media/demo_screenshot_20141221.png)
+![](https://raw.github.com/wiki/pupil-labs/pyglui/media/pyglui_20171219.png)
 *Demo screenshot as of 2017-12-19*
