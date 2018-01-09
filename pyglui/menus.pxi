@@ -500,6 +500,7 @@ cdef class Scrolling_Menu(Movable_Menu):
     cdef Draggable scrollbar
     cdef Vec2 scrollstate
     cdef float scroll_factor
+    cdef bint _collapsed
 
     def __cinit__(self,label,pos=(100,100),size=(200,100),header_pos = 'top'):
         self.uid = id(self)
@@ -515,6 +516,7 @@ cdef class Scrolling_Menu(Movable_Menu):
             min_size = Vec2(0,0)
         self.outline = FitBox(position=Vec2(*pos),size=Vec2(*size),min_size=min_size)
         self.uncollapsed_outline = self.outline.copy()
+        self._collapsed = False
         self.elements = []
 
         self.scrollstate = Vec2(0,0)
@@ -531,6 +533,19 @@ cdef class Scrolling_Menu(Movable_Menu):
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
         self.outline.compute(parent)
         self.element_space.compute(self.outline)
+
+        # collapse/inflate if needed
+        if self.collapsed == self.element_space.has_area():
+            if self.collapsed:
+                self.uncollapsed_outline = self.outline.copy()
+                self.outline.min_size = Vec2(0., 0.)
+                self.outline.collapse()
+            else:
+                self.outline.min_size[:] = self.uncollapsed_outline.min_size[:]
+                self.outline.inflate(self.uncollapsed_outline)
+            self.outline.compute(parent)
+            self.element_space.compute(self.outline)
+
         if self.header_pos_id == 2:
             nested = nested or self.collapsed
         self.draw_menu(nested)
@@ -639,25 +654,18 @@ cdef class Scrolling_Menu(Movable_Menu):
 
 
     def toggle_iconified(self):
-        global should_redraw
-        should_redraw = True
-
-        if self.collapsed:
-            self.outline.min_size[:] = self.uncollapsed_outline.min_size[:]
-            self.outline.inflate(self.uncollapsed_outline)
-        else:
-            self.uncollapsed_outline = self.outline.copy()
-            self.outline.min_size = Vec2(0., 0.)
-            self.outline.collapse()
+        self.collapsed = not self.collapsed
 
     @property
     def collapsed(self):
-        return not self.element_space.has_area()
+        return self._collapsed
 
     @collapsed.setter
-    def collapsed(self,collapsed):
-        if collapsed != self.collapsed:
-            self.toggle_iconified()
+    def collapsed(self, should_collapse):
+        if should_collapse != self.collapsed:
+            global should_redraw
+            should_redraw = True
+            self._collapsed = should_collapse
 
     @property
     def configuration(self):
@@ -684,12 +692,13 @@ cdef class Scrolling_Menu(Movable_Menu):
         self.outline.design_size[:] = new_conf.get('size', self.outline.design_size[:])
         self.outline.min_size[:] = new_conf.get('min_size', None)
 
-        if new_conf.get('collapsed',False):
+        if new_conf.get('collapsed', False):
 
             self.uncollapsed_outline.design_org[:] = new_conf.get('uncollapsed_pos',self.outline.design_org[:])
             self.uncollapsed_outline.design_size[:] = new_conf.get('uncollapsed_size',self.outline.design_size[:])
             self.uncollapsed_outline.min_size[:] = new_conf.get('uncollapsed_min_size',None)
 
+        self.collapsed = new_conf.get('collapsed', False)
         self.header_pos = self.header_pos #update layout
         self.scrollstate[:] = new_conf.get('scrollstate',(0,0))
         self.set_submenu_config(new_conf.get('submenus',{}))
