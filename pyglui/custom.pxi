@@ -2,8 +2,10 @@
 cdef class Seek_Bar(UI_element):
 
     cdef int total
+    cdef Vec2 point_click_seek_loc
+    cdef readonly int hovering
     cdef FitBox bar, seek_handle, trim_left_handle, trim_right_handle
-    cdef readonly bint hovering, seeking, trimming_left, trimming_right
+    cdef readonly bint seeking, trimming_left, trimming_right
     cdef Synced_Value trim_left, trim_right, current
     cdef object seeking_cb
     cdef Timeline_Menu handle_start_reference
@@ -17,12 +19,13 @@ cdef class Seek_Bar(UI_element):
         self.current = Synced_Value('current_index', ctx, trigger_overlay_only=True)
         self.seeking_cb = seeking_cb
         self.total = total
-        self.hovering = False
+        self.hovering = 0
         self.seeking = False
         self.trimming_left = False
         self.trimming_right = False
         self.handle_start_reference = handle_start_reference
 
+        self.point_click_seek_loc = Vec2(0., 0.)
         self.outline = FitBox(Vec2(0., -50.), Vec2(0., 0.))
         self.bar = FitBox(Vec2(130., 18.), Vec2(-30., 3.))
         self.seek_handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
@@ -84,12 +87,12 @@ cdef class Seek_Bar(UI_element):
         handle.org.y = self.bar.org.y + self.bar.size.y / 2 - selection_height / 2
         handle.size.x = selection_height
         handle.size.y = selection_height
-        self.trim_left_handle = draw_trim_handle(handle, 0.25, RGBA(*seekbar_trim_color))
+        self.trim_left_handle = draw_trim_handle(handle, 0.25, RGBA(*seekbar_trim_color_hover if self.hovering == 3 else seekbar_trim_color))
 
         cdef float trim_r_x = clampmap(trim_right_val, 0, self.total, 0, self.bar.size.x)
         handle.org.x = int(self.bar.org.x + trim_r_x)
         handle.org.y = self.bar.org.y + self.bar.size.y / 2 - selection_height / 2
-        self.trim_right_handle = draw_trim_handle(handle, 0.75, RGBA(*seekbar_trim_color))
+        self.trim_right_handle = draw_trim_handle(handle, 0.75, RGBA(*seekbar_trim_color_hover if self.hovering == 2 else seekbar_trim_color))
 
         # draw region between trim marks
         handle.size.x = handle.org.x - int(self.bar.org.x + trim_l_x)
@@ -102,7 +105,12 @@ cdef class Seek_Bar(UI_element):
 
         handle.org = Vec2(int(self.bar.org.x + seek_x - self.bar.size.y / 4), top_ext)
         handle.size = Vec2(self.bar.size.y / 2, bot_ext - top_ext)
-        self.seek_handle = draw_seek_handle(handle, RGBA(*seekbar_seek_color))
+        self.seek_handle = draw_seek_handle(handle, RGBA(*seekbar_seek_color_hover if self.hovering == 1 else seekbar_seek_color))
+
+        if self.hovering == 4:
+            utils.draw_points([self.point_click_seek_loc],
+                              size=4*self.bar.size.y,
+                              color=RGBA(*seekbar_seek_color_hover))
 
         # debug draggable areas
         # rect(self.seek_handle.org, self.seek_handle.size, RGBA(1., 0., 0., 0.2))
@@ -114,28 +122,28 @@ cdef class Seek_Bar(UI_element):
         cdef basestring trim_right_str = str(trim_right_val + 1)
         cdef float trim_num_offset = 3. * ui_scale
         cdef float nums_y = self.play.button.org.y + self.play.button.size.y - seekbar_number_size * ui_scale / 3
-        if self.hovering or self.seeking or self.trimming_left or self.trimming_right:
-            glfont.push_state()
-            glfont.set_font('opensans')
-            glfont.set_size(seekbar_number_size * ui_scale)
+        # if self.hovering or self.seeking or self.trimming_left or self.trimming_right:
+        glfont.push_state()
+        glfont.set_font('opensans')
+        glfont.set_size(seekbar_number_size * ui_scale)
 
-            # draw actual text
-            glfont.set_blur(.1)
-            glfont.set_color_float((1., 1., 1., .8))
+        # draw actual text
+        glfont.set_blur(.1)
+        glfont.set_color_float((1., 1., 1., .8))
 
-            glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_CENTER)
-            # glfont.draw_text(self.seek_handle.org.x+self.seek_handle.size.x/2,
-            #                  self.seek_handle.org.y+self.seek_handle.size.y + 3. * ui_scale,
-            #                  current_str)
-            glfont.draw_text(self.play.button.center[0], nums_y, current_str)
+        glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_CENTER)
+        # glfont.draw_text(self.seek_handle.org.x+self.seek_handle.size.x/2,
+        #                  self.seek_handle.org.y+self.seek_handle.size.y + 3. * ui_scale,
+        #                  current_str)
+        glfont.draw_text(self.play.button.center[0], nums_y, current_str)
 
-            glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)
-            glfont.draw_text(self.trim_left_handle.center[0] - trim_num_offset, nums_y, trim_left_str)
+        glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)
+        glfont.draw_text(self.trim_left_handle.center[0] - trim_num_offset, nums_y, trim_left_str)
 
-            glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_LEFT)
-            glfont.draw_text(self.trim_right_handle.center[0] + trim_num_offset, nums_y, trim_right_str)
+        glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_LEFT)
+        glfont.draw_text(self.trim_right_handle.center[0] + trim_num_offset, nums_y, trim_right_str)
 
-            glfont.pop_state()
+        glfont.pop_state()
 
     cpdef handle_input(self,Input new_input, bint visible, bint parent_read_only = False):
         self.backwards.handle_input(new_input, True, parent_read_only=False)
@@ -159,18 +167,36 @@ cdef class Seek_Bar(UI_element):
             self.trim_left.value = int(val)
             should_redraw_overlay = True
 
-        for b in new_input.buttons[:]:#list copy for remove to work
+        if self.seek_handle.mouse_over(new_input.m) or self.seeking:
+            should_redraw_overlay = should_redraw_overlay or self.hovering != 1
+            self.hovering = 1
+        elif self.trim_right_handle.mouse_over(new_input.m) or self.trimming_right:
+            should_redraw_overlay = should_redraw_overlay or self.hovering != 2
+            self.hovering = 2
+        elif self.trim_left_handle.mouse_over(new_input.m) or self.trimming_left:
+            should_redraw_overlay = should_redraw_overlay or self.hovering != 3
+            self.hovering = 3
+        elif self.bar.mouse_over_margin(new_input.m, Vec2(0, 10 * ui_scale)):
+            self.point_click_seek_loc = Vec2(new_input.m.x, self.bar.center[1])
+            should_redraw_overlay = should_redraw_overlay or self.hovering != 4 or new_input.dm.x != 0
+            self.hovering = 4
+        else:
+            should_redraw_overlay = should_redraw_overlay or self.hovering != 0
+            self.hovering = 0
+
+
+        for b in new_input.buttons[:]: # list copy for remove to work
             if b[1] == 1:
-                if self.seek_handle.mouse_over(new_input.m):
+                if self.hovering == 1:
                     new_input.buttons.remove(b)
                     self.seeking = True
                     should_redraw_overlay = True
                     self.seeking_cb(True)
-                elif self.trim_right_handle.mouse_over(new_input.m):
+                elif self.hovering == 2:
                     new_input.buttons.remove(b)
                     self.trimming_right = True
                     should_redraw_overlay = True
-                elif self.trim_left_handle.mouse_over(new_input.m):
+                elif self.hovering == 3:
                     new_input.buttons.remove(b)
                     self.trimming_left = True
                     should_redraw_overlay = True
@@ -185,8 +211,9 @@ cdef class Seek_Bar(UI_element):
             elif self.trimming_left and b[1] == 0:
                 self.trimming_left = False
                 should_redraw_overlay = True
-
-        cdef bint hover = self.outline.mouse_over(new_input.m)
-        if hover != self.hovering:
-            self.hovering = hover
-            should_redraw_overlay = True
+            elif self.hovering == 4 and b[1] == 0:
+                val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
+                               0, self.total)
+                self.current.value = int(val)
+                self.hovering = 0
+                should_redraw_overlay = True

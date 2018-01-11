@@ -111,7 +111,9 @@ DEF menu_sidebar_min_height = 20.
 DEF menu_line = (1.,1.,1.,.8)
 
 DEF seekbar_trim_color = color_on
+DEF seekbar_trim_color_hover = (1., 0.84, 0.4, 0.8)
 DEF seekbar_seek_color = color_on
+DEF seekbar_seek_color_hover = (1., 0.84, 0.4, 0.8)
 DEF seekbar_number_size = 15.
 
 DEF timelines_draggable_size = resize_corner_size
