@@ -675,6 +675,9 @@ cdef class FitBox:
     cpdef bint mouse_over(self,Vec2 m):
         return self.org.x <= m.x <= self.org.x+self.size.x and self.org.y <= m.y <=self.org.y+self.size.y
 
+    cpdef bint mouse_over_margin(self, Vec2 m, Vec2 margin):
+        return self.org.x - margin.x <= m.x <= self.org.x + self.size.x + margin.x and self.org.y - margin.y <= m.y <= self.org.y + self.size.y + margin.y
+
     def __str__(self):
         return "FitBox:\n   design org: %s size: %s\n   comptd org: %s size: %s"%(self.design_org,self.design_size,self.org,self.size)
 

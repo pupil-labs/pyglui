@@ -2,6 +2,7 @@
 cdef class Seek_Bar(UI_element):
 
     cdef int total
+    cdef Vec2 point_click_seek_loc
     cdef readonly int hovering
     cdef FitBox bar, seek_handle, trim_left_handle, trim_right_handle
     cdef readonly bint seeking, trimming_left, trimming_right
@@ -24,6 +25,7 @@ cdef class Seek_Bar(UI_element):
         self.trimming_right = False
         self.handle_start_reference = handle_start_reference
 
+        self.point_click_seek_loc = Vec2(0., 0.)
         self.outline = FitBox(Vec2(0., -50.), Vec2(0., 0.))
         self.bar = FitBox(Vec2(130., 18.), Vec2(-30., 3.))
         self.seek_handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
@@ -105,6 +107,11 @@ cdef class Seek_Bar(UI_element):
         handle.size = Vec2(self.bar.size.y / 2, bot_ext - top_ext)
         self.seek_handle = draw_seek_handle(handle, RGBA(*seekbar_seek_color_hover if self.hovering == 1 else seekbar_seek_color))
 
+        if self.hovering == 4:
+            utils.draw_points([self.point_click_seek_loc],
+                              size=4*self.bar.size.y,
+                              color=RGBA(*seekbar_seek_color_hover))
+
         # debug draggable areas
         # rect(self.seek_handle.org, self.seek_handle.size, RGBA(1., 0., 0., 0.2))
         # rect(self.trim_left_handle.org, self.trim_left_handle.size, RGBA(1., 0., 0., 0.2))
@@ -169,6 +176,10 @@ cdef class Seek_Bar(UI_element):
         elif self.trim_left_handle.mouse_over(new_input.m) or self.trimming_left:
             should_redraw_overlay = should_redraw_overlay or self.hovering != 3
             self.hovering = 3
+        elif self.bar.mouse_over_margin(new_input.m, Vec2(0, 10 * ui_scale)):
+            self.point_click_seek_loc = Vec2(new_input.m.x, self.bar.center[1])
+            should_redraw_overlay = should_redraw_overlay or self.hovering != 4 or new_input.dm.x != 0
+            self.hovering = 4
         else:
             should_redraw_overlay = should_redraw_overlay or self.hovering != 0
             self.hovering = 0
@@ -199,4 +210,10 @@ cdef class Seek_Bar(UI_element):
                 should_redraw_overlay = True
             elif self.trimming_left and b[1] == 0:
                 self.trimming_left = False
+                should_redraw_overlay = True
+            elif self.hovering == 4 and b[1] == 0:
+                val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
+                               0, self.total)
+                self.current.value = int(val)
+                self.hovering = 0
                 should_redraw_overlay = True
