@@ -187,6 +187,13 @@ cdef class Seek_Bar(UI_element):
 
         for b in new_input.buttons[:]: # list copy for remove to work
             if b[1] == 1:
+                if self.hovering == 4:
+                    val = clampmap(new_input.m.x-self.bar.org.x, 0,
+                                   self.bar.size.x, 0, self.total)
+                    self.current.value = int(val)
+                    self.hovering = 1
+                    should_redraw_overlay = True
+
                 if self.hovering == 1:
                     new_input.buttons.remove(b)
                     self.seeking = True
@@ -210,10 +217,4 @@ cdef class Seek_Bar(UI_element):
                 should_redraw_overlay = True
             elif self.trimming_left and b[1] == 0:
                 self.trimming_left = False
-                should_redraw_overlay = True
-            elif self.hovering == 4 and b[1] == 0:
-                val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
-                               0, self.total)
-                self.current.value = int(val)
-                self.hovering = 0
                 should_redraw_overlay = True
