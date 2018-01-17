@@ -43,9 +43,9 @@ cdef class Seek_Bar(UI_element):
         self.trim_right_handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
 
         play_icon = chr(0xE037)
-        pause_icon = chr(0xe01d)  # TODO: Pause icon
+        pause_icon = chr(0xe034)
         step_fwd_icon = chr(0xe044)
-        step_bwd_icon = chr(0xe044)  # TODO: Step backwards icon
+        step_bwd_icon = chr(0xe045)
         incr_pbs_icon = chr(0xE01F)  # pbs: playback speed
         decr_pbs_icon = chr(0xE020)
 
