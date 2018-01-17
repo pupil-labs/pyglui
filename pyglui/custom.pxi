@@ -1,12 +1,21 @@
 
 cdef class Seek_Bar(UI_element):
+    '''Seek bar that visualizes seek handles, trim marks and playback buttons
+
+    Hover modes:
+        0   Seek bar is not being hovered
+        1   Seek handle is being hovered
+        2   Right trim mark handle is being hovered
+        3   Left trim mark handle is being hovered
+        4   Seek bar is being hovered
+    '''
 
     cdef int total
     cdef Vec2 point_click_seek_loc
     cdef readonly int hovering
     cdef FitBox bar, seek_handle, trim_left_handle, trim_right_handle
     cdef readonly bint seeking, trimming_left, trimming_right
-    cdef Synced_Value trim_left, trim_right, current
+    cdef Synced_Value trim_left, trim_right, current, playback_speed
     cdef object seeking_cb
     cdef Timeline_Menu handle_start_reference
     cdef Icon backwards, play, forwards
@@ -17,6 +26,7 @@ cdef class Seek_Bar(UI_element):
         self.trim_left = Synced_Value('trim_left', ctx, trigger_overlay_only=True)
         self.trim_right = Synced_Value('trim_right', ctx, trigger_overlay_only=True)
         self.current = Synced_Value('current_index', ctx, trigger_overlay_only=True)
+        self.playback_speed = Synced_Value('playback_speed', ctx, trigger_overlay_only=True)
         self.seeking_cb = seeking_cb
         self.total = total
         self.hovering = 0
@@ -32,19 +42,39 @@ cdef class Seek_Bar(UI_element):
         self.trim_left_handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
         self.trim_right_handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
 
-        def step_backwards(_):
-            self.current.value = max(self.current.value - 1, 0)
+        play_icon = chr(0xE037)
+        pause_icon = chr(0xe034)
+        step_fwd_icon = chr(0xe044)
+        step_bwd_icon = chr(0xe045)
+        incr_pbs_icon = chr(0xE01F)  # pbs: playback speed
+        decr_pbs_icon = chr(0xE020)
 
-        def step_forwards(_):
-            self.current.value = min(self.current.value + 1, self.total)
+        def set_play(_):
+            if ctx.play:
+                self.backwards.label = step_bwd_icon
+                self.forwards.label = step_fwd_icon
+                self.play.label = play_icon
+                ctx.play = False
+            else:
+                self.backwards.label = decr_pbs_icon
+                self.forwards.label = incr_pbs_icon
+                self.play.label = pause_icon
+                ctx.play = True
 
-        self.backwards = Icon('backwards', label=chr(0xE020), getter=lambda: False,
-                              setter=step_backwards, hotkey=263,  # 263 = glfw.GLFW_KEY_LEFT
-                              label_font='pupil_icons')
-        self.forwards = Icon('forwards', label=chr(0xE01F), getter=lambda: False,
-                             setter=step_forwards, hotkey=262,  # 262 = glfw.GLFW_KEY_RIGHT
-                             label_font='pupil_icons')
-        self.play = Icon('play', ctx, label=chr(0xE037), hotkey=32, label_font='pupil_icons')  # 32 = glfw.GLFW_KEY_SPACE
+        self.backwards = Icon('backwards', ctx, label_font='pupil_icons',
+                              label=step_bwd_icon,
+                              getter=lambda: True,
+                              hotkey=263)  # 263 = glfw.GLFW_KEY_LEFT
+        self.forwards = Icon('forwards', ctx, label_font='pupil_icons',
+                             label=step_fwd_icon,
+                             hotkey=262,  # 262 = glfw.GLFW_KEY_RIGHT
+                             getter=lambda: True)
+
+        self.play = Icon('play', ctx, label_font='pupil_icons',
+                         label=play_icon,
+                         hotkey=32, # 32 = glfw.GLFW_KEY_SPACE
+                         setter=set_play,
+                         getter=lambda: True)
 
         self.backwards.outline = FitBox(Vec2(5, 0),Vec2(40, 40))
         self.play.outline = FitBox(Vec2(40, 0),Vec2(40, 40))
@@ -57,6 +87,7 @@ cdef class Seek_Bar(UI_element):
         self.trim_left.sync()
         self.trim_right.sync()
         self.current.sync()
+        self.playback_speed.sync()
         self.backwards.sync()
         self.play.sync()
         self.forwards.sync()
@@ -117,9 +148,10 @@ cdef class Seek_Bar(UI_element):
         # rect(self.trim_left_handle.org, self.trim_left_handle.size, RGBA(1., 0., 0., 0.2))
         # rect(self.trim_right_handle.org, self.trim_right_handle.size, RGBA(1., 0., 0., 0.2))
 
-        cdef basestring current_str = str(current_val + 1)
+        cdef basestring current_str = '{}x'.format(self.playback_speed.value) if self.playback_speed.value else str(current_val + 1)
         cdef basestring trim_left_str = str(trim_left_val + 1)
         cdef basestring trim_right_str = str(trim_right_val + 1)
+
         cdef float trim_num_offset = 3. * ui_scale
         cdef float nums_y = self.play.button.org.y + self.play.button.size.y - seekbar_number_size * ui_scale / 3
         # if self.hovering or self.seeking or self.trimming_left or self.trimming_right:
@@ -187,6 +219,13 @@ cdef class Seek_Bar(UI_element):
 
         for b in new_input.buttons[:]: # list copy for remove to work
             if b[1] == 1:
+                if self.hovering == 4:
+                    val = clampmap(new_input.m.x-self.bar.org.x, 0,
+                                   self.bar.size.x, 0, self.total)
+                    self.current.value = int(val)
+                    self.hovering = 1
+                    should_redraw_overlay = True
+
                 if self.hovering == 1:
                     new_input.buttons.remove(b)
                     self.seeking = True
@@ -210,10 +249,4 @@ cdef class Seek_Bar(UI_element):
                 should_redraw_overlay = True
             elif self.trimming_left and b[1] == 0:
                 self.trimming_left = False
-                should_redraw_overlay = True
-            elif self.hovering == 4 and b[1] == 0:
-                val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
-                               0, self.total)
-                self.current.value = int(val)
-                self.hovering = 0
                 should_redraw_overlay = True
