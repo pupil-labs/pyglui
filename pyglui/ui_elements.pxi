@@ -574,7 +574,7 @@ cdef class Text_Input(UI_element):
                 return
 
             # cut: mod+x (88), copy: mod+c (67)
-            elif key in (67, 88) and mods & UI_MOD_KEY and action == 0:
+            elif key in (67, 88) and mods & UI_MOD_KEY and action != 0:
                 if self.highlight:
                     min_idx = min(self.start_highlight_idx, self.caret)
                     max_idx = max(self.start_highlight_idx, self.caret)
@@ -585,7 +585,7 @@ cdef class Text_Input(UI_element):
                         self.highlight = False
                         should_redraw = True
             # paste: mod+v
-            elif key == 86 and mods & UI_MOD_KEY and action == 0 and new_input.cb:
+            elif key == 86 and mods & UI_MOD_KEY and action != 0 and new_input.cb:
                 if self.highlight:
                     min_idx = min(self.start_highlight_idx, self.caret)
                     max_idx = max(self.start_highlight_idx, self.caret)
@@ -751,7 +751,6 @@ cdef class Text_Input(UI_element):
 
 
     cdef finish_input(self):
-        print('finish')
         global should_redraw
         should_redraw = True
         self.selected = False
