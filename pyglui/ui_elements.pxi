@@ -573,16 +573,42 @@ cdef class Text_Input(UI_element):
                 self.abort_input()
                 return
 
+            # cut: mod+x (88), copy: mod+c (67)
+            elif key in (67, 88) and mods & UI_MOD_KEY and action == 0:
+                if self.highlight:
+                    min_idx = min(self.start_highlight_idx, self.caret)
+                    max_idx = max(self.start_highlight_idx, self.caret)
+                    new_input.cb = self.preview[min_idx:max_idx]
+                    if key == 88:
+                        self.preview = self.preview[:min_idx] + self.preview[max_idx:]
+                        self.caret = min_idx
+                        self.highlight = False
+                        should_redraw = True
+            # paste: mod+v
+            elif key == 86 and mods & UI_MOD_KEY and action == 0 and new_input.cb:
+                if self.highlight:
+                    min_idx = min(self.start_highlight_idx, self.caret)
+                    max_idx = max(self.start_highlight_idx, self.caret)
+                else:
+                    min_idx = max_idx = self.caret
+
+                self.preview = self.preview[:min_idx] + new_input.cb + self.preview[max_idx:]
+                self.caret = min_idx + len(new_input.cb)
+                self.highlight = False
+                should_redraw = True
+
             elif key == 259 and action != 1: # Backspace and key not released (key repeat)
                 if self.caret > 0 and self.highlight is False:
                     self.preview = self.preview[:self.caret-1] + self.preview[self.caret:]
                     self.caret -=1
                 if self.highlight:
-                    self.preview = self.preview[:min(self.start_highlight_idx,self.caret)] + self.preview[max(self.start_highlight_idx,self.caret):]
-                    self.caret = min(self.start_highlight_idx,self.caret)
+                    min_idx = min(self.start_highlight_idx, self.caret)
+                    max_idx = max(self.start_highlight_idx, self.caret)
+                    self.preview = self.preview[:min_idx] + self.preview[max_idx:]
+                    self.caret = min_idx
                     self.highlight = False
 
-                self.caret = max(0,self.caret)
+                self.caret = max(0, self.caret)
                 should_redraw = True
 
             elif key == 261 and action != 1: # Delete and key not released (key repeat)
@@ -624,7 +650,7 @@ cdef class Text_Input(UI_element):
                 self.highlight = True
                 should_redraw = True
 
-            elif key == 65 and action == 0 and mods in (8,2): # select all
+            elif key == 65 and action == 0 and mods == UI_MOD_KEY: # select all
                 # key a and action key press and mods are either command/super for MacOS or control for Windows
                 if len(self.preview) > 0 and self.highlight is False:
                     self.start_highlight_idx = 0
