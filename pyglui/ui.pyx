@@ -14,6 +14,13 @@ from os import path
 from time import time
 from collections import namedtuple
 
+from platform import system as current_os
+
+cdef int UI_MOD_KEY  # defines modifier key for cut/copy/paste
+if current_os() == 'Darwin':
+    UI_MOD_KEY = 8  # glfw.GLFW_MOD_SUPER
+else:
+    UI_MOD_KEY = 2  # glfw.GLFW_MOD_CONTROL
 
 #global cdefs
 cdef fs.Context glfont
@@ -110,6 +117,9 @@ cdef class UI:
     def update_button(self,button,action,mods):
         self.new_input.buttons.append((button,action,mods))
 
+    def update_clipboard(self, clipboard):
+        self.new_input.cb = clipboard
+
     cdef sync(self):
         for e in self.elements:
             e.sync()
@@ -126,10 +136,11 @@ cdef class UI:
             for e in self.elements[::-1]:
                 e.handle_input(self.new_input,True)
 
-            unused = Unused_Input(self.new_input.buttons, self.new_input.keys, self.new_input.chars)
+            unused = Unused_Input(self.new_input.buttons, self.new_input.keys,
+                                  self.new_input.chars, self.new_input.cb)
             self.new_input.purge()
         else:
-            unused = Unused_Input([], [], [])
+            unused = Unused_Input([], [], [], self.new_input.cb)
 
         return unused
 
@@ -371,6 +382,7 @@ cdef class Input:
     '''
 
     cdef public list keys,chars,buttons,active_ui_elements
+    cdef public basestring cb
     cdef Vec2 dm,m,s
 
     def __cinit__(self):
@@ -381,6 +393,7 @@ cdef class Input:
         self.m = Vec2(0,0)
         self.dm = Vec2(0,0)
         self.s = Vec2(0,0)
+        self.cb = ''
 
     def __init__(self):
         pass
@@ -396,11 +409,12 @@ cdef class Input:
         self.dm.y = 0
         self.s.x = 0
         self.s.y = 0
+        self.cb = ''
 
     def __str__(self):
         return 'Current Input: \n   Mouse pos  : %s\n   Mouse delta: %s\n   Scroll: %s\n   Buttons: %s\n   Keys: %s\n   Chars: %s' %(self.m,self.dm,self.s,self.buttons,self.keys,self.chars)
 
-Unused_Input = namedtuple('Unused_Input', ['buttons', 'keys', 'chars'])
+Unused_Input = namedtuple('Unused_Input', ['buttons', 'keys', 'chars', 'clipboard'])
 
 
 DEF drag_threshold = 10
