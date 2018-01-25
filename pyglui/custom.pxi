@@ -5,12 +5,12 @@ from libc.math cimport floor
 cdef class Seek_Bar(UI_element):
     '''Seek bar that visualizes seek handles, trim marks and playback buttons
 
-    Hover modes:
-        0   Seek bar is not being hovered
+    Hover modes (descending priority):
         1   Seek handle is being hovered
         2   Right trim mark handle is being hovered
         3   Left trim mark handle is being hovered
         4   Seek bar is being hovered
+        0   Seek bar is not being hovered
     '''
 
     cdef double min_ts, mid_ts, max_ts
@@ -26,8 +26,8 @@ cdef class Seek_Bar(UI_element):
     def __cinit__(self, object ctx, double min_ts, double max_ts, object seeking_cb,
                   Timeline_Menu handle_start_reference, *args, **kwargs):
         self.uid = id(self)
-        self.trim_left = Synced_Value('trim_left', ctx, trigger_overlay_only=True)
-        self.trim_right = Synced_Value('trim_right', ctx, trigger_overlay_only=True)
+        self.trim_left = Synced_Value('trim_left_ts', ctx, trigger_overlay_only=True)
+        self.trim_right = Synced_Value('trim_right_ts', ctx, trigger_overlay_only=True)
         self.current = Synced_Value('current_ts', ctx, trigger_overlay_only=True)
         self.playback_speed = Synced_Value('playback_speed', ctx, trigger_overlay_only=True)
         self.seeking_cb = seeking_cb
