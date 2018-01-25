@@ -1,21 +1,21 @@
 
-cdef inline float lmap(float value, float istart, float istop, float ostart, float ostop):
+cdef inline double lmap(double value, double istart, double istop, double ostart, double ostop):
     '''
     linear mapping of val from space 1 to space 2
     '''
     return ostart + (ostop - ostart) * ((value - istart) / (istop - istart))
 
-cdef inline float clamp(float value, float minium, float maximum):
+cdef inline double clamp(double value, double minium, double maximum):
     return max(min(value,maximum),minium)
 
-cdef inline float clampmap(float value, float istart, float istop, float ostart, float ostop):
+cdef inline double clampmap(double value, double istart, double istop, double ostart, double ostop):
     return clamp(lmap(value,istart,istop,ostart,ostop),ostart,ostop)
 
-cdef inline bint mouse_over_center(Vec2 center, float w, float h, Vec2 m):
+cdef inline bint mouse_over_center(Vec2 center, double w, double h, Vec2 m):
     return center.x-w/2 <= m.x <=center.x+w/2 and center.y-h/2 <= m.y <=center.y+h/2
 
-cdef inline float step(float value, float start, float stop, float step):
-    cdef float rest
+cdef inline double step(double value, double start, double stop, double step):
+    cdef double rest
     if step:
         value -=start
         rest = value%step
