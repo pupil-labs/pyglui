@@ -50,7 +50,6 @@ simple_pt_shader = None
 progress_shader = None
 tooltip_shader = None
 simple_yuv422_shader = None
-simple_concentric_circle_shader = None
 simple_circle_shader = None
 rounded_rect_shader = None
 
@@ -60,7 +59,6 @@ cpdef init():
     global progress_shader
     global tooltip_shader
     global simple_yuv422_shader
-    global simple_concentric_circle_shader
     global simple_circle_shader
     global rounded_rect_shader
     basic_shader = None
@@ -68,7 +66,6 @@ cpdef init():
     progress_shader = None
     tooltip_shader = None
     simple_yuv422_shader = None
-    simple_concentric_circle_shader = None
     simple_circle_shader = None
     rounded_rect_shader = None
 
@@ -372,93 +369,6 @@ cpdef draw_circle( center_position = (0,0) ,float radius=20,float stroke_width= 
 
 
     simple_circle_shader.unbind()
-
-
-
-cpdef draw_concentric_circles( center_position = (0,0), radius = 10 , circle_count = 5, alpha = 1.0):
-
-    global simple_concentric_circle_shader
-
-    if not simple_concentric_circle_shader:
-        VERT_SHADER = """
-        #version 120
-
-        uniform vec2 center_position; // position in screen coordinates
-        uniform float radius = 10;
-
-        void main () {
-
-               float quadSize = radius * 2 * 1.1;
-
-               gl_Position =  gl_ModelViewProjectionMatrix * vec4( center_position + quadSize * 0.5 *  gl_Vertex.xy, 0.0, 1.0);
-               gl_TexCoord[0] = gl_MultiTexCoord0;
-
-               }
-        """
-
-        FRAG_SHADER = """
-        #version 120
-
-        uniform float alpha = 1;
-        uniform float radius = 10;
-        uniform int circle_count = 4;
-
-        void main()
-        {
-            vec2 texCoord = gl_TexCoord[0].st ;
-            float quadSize = radius * 2 * 1.1;
-            float normalizedradius = radius/quadSize/circle_count;
-            float circleSize = normalizedradius * circle_count;
-
-            float dist = distance(texCoord , vec2(0.5,0.5));
-            float circleIndex = mod(dist/normalizedradius, 2);
-            float segmentDelta = fract(circleIndex) ;
-
-            int colorIndex = int(floor(circleIndex));
-            const float colors[2] =  float[2](0.0f, 1.0f);
-            const float colors2[2] =  float[2](1.0f, 0.0f);
-
-            vec3 color = vec3(colors[colorIndex]);
-            vec3 colorOpposit  = vec3(colors2[colorIndex]);
-
-            const float sharpness = 0.3;
-            color = mix(color, colorOpposit, smoothstep(0.0, sharpness, segmentDelta) );
-
-            if( dist  > circleSize ){
-                float delta = dist - circleSize;
-                gl_FragColor = vec4(color, alpha *  smoothstep(1.0-sharpness, 1.0, (0.207 - delta)/0.207 ) ); // 0.207 = sqrt(0.5^2 + 0.5^2) - 0.5 , length of texture corner to outer circle radius
-            }
-            else
-                gl_FragColor = vec4(color,alpha);
-
-        }
-        """
-
-        GEOM_SHADER = """"""
-        #shader link and compile
-        simple_concentric_circle_shader = shader.Shader(VERT_SHADER,FRAG_SHADER,GEOM_SHADER)
-
-
-
-    simple_concentric_circle_shader.bind()
-    simple_concentric_circle_shader.uniform1f('alpha', alpha)
-    simple_concentric_circle_shader.uniform1f('radius', radius)
-    simple_concentric_circle_shader.uniform1i('circle_count', circle_count)
-    simple_concentric_circle_shader.uniformf('center_position', center_position )
-
-    glBegin(GL_QUADS)
-    glTexCoord2f(0.0, 1.0)
-    glVertex2f(-0.5,-0.5)
-    glTexCoord2f(1.0, 1.0)
-    glVertex2f(0.5,-0.5)
-    glTexCoord2f(1.0, 0.0)
-    glVertex2f(0.5,0.5)
-    glTexCoord2f(0.0, 0.0)
-    glVertex2f(-0.5,0.5)
-    glEnd()
-
-
-    simple_concentric_circle_shader.unbind()
 
 
 cpdef draw_rounded_rect(origin, size, float corner_radius, RGBA color=RGBA(1.,0.5,0.5,.5), float sharpness=0.8):
