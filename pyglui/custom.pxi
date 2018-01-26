@@ -1,16 +1,19 @@
+cimport cython
+from libc.math cimport floor
+
 
 cdef class Seek_Bar(UI_element):
     '''Seek bar that visualizes seek handles, trim marks and playback buttons
 
-    Hover modes:
-        0   Seek bar is not being hovered
+    Hover modes (descending priority):
         1   Seek handle is being hovered
         2   Right trim mark handle is being hovered
         3   Left trim mark handle is being hovered
         4   Seek bar is being hovered
+        0   Seek bar is not being hovered
     '''
 
-    cdef int total
+    cdef double min_ts, mid_ts, max_ts
     cdef Vec2 point_click_seek_loc
     cdef readonly int hovering
     cdef FitBox bar, seek_handle, trim_left_handle, trim_right_handle
@@ -20,15 +23,17 @@ cdef class Seek_Bar(UI_element):
     cdef Timeline_Menu handle_start_reference
     cdef Icon backwards, play, forwards
 
-    def __cinit__(self, object ctx, int total, object seeking_cb,
+    def __cinit__(self, object ctx, double min_ts, double max_ts, object seeking_cb,
                   Timeline_Menu handle_start_reference, *args, **kwargs):
         self.uid = id(self)
-        self.trim_left = Synced_Value('trim_left', ctx, trigger_overlay_only=True)
-        self.trim_right = Synced_Value('trim_right', ctx, trigger_overlay_only=True)
-        self.current = Synced_Value('current_index', ctx, trigger_overlay_only=True)
+        self.trim_left = Synced_Value('trim_left_ts', ctx, trigger_overlay_only=True)
+        self.trim_right = Synced_Value('trim_right_ts', ctx, trigger_overlay_only=True)
+        self.current = Synced_Value('current_ts', ctx, trigger_overlay_only=True)
         self.playback_speed = Synced_Value('playback_speed', ctx, trigger_overlay_only=True)
         self.seeking_cb = seeking_cb
-        self.total = total
+        self.min_ts = min_ts
+        self.max_ts = max_ts
+        self.mid_ts = (min_ts + max_ts) / 2
         self.hovering = 0
         self.seeking = False
         self.trimming_left = False
@@ -37,7 +42,7 @@ cdef class Seek_Bar(UI_element):
 
         self.point_click_seek_loc = Vec2(0., 0.)
         self.outline = FitBox(Vec2(0., -50.), Vec2(0., 0.))
-        self.bar = FitBox(Vec2(130., 18.), Vec2(-30., 3.))
+        self.bar = FitBox(Vec2(130., 21.), Vec2(-30., 3.))
         self.seek_handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
         self.trim_left_handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
         self.trim_right_handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
@@ -105,22 +110,22 @@ cdef class Seek_Bar(UI_element):
         self.forwards.draw(self.outline, nested=True, parent_read_only=False)
 
         cdef FitBox handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
-        cdef int current_val = self.current.value
-        cdef int trim_left_val = self.trim_left.value
-        cdef int trim_right_val = self.trim_right.value
-        cdef float seek_x = clampmap(current_val, 0, self.total, 0, self.bar.size.x)
-        cdef float top_ext = self.handle_start_reference.element_space.org.y
-        cdef float bot_ext = self.bar.org.y + self.bar.size.y + 20 * ui_scale
-        cdef float selection_height = 5 * self.bar.size.y
+        cdef double current_val = self.current.value
+        cdef double trim_left_val = self.trim_left.value
+        cdef double trim_right_val = self.trim_right.value
+        cdef double seek_x = clampmap(current_val, self.min_ts, self.max_ts, 0, self.bar.size.x)
+        cdef double top_ext = self.handle_start_reference.element_space.org.y
+        cdef double bot_ext = self.bar.org.y + self.bar.size.y + 20 * ui_scale
+        cdef double selection_height = 5 * self.bar.size.y
 
-        cdef float trim_l_x = clampmap(trim_left_val, 0, self.total, 0, self.bar.size.x)
+        cdef double trim_l_x = clampmap(trim_left_val, self.min_ts, self.max_ts, 0, self.bar.size.x)
         handle.org.x = int(self.bar.org.x + trim_l_x - selection_height)
         handle.org.y = self.bar.org.y + self.bar.size.y / 2 - selection_height / 2
         handle.size.x = selection_height
         handle.size.y = selection_height
         self.trim_left_handle = draw_trim_handle(handle, 0.25, RGBA(*seekbar_trim_color_hover if self.hovering == 3 else seekbar_trim_color))
 
-        cdef float trim_r_x = clampmap(trim_right_val, 0, self.total, 0, self.bar.size.x)
+        cdef double trim_r_x = clampmap(trim_right_val, self.min_ts, self.max_ts, 0, self.bar.size.x)
         handle.org.x = int(self.bar.org.x + trim_r_x)
         handle.org.y = self.bar.org.y + self.bar.size.y / 2 - selection_height / 2
         self.trim_right_handle = draw_trim_handle(handle, 0.75, RGBA(*seekbar_trim_color_hover if self.hovering == 2 else seekbar_trim_color))
@@ -148,12 +153,14 @@ cdef class Seek_Bar(UI_element):
         # rect(self.trim_left_handle.org, self.trim_left_handle.size, RGBA(1., 0., 0., 0.2))
         # rect(self.trim_right_handle.org, self.trim_right_handle.size, RGBA(1., 0., 0., 0.2))
 
-        cdef basestring current_str = '{}x'.format(self.playback_speed.value) if self.playback_speed.value else str(current_val + 1)
-        cdef basestring trim_left_str = str(trim_left_val + 1)
-        cdef basestring trim_right_str = str(trim_right_val + 1)
+        cdef basestring speed_str = '{}x'.format(self.playback_speed.value)
+        cdef basestring current_ts_str = self.format_ts(current_val)
+        cdef basestring trim_left_str = self.format_ts(trim_left_val)
+        cdef basestring trim_right_str = self.format_ts(trim_right_val)
 
-        cdef float trim_num_offset = 3. * ui_scale
-        cdef float nums_y = self.play.button.org.y + self.play.button.size.y - seekbar_number_size * ui_scale / 3
+        cdef double trim_num_offset = 3. * ui_scale
+        cdef double time_y = self.bar.org.y - selection_height / 2 + 2*ui_scale
+        cdef double nums_y = self.play.button.org.y + self.play.button.size.y - seekbar_number_size * ui_scale / 3
         # if self.hovering or self.seeking or self.trimming_left or self.trimming_right:
         glfont.push_state()
         glfont.set_font('opensans')
@@ -161,13 +168,20 @@ cdef class Seek_Bar(UI_element):
 
         # draw actual text
         glfont.set_blur(.1)
-        glfont.set_color_float((1., 1., 1., .8))
+        glfont.set_color_float((1., 1., 1., 1.))
+
+        if current_val < self.mid_ts:
+            glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_LEFT)
+            glfont.draw_text(self.bar.org.x + seek_x + 5*ui_scale, time_y, current_ts_str)
+        else:
+            glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_RIGHT)
+            glfont.draw_text(self.bar.org.x + seek_x - 5*ui_scale, time_y, current_ts_str)
 
         glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_CENTER)
         # glfont.draw_text(self.seek_handle.org.x+self.seek_handle.size.x/2,
         #                  self.seek_handle.org.y+self.seek_handle.size.y + 3. * ui_scale,
-        #                  current_str)
-        glfont.draw_text(self.play.button.center[0], nums_y, current_str)
+        #                  speed_str)
+        glfont.draw_text(self.play.button.center[0], nums_y, speed_str)
 
         glfont.set_align(fs.FONS_ALIGN_TOP | fs.FONS_ALIGN_RIGHT)
         glfont.draw_text(self.trim_left_handle.center[0] - trim_num_offset, nums_y, trim_left_str)
@@ -177,6 +191,14 @@ cdef class Seek_Bar(UI_element):
 
         glfont.pop_state()
 
+    @cython.cdivision(True)
+    cdef format_ts(self, double ts):
+        cdef double minutes, seconds
+        ts -= self.min_ts
+        minutes = floor(ts / 60)
+        seconds = ts - (minutes * 60.)
+        return '{:02.0f}:{:06.3f}'.format(minutes, seconds)
+
     cpdef handle_input(self,Input new_input, bint visible, bint parent_read_only = False):
         self.backwards.handle_input(new_input, True, parent_read_only=False)
         self.play.handle_input(new_input, True, parent_read_only=False)
@@ -185,18 +207,18 @@ cdef class Seek_Bar(UI_element):
         global should_redraw_overlay
         if self.seeking and new_input.dm:
             val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
-                           0, self.total)
-            self.current.value = int(val)
+                           self.min_ts, self.max_ts)
+            self.current.value = val
             should_redraw_overlay = True
         elif self.trimming_right and new_input.dm:
             val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
-                           0, self.total)
-            self.trim_right.value = int(val)
+                           self.min_ts, self.max_ts)
+            self.trim_right.value = val
             should_redraw_overlay = True
         elif self.trimming_left and new_input.dm:
             val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
-                           0, self.total)
-            self.trim_left.value = int(val)
+                           self.min_ts, self.max_ts)
+            self.trim_left.value = val
             should_redraw_overlay = True
 
         if self.seek_handle.mouse_over(new_input.m) or self.seeking:
@@ -221,8 +243,8 @@ cdef class Seek_Bar(UI_element):
             if b[1] == 1:
                 if self.hovering == 4:
                     val = clampmap(new_input.m.x-self.bar.org.x, 0,
-                                   self.bar.size.x, 0, self.total)
-                    self.current.value = int(val)
+                                   self.bar.size.x, self.min_ts, self.max_ts)
+                    self.current.value = val
                     self.hovering = 1
                     should_redraw_overlay = True
 
