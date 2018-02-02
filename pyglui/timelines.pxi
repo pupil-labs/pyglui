@@ -1,18 +1,19 @@
 cdef class Timeline(UI_element):
     cdef public RGBA color
-    cdef public float point_size, xstart, xstop, ystart, ystop
+    cdef public double point_size, xstart, xstop, ystart, ystop, ypad
     cdef object draw_data, draw_label
     cdef FitBox data_area
 
     def __cinit__(self, basestring label, object draw_data_callback,
-                  object draw_label_callback=None, float height=30.,
-                  xpad=Vec2(130, 30), *args, **kwargs):
+                  object draw_label_callback=None, double height=30.,
+                  xpad=Vec2(130, 30), ypad=5., *args, **kwargs):
         self.uid = id(self)
         self.label = label
         self.draw_data = draw_data_callback
         self.draw_label = draw_label_callback
-        self.outline = FitBox(Vec2(0, 0.), Vec2(0, height + 10))
-        self.data_area = FitBox(Vec2(xpad[0], 5.), Vec2(-xpad[1], -5.))
+        self.ypad = ypad
+        self.outline = FitBox(Vec2(0, 0.), Vec2(0, height + 2*self.ypad))
+        self.data_area = FitBox(Vec2(xpad[0], self.ypad), Vec2(-xpad[1], -self.ypad))
 
     def __init__(self, *args, **kwargs):
         pass
@@ -89,8 +90,8 @@ cdef class Timeline(UI_element):
 
     @height.setter
     def height(self, val):
-        if val != self.height / ui_scale:
-            self.outline.design_size.y = val + 10
+        if val + 2 * self.ypad != self.height / ui_scale:
+            self.outline.design_size.y = val + 2 * self.ypad
             self.refresh()
 
     cpdef draw_label_default(self, width, height, scale):
