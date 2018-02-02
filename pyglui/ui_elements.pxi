@@ -860,11 +860,11 @@ cdef class Slider_Text_Input(Text_Input):
             typed_val = self.preview
         else:
             try:
-                typed_val = self.data_type(eval(self.preview))
+                typed_val = self.data_type(self.validator(eval(self.preview)))
             except:
                 #failed to convert. Ignore user input.
                 return
-        self.sync_val.value = self.validator(typed_val)
+        self.sync_val.value = typed_val
 
     cdef to_unicode(self,obj):
         if type(obj) is unicode:
