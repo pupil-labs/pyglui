@@ -484,17 +484,17 @@ cpdef draw_bars(verts, float height, float thickness=1,RGBA color=RGBA(1.,0.5,0.
         glVertex2f(pt[0],pt[1] + height/2)
     glEnd()
 
-cpdef draw_x(verts, float size, float thickness=1,RGBA color=RGBA(1.,0.5,0.5,.5)):
+cpdef draw_x(verts, float width, float height, float thickness=1,RGBA color=RGBA(1.,0.5,0.5,.5)):
     glColor4f(color.r,color.g,color.b,color.a)
     glLineWidth(thickness)
     glBegin(GL_LINES)
     for pt in verts:
         # top left -> bot right
-        glVertex2f(pt[0] - size/2, pt[1] - size/2)
-        glVertex2f(pt[0] + size/2, pt[1] + size/2)
+        glVertex2f(pt[0] - width/2, pt[1] - height/2)
+        glVertex2f(pt[0] + width/2, pt[1] + height/2)
         # bot left -> top right
-        glVertex2f(pt[0] - size/2, pt[1] + size/2)
-        glVertex2f(pt[0] + size/2, pt[1] - size/2)
+        glVertex2f(pt[0] - width/2, pt[1] + height/2)
+        glVertex2f(pt[0] + width/2, pt[1] - height/2)
     glEnd()
 
 
