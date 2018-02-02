@@ -11,8 +11,8 @@ cdef class Timeline(UI_element):
         self.label = label
         self.draw_data = draw_data_callback
         self.draw_label = draw_label_callback
-        self.outline = FitBox(Vec2(0, 0.), Vec2(0, height))
-        self.data_area = FitBox(Vec2(xpad[0], 0.), Vec2(-xpad[1], 0))
+        self.outline = FitBox(Vec2(0, 0.), Vec2(0, height + 10))
+        self.data_area = FitBox(Vec2(xpad[0], 5.), Vec2(-xpad[1], -5.))
 
     def __init__(self, *args, **kwargs):
         pass
@@ -20,6 +20,7 @@ cdef class Timeline(UI_element):
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         self.outline.compute(parent)
         self.data_area.compute(self.outline)
+
         cdef int width, height
         width = int(self.data_area.size.x)
         height = int(self.data_area.size.y)
@@ -71,6 +72,13 @@ cdef class Timeline(UI_element):
         gl.glPopMatrix()
         gl.glPopAttrib()
 
+        cdef tuple seperator = ((self.outline.org.x,
+                                 self.outline.org.y + self.outline.size.y),
+                                (self.outline.org.x + self.outline.size.x,
+                                 self.outline.org.y + self.outline.size.y))
+        utils.draw_polyline(seperator, color=RGBA(*color_line_default),
+                            line_type=gl.GL_LINES, thickness=ui_scale)
+
     cpdef refresh(self):
         global should_redraw
         should_redraw = True
@@ -82,7 +90,7 @@ cdef class Timeline(UI_element):
     @height.setter
     def height(self, val):
         if val != self.height / ui_scale:
-            self.outline.design_size.y = val
+            self.outline.design_size.y = val + 10
             self.refresh()
 
     cpdef draw_label_default(self, width, height, scale):
