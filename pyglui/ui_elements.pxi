@@ -889,7 +889,7 @@ cdef class Slider_Text_Input(Text_Input):
 cdef class Button(UI_element):
     cdef FitBox field, button
     cdef bint selected
-    cdef object function
+    cdef public object function
     cdef RGBA text_color
     cdef basestring _outer_label
 
