@@ -1088,12 +1088,13 @@ cdef class Thumb(UI_element):
     cdef Synced_Value sync_val
     cdef public RGBA on_color,off_color
     cdef basestring _status_text
-    cdef object hotkey
+    cdef object hotkey, label_getter
 
-    def __cinit__(self,str attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None,label_font='roboto', label_offset_x=0, label_offset_y=0,label_offset_size=0, setter=None, getter=None, hotkey = None,  on_color=thumb_color_on, off_color=thumb_color_off):
+    def __cinit__(self,str attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None,label_font='roboto', label_offset_x=0, label_offset_y=0,label_offset_size=0, setter=None, getter=None, hotkey = None,  on_color=thumb_color_on, off_color=thumb_color_off, label_getter=None):
         self.uid = id(self)
-        self._label = label or attribute_name[0]
+        self._label = label_getter() if label_getter is not None else (label or attribute_name[0])
         self.label_font = label_font
+        self.label_getter = label_getter
         self.offset_x = label_offset_x
         self.offset_y = label_offset_y
         self.offset_size = label_offset_size
@@ -1108,9 +1109,8 @@ cdef class Thumb(UI_element):
         self.hotkey = hotkey
         self._status_text = ''
 
-    def __init__(self,str attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None,label_font='roboto', label_offset_x=0, label_offset_y=0,label_offset_size=0, setter=None, getter=None, hotkey = None,  on_color=thumb_color_on, off_color=thumb_color_off):
+    def __init__(self, *args, **kwargs):
         pass
-
 
     property status_text:
         def __get__(self):
@@ -1121,11 +1121,11 @@ cdef class Thumb(UI_element):
                 should_redraw = True
                 self._status_text = new_status_text
 
-
-
     cpdef sync(self):
+        if self.label_getter is not None:
+            # only redraws if label_getter returns a new value
+            self.label = self.label_getter()
         self.sync_val.sync()
-
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         #update appearance
