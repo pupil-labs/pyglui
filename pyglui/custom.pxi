@@ -55,28 +55,19 @@ cdef class Seek_Bar(UI_element):
         decr_pbs_icon = chr(0xE020)
 
         def set_play(_):
-            if ctx.play:
-                self.backwards.label = step_bwd_icon
-                self.forwards.label = step_fwd_icon
-                self.play.label = play_icon
-                ctx.play = False
-            else:
-                self.backwards.label = decr_pbs_icon
-                self.forwards.label = incr_pbs_icon
-                self.play.label = pause_icon
-                ctx.play = True
+            ctx.play = not ctx.play
 
         self.backwards = Icon('backwards', ctx, label_font='pupil_icons',
-                              label=step_bwd_icon,
+                              label_getter=lambda: decr_pbs_icon if ctx.play else step_bwd_icon,
                               getter=lambda: True,
                               hotkey=263)  # 263 = glfw.GLFW_KEY_LEFT
         self.forwards = Icon('forwards', ctx, label_font='pupil_icons',
-                             label=step_fwd_icon,
+                             label_getter=lambda: incr_pbs_icon if ctx.play else step_fwd_icon,
                              hotkey=262,  # 262 = glfw.GLFW_KEY_RIGHT
                              getter=lambda: True)
 
         self.play = Icon('play', ctx, label_font='pupil_icons',
-                         label=play_icon,
+                         label_getter=lambda: pause_icon if ctx.play else play_icon,
                          hotkey=32, # 32 = glfw.GLFW_KEY_SPACE
                          setter=set_play,
                          getter=lambda: True)
