@@ -5,14 +5,14 @@ cdef class Timeline(UI_element):
     cdef FitBox data_area
 
     def __cinit__(self, basestring label, object draw_data_callback,
-                  object draw_label_callback=None, double height=30.,
+                  object draw_label_callback=None, double content_height=30.,
                   xpad=Vec2(130, 30), ypad=5., *args, **kwargs):
         self.uid = id(self)
         self.label = label
         self.draw_data = draw_data_callback
         self.draw_label = draw_label_callback
         self.ypad = ypad
-        self.outline = FitBox(Vec2(0, 0.), Vec2(0, height + 2*self.ypad))
+        self.outline = FitBox(Vec2(0, 0.), Vec2(0, content_height + 2*self.ypad))
         self.data_area = FitBox(Vec2(xpad[0], self.ypad), Vec2(-xpad[1], -self.ypad))
 
     def __init__(self, *args, **kwargs):
@@ -85,12 +85,14 @@ cdef class Timeline(UI_element):
         should_redraw = True
 
     @property
-    def height(self):
-        return self.outline.design_size.y * ui_scale
+    def content_height(self):
+        '''gets scale-independent timeline height excluding vertical padding'''
+        return self.outline.design_size.y - 2 * self.ypad
 
-    @height.setter
-    def height(self, val):
-        if val + 2 * self.ypad != self.height / ui_scale:
+    @content_height.setter
+    def content_height(self, val):
+        '''sets scale-independent timeline height excluding vertical padding'''
+        if val != self.content_height:
             self.outline.design_size.y = val + 2 * self.ypad
             self.refresh()
 
