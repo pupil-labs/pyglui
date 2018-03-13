@@ -18,7 +18,7 @@ cdef class Seek_Bar(UI_element):
     cdef readonly int hovering
     cdef FitBox bar, seek_handle, trim_left_handle, trim_right_handle
     cdef readonly bint seeking, trimming_left, trimming_right
-    cdef Synced_Value trim_left, trim_right, current, playback_speed
+    cdef Synced_Value trim_left, trim_right, current_ts, current_ts_idx, playback_speed
     cdef object seeking_cb
     cdef Timeline_Menu handle_start_reference
     cdef Icon backwards, play, forwards
@@ -28,7 +28,8 @@ cdef class Seek_Bar(UI_element):
         self.uid = id(self)
         self.trim_left = Synced_Value('trim_left_ts', ctx, trigger_overlay_only=True)
         self.trim_right = Synced_Value('trim_right_ts', ctx, trigger_overlay_only=True)
-        self.current = Synced_Value('current_ts', ctx, trigger_overlay_only=True)
+        self.current_ts = Synced_Value('current_ts', ctx, trigger_overlay_only=True)
+        self.current_ts_idx = Synced_Value('current_ts_idx', ctx, trigger_overlay_only=True)
         self.playback_speed = Synced_Value('playback_speed', ctx, trigger_overlay_only=True)
         self.seeking_cb = seeking_cb
         self.min_ts = min_ts
@@ -82,7 +83,8 @@ cdef class Seek_Bar(UI_element):
     cpdef sync(self):
         self.trim_left.sync()
         self.trim_right.sync()
-        self.current.sync()
+        self.current_ts.sync()
+        self.current_ts_idx.sync()
         self.playback_speed.sync()
         self.backwards.sync()
         self.play.sync()
@@ -101,10 +103,11 @@ cdef class Seek_Bar(UI_element):
         self.forwards.draw(self.outline, nested=True, parent_read_only=False)
 
         cdef FitBox handle = FitBox(Vec2(0., 0.), Vec2(0., 0.))
-        cdef double current_val = self.current.value
+        cdef int current_ts_idx_val = self.current_ts_idx.value
+        cdef double current_ts_val = self.current_ts.value
         cdef double trim_left_val = self.trim_left.value
         cdef double trim_right_val = self.trim_right.value
-        cdef double seek_x = clampmap(current_val, self.min_ts, self.max_ts, 0, self.bar.size.x)
+        cdef double seek_x = clampmap(current_ts_val, self.min_ts, self.max_ts, 0, self.bar.size.x)
         cdef double top_ext = self.handle_start_reference.element_space.org.y
         cdef double bot_ext = self.bar.org.y + self.bar.size.y + 20 * ui_scale
         cdef double selection_height = 5 * self.bar.size.y
@@ -145,9 +148,11 @@ cdef class Seek_Bar(UI_element):
         # rect(self.trim_right_handle.org, self.trim_right_handle.size, RGBA(1., 0., 0., 0.2))
 
         cdef basestring speed_str = '{}x'.format(self.playback_speed.value)
-        cdef basestring current_ts_str = self.format_ts(current_val)
+        cdef basestring current_ts_str = self.format_ts(current_ts_val)
         cdef basestring trim_left_str = self.format_ts(trim_left_val)
         cdef basestring trim_right_str = self.format_ts(trim_right_val)
+
+        current_ts_str += ' – {:d}'.format(current_ts_idx_val)
 
         cdef double trim_num_offset = 3. * ui_scale
         cdef double time_y = self.bar.org.y - selection_height / 2 + 2*ui_scale
@@ -161,7 +166,7 @@ cdef class Seek_Bar(UI_element):
         glfont.set_blur(.1)
         glfont.set_color_float((1., 1., 1., 1.))
 
-        if current_val < self.mid_ts:
+        if current_ts_val < self.mid_ts:
             glfont.set_align(fs.FONS_ALIGN_BOTTOM | fs.FONS_ALIGN_LEFT)
             glfont.draw_text(self.bar.org.x + seek_x + 5*ui_scale, time_y, current_ts_str)
         else:
@@ -199,7 +204,7 @@ cdef class Seek_Bar(UI_element):
         if self.seeking and new_input.dm:
             val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
                            self.min_ts, self.max_ts)
-            self.current.value = val
+            self.current_ts.value = val
             should_redraw_overlay = True
         elif self.trimming_right and new_input.dm:
             val = clampmap(new_input.m.x-self.bar.org.x, 0, self.bar.size.x,
@@ -237,7 +242,7 @@ cdef class Seek_Bar(UI_element):
                                    self.bar.size.x, self.min_ts, self.max_ts)
                     self.seeking = True
                     self.seeking_cb(True)
-                    self.current.value = val
+                    self.current_ts.value = val
                     self.hovering = 1
                     should_redraw_overlay = True
 
