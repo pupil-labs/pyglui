@@ -235,15 +235,18 @@ cdef class Seek_Bar(UI_element):
                 if self.hovering == 4:
                     val = clampmap(new_input.m.x-self.bar.org.x, 0,
                                    self.bar.size.x, self.min_ts, self.max_ts)
+                    self.seeking = True
+                    self.seeking_cb(True)
                     self.current.value = val
                     self.hovering = 1
                     should_redraw_overlay = True
 
                 if self.hovering == 1:
                     new_input.buttons.remove(b)
-                    self.seeking = True
                     should_redraw_overlay = True
-                    self.seeking_cb(True)
+                    if not self.seeking:  # do not call seeking_cb twice
+                        self.seeking = True
+                        self.seeking_cb(True)
                 elif self.hovering == 2:
                     new_input.buttons.remove(b)
                     self.trimming_right = True
