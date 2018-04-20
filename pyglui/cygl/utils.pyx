@@ -484,6 +484,14 @@ cpdef draw_bars(verts, float height, float thickness=1,RGBA color=RGBA(1.,0.5,0.
         glVertex2f(pt[0],pt[1] + height/2)
     glEnd()
 
+cpdef draw_bars_buffer(verts, float thickness=1,RGBA color=RGBA(1.,0.5,0.5,.5)):
+    glColor4f(color.r,color.g,color.b,color.a)
+    glLineWidth(thickness)
+    cdef float[:] data = verts
+    glEnableClientState(GL_VERTEX_ARRAY)
+    glVertexPointer(2, GL_FLOAT, 0, &data[0])
+    glDrawArrays (GL_LINES, 0, (verts.size)/2)
+
 cpdef draw_x(verts, float width, float height, float thickness=1,RGBA color=RGBA(1.,0.5,0.5,.5)):
     glColor4f(color.r,color.g,color.b,color.a)
     glLineWidth(thickness)
