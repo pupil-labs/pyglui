@@ -471,8 +471,8 @@ cdef class Selector(UI_element):
         self.sync_val.value = self.selection[self.selection_idx]
 
         #Sometimes the synced values setter rejects the set value or the getter return val is static.
-        #for these ceased we need to check the value ourselves to know what the newly set value is.
-        self._on_change(self.sync_val.value)
+        #Sync the value to trigger changes required.
+        self.sync_val.sync()
 
 
         #make the outline small again
