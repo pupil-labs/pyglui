@@ -436,8 +436,7 @@ cdef class ETRA_Graph:
 
         # --- graph end / legend start
 
-        x = width
-        width = int(self.legend_margin * self.scale)
+        width = int(self.win_width - 2 * x)
 
         gl.glPushAttrib(gl.GL_VIEWPORT_BIT)
         gl.glViewport(x, y, width, height)
