@@ -151,7 +151,7 @@ cdef class UI:
         window_size = self.window.size
 
         if should_redraw:
-
+            should_redraw = False
             #print "UI is redrawing the screen"
             push_view(self.window.size)
             render_to_ui_texture(self.ui_layer)
@@ -171,6 +171,7 @@ cdef class UI:
         draw_ui_texture(self.ui_layer)
 
         if should_redraw or should_redraw_overlay:
+            should_redraw_overlay = False
             push_view(self.window.size)
             render_to_ui_texture(self.overlay_layer)
             glfont.clear_state()
@@ -188,8 +189,6 @@ cdef class UI:
 
         draw_ui_texture(self.overlay_layer)
 
-        should_redraw = False
-        should_redraw_overlay = False
 
     def update(self):
         unused_Input = self.handle_input()
