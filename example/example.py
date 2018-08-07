@@ -13,7 +13,6 @@ import time
 from pyglui import ui
 from pyglui.cygl.utils import init
 from pyglui.cygl.utils import RGBA
-from pyglui.cygl.utils import draw_concentric_circles
 from pyglui.pyfontstash import fontstash as fs
 from pyglui.cygl.shader import Shader
 
