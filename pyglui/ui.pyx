@@ -154,7 +154,7 @@ cdef class UI:
 
         if should_redraw:
             should_redraw = False
-            #print "UI is redrawing the screen"
+            should_redraw_overlay = True
             push_view(self.window.size)
             render_to_ui_texture(self.ui_layer)
             glfont.clear_state()
