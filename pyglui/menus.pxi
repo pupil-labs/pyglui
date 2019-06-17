@@ -56,9 +56,13 @@ cdef class Base_Menu(UI_element):
 
     def __setitem__ (self,x,obj):
         self.elements[x] = obj
+        global should_redraw
+        should_redraw = True
 
     def __delitem__ (self,x):
         del self.elements[x]
+        global should_redraw
+        should_redraw = True
 
     def __contains__ (self,obj):
         return obj in self.elements

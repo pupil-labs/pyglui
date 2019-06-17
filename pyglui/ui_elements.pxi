@@ -1250,10 +1250,10 @@ cdef class Icon(Thumb):
     def indicator_start(self, val):
         assert isinstance(val, float), 'Indicator values are required to be floats'
         val %= 1.
-        self._indicator_start = val
-        if self._indicator_start != self._indicator_stop:
+        if self._indicator_start != val:
             global should_redraw_overlay
             should_redraw_overlay = True
+        self._indicator_start = val
 
     @property
     def indicator_stop(self):
@@ -1263,10 +1263,10 @@ cdef class Icon(Thumb):
     def indicator_stop(self, val):
         assert isinstance(val, float), 'Indicator values are required to be floats'
         val %= 1.
-        self._indicator_stop = val
-        if self._indicator_start != self._indicator_stop:
+        if self._indicator_stop != val:
             global should_redraw_overlay
             should_redraw_overlay = True
+        self._indicator_stop = val
 
     cpdef handle_input(self,Input new_input,bint visible,bint parent_read_only = False):
         unused = super(Icon, self).handle_input(new_input, visible, parent_read_only)

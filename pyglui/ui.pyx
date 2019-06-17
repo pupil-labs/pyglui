@@ -16,6 +16,8 @@ from collections import namedtuple
 
 from platform import system as current_os
 
+import cysignals
+
 cdef int UI_MOD_KEY  # defines modifier key for cut/copy/paste
 if current_os() == 'Darwin':
     UI_MOD_KEY = 8  # glfw.GLFW_MOD_SUPER
@@ -152,7 +154,7 @@ cdef class UI:
 
         if should_redraw:
             should_redraw = False
-            #print "UI is redrawing the screen"
+            should_redraw_overlay = True
             push_view(self.window.size)
             render_to_ui_texture(self.ui_layer)
             glfont.clear_state()
