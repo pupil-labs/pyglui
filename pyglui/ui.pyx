@@ -16,7 +16,8 @@ from collections import namedtuple
 
 from platform import system as current_os
 
-import cysignals
+IF UNAME_SYSNAME != "Windows":
+    import cysignals
 
 cdef int UI_MOD_KEY  # defines modifier key for cut/copy/paste
 if current_os() == 'Darwin':
