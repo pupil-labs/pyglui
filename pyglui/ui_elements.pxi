@@ -37,6 +37,10 @@ cdef class UI_element:
     cpdef precompute(self,FitBox parent):
         self.outline.compute(parent)
 
+    property width:
+        def __get__(self):
+            return self.outline.size.x
+
     property height:
         def __get__(self):
             return self.outline.size.y

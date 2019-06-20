@@ -356,6 +356,72 @@ cdef class Stretching_Menu(Base_Menu):
         self.collapsed = new_conf.get('collapsed',self.collapsed)
         self.set_submenu_config(new_conf.get('submenus',{}))
 
+cdef class Horizontally_Stretching_Menu(Base_Menu):
+    '''
+    A simple menu
+    Not movable and fixed in height.
+    It will space its content evenenly in x.
+    '''
+    cdef public bint collapsed
+
+    def __cinit__(self,label,pos=(0,0),size=(200,100)):
+        self.uid = id(self)
+        self._label = label
+        self.outline = FitBox(position=Vec2(*pos),size=Vec2(*size),min_size=Vec2(0,0))
+        self.element_space = FitBox(position=Vec2(menu_pad,menu_pad),size=Vec2(-menu_pad,-menu_pad))
+        self.elements = []
+        self.color = RGBA(*rect_color_default)
+        self.collapsed = False
+
+    def __init__(self,label,pos=(0,0),size=(200,100)):
+        pass
+
+    cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only=False):
+        cdef float w=0, x_spacing=0, org_x=0
+        if not self.collapsed:
+            self.elements.sort(key=sort_key)
+            self.outline.compute(parent)
+            self.element_space.compute(self.outline)
+
+            for e in self.elements:
+                e.precompute(self.element_space)
+                w += e.width
+
+            x_spacing  = (self.element_space.size.x-w)/(len(self.elements)+1)
+            org_x = self.element_space.org.x
+            #if elements are not visible, no need to draw them.
+            if self.element_space.has_area():
+                self.element_space.org.x+= x_spacing
+                for e in self.elements:
+                    e.draw(self.element_space,nested= False, parent_read_only = parent_read_only or self._read_only)
+                    self.element_space.org.x+= e.width + x_spacing
+                self.outline.org.x = org_x
+
+    cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        if not self.collapsed and self.element_space.has_area():
+            self.elements.sort(key=sort_key)
+            for e in self.elements:
+                (<UI_element>e).draw_overlay(self.element_space, nested=False,
+                                             parent_read_only=parent_read_only or self._read_only)
+
+    cpdef handle_input(self, Input new_input,bint visible,bint parent_read_only = False):
+        #if elements are not visible, no need to interact with them.
+        if self.element_space.has_area():
+            for e in self.elements:
+                e.handle_input(new_input, visible,self._read_only or parent_read_only)
+
+
+    @property
+    def configuration(self):
+        cdef dict submenus = self.get_submenu_config()
+        return {'pos':self.outline.design_org[:],'size':self.outline.design_size[:],'collapsed':self.collapsed,'submenus':submenus}
+
+    @configuration.setter
+    def configuration(self,new_conf):
+        self.outline.design_org[:] = new_conf.get('pos',self.outline.design_org[:])
+        self.outline.design_size[:] = new_conf.get('size',self.outline.design_size[:])
+        self.collapsed = new_conf.get('collapsed',self.collapsed)
+        self.set_submenu_config(new_conf.get('submenus',{}))
 
 cdef class Growing_Menu(Movable_Menu):
     '''
