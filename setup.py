@@ -31,6 +31,8 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 
+requirements = ["cysignals"]
+
 includes = ["pyglui/cygl/", ".", numpy.get_include()]
 glew_binaries = []
 lib_dir = []
@@ -144,6 +146,7 @@ setup(
     name="pyglui",
     version=pyglui_version,
     packages=["pyglui"],
+    install_requires=requirements,
     py_modules=[
         "pyglui.cygl.__init__",
         "pyglui.pyfontstash.__init__",
