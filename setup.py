@@ -138,7 +138,7 @@ extensions = [
 ]
 
 
-pyglui_version = find_version("pylgui", "__init__.py")
+pyglui_version = find_version("pyglui", "__init__.py")
 
 setup(
     name="pyglui",
