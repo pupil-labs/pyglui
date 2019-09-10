@@ -62,5 +62,7 @@ pyglui/cygl/glew\.pxd
 pyglui/cygl/unhandled_glew\.h
 
 pip-*-build/
+pip-*-metadata/
 
+.venv
 .vscode/
