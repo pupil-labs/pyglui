@@ -32,8 +32,9 @@ def find_version(*file_paths):
 
 
 requirements = []
-if platform.system() == "Windows":
+if platform.system() != "Windows":
     requirements.append("cysignals")
+
 
 includes = ["pyglui/cygl/", ".", numpy.get_include()]
 glew_binaries = []
