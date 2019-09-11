@@ -31,7 +31,9 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 
-requirements = ["cysignals"]
+requirements = []
+if platform.system() == "Windows":
+    requirements.append("cysignals")
 
 includes = ["pyglui/cygl/", ".", numpy.get_include()]
 glew_binaries = []
