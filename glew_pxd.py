@@ -1,14 +1,14 @@
-'''
+"""
 Script taken from: https://github.com/orlp/pygrafix
 Appropriate Licence applies!
-'''
+"""
 
 import re
 import sys
 import os
 
 
-def generate_pxd(glew_header_loc, dest=''):
+def generate_pxd(glew_header_loc, dest=""):
     with open(glew_header_loc, "r") as fin:
         data = fin.read()
 
@@ -26,7 +26,10 @@ def generate_pxd(glew_header_loc, dest=''):
     # read in function types
     for linenr, line in enumerate(lines):
         try:
-            result = re.findall(r"typedef\s+([^(]+)\([^*]+\*\s*([a-zA-Z_][a-zA-Z0-9_]+)\)\s*(\(.+\))\s*;", line)[0]
+            result = re.findall(
+                r"typedef\s+([^(]+)\([^*]+\*\s*([a-zA-Z_][a-zA-Z0-9_]+)\)\s*(\(.+\))\s*;",
+                line,
+            )[0]
         except IndexError:
             continue
 
@@ -36,7 +39,10 @@ def generate_pxd(glew_header_loc, dest=''):
     # read in exported functions
     for linenr, line in enumerate(lines):
         try:
-            result = re.findall(r"GLEW_FUN_EXPORT\s+([a-zA-Z_][a-zA-Z0-9_]+)\s+([a-zA-Z_][a-zA-Z0-9_]+)", line)[0]
+            result = re.findall(
+                r"GLEW_FUN_EXPORT\s+([a-zA-Z_][a-zA-Z0-9_]+)\s+([a-zA-Z_][a-zA-Z0-9_]+)",
+                line,
+            )[0]
         except IndexError:
             continue
 
@@ -46,18 +52,29 @@ def generate_pxd(glew_header_loc, dest=''):
     # match exported functions with function types
     for linenr, line in enumerate(lines):
         try:
-            result = re.findall(r"#define\s+([a-zA-Z_][a-zA-Z0-9_]+)\s+GLEW_GET_FUN\s*\(\s*([a-zA-Z_][a-zA-Z0-9_]+)\s*\)", line)[0]
+            result = re.findall(
+                r"#define\s+([a-zA-Z_][a-zA-Z0-9_]+)\s+GLEW_GET_FUN\s*\(\s*([a-zA-Z_][a-zA-Z0-9_]+)\s*\)",
+                line,
+            )[0]
         except IndexError:
             continue
 
         export_func = export_functions[result[1]]
-        function_defs.append(function_types[export_func][0] + " " + result[0] + function_types[export_func][1])
+        function_defs.append(
+            function_types[export_func][0]
+            + " "
+            + result[0]
+            + function_types[export_func][1]
+        )
         handled_lines.add(linenr)
 
     # add GLAPIENTRY functions
     for linenr, line in enumerate(lines):
         try:
-            result = re.findall(r"GLAPI\s+([a-zA-Z_][a-zA-Z0-9_]+)[^a-zA-Z_]+GLAPIENTRY[^a-zA-Z_]+([a-zA-Z_][a-zA-Z0-9_]+)\s*(\(.+\))\s*;", line)[0]
+            result = re.findall(
+                r"GLAPI\s+([a-zA-Z_][a-zA-Z0-9_]+)[^a-zA-Z_]+GLAPIENTRY[^a-zA-Z_]+([a-zA-Z_][a-zA-Z0-9_]+)\s*(\(.+\))\s*;",
+                line,
+            )[0]
         except IndexError:
             continue
 
@@ -67,7 +84,10 @@ def generate_pxd(glew_header_loc, dest=''):
     # read in numeric defines as enums
     for linenr, line in enumerate(lines):
         try:
-            result = re.findall(r"#define\s+([a-zA-Z_][a-zA-Z0-9_]+)\s+(?:(?:0x[0-9a-fA-F]+)|[0-9]+)", line)[0]
+            result = re.findall(
+                r"#define\s+([a-zA-Z_][a-zA-Z0-9_]+)\s+(?:(?:0x[0-9a-fA-F]+)|[0-9]+)",
+                line,
+            )[0]
         except IndexError:
             continue
 
@@ -77,7 +97,9 @@ def generate_pxd(glew_header_loc, dest=''):
     # read in GLEW vars as enums
     for linenr, line in enumerate(lines):
         try:
-            result = re.findall(r"#define\s+([a-zA-Z_][a-zA-Z0-9_]+)\s+GLEW_GET_VAR\(.+\)", line)[0]
+            result = re.findall(
+                r"#define\s+([a-zA-Z_][a-zA-Z0-9_]+)\s+GLEW_GET_VAR\(.+\)", line
+            )[0]
         except IndexError:
             continue
 
@@ -87,7 +109,9 @@ def generate_pxd(glew_header_loc, dest=''):
     # also accept GL to GL defines as enums
     for linenr, line in enumerate(lines):
         try:
-            result = re.findall(r"#define\s+(GL_[a-zA-Z0-9_]+)\s+GL_[a-zA-Z0-9_]+", line)[0]
+            result = re.findall(
+                r"#define\s+(GL_[a-zA-Z0-9_]+)\s+GL_[a-zA-Z0-9_]+", line
+            )[0]
         except IndexError:
             continue
 
@@ -170,14 +194,45 @@ cdef extern from "include_glew.h":
         data += "\n\n"
 
         def mod_func(func):
-            keywords = ["and", "del", "for", "is", "raise", "assert", "elif", "from", "lambda", "return", "break", "else", "global", "not", "try", "class",
-                        "except", "if", "or", "while", "continue", "exec", "import", "pass", "yield", "def", "finally", "in", "print"]
+            keywords = [
+                "and",
+                "del",
+                "for",
+                "is",
+                "raise",
+                "assert",
+                "elif",
+                "from",
+                "lambda",
+                "return",
+                "break",
+                "else",
+                "global",
+                "not",
+                "try",
+                "class",
+                "except",
+                "if",
+                "or",
+                "while",
+                "continue",
+                "exec",
+                "import",
+                "pass",
+                "yield",
+                "def",
+                "finally",
+                "in",
+                "print",
+            ]
 
             # beautify functions
             func = re.sub(r"\s+", " ", func)  # collapse whitespace
             func = re.sub(r"\s*([()])\s*", r"\1", func)  # no whitespace near brackets
             func = re.sub(r"\s*,\s*", r", ", func)  # only whitespace __after__ comma
-            func = re.sub(r"\s*(\*+)\s*", r" \1", func)  # beautify pointers in functions
+            func = re.sub(
+                r"\s*(\*+)\s*", r" \1", func
+            )  # beautify pointers in functions
 
             # cython doesn't support (void), need to do () for no arguments instead
             func = re.sub(r"\(void\)", "()", func)
@@ -193,12 +248,14 @@ cdef extern from "include_glew.h":
         fout.write(data)
 
     with open(os.path.join(dest, "unhandled_glew.h"), "w") as fout:
-        data = "\n".join(lines[linenr] for linenr in range(len(lines)) if linenr not in handled_lines)
+        data = "\n".join(
+            lines[linenr] for linenr in range(len(lines)) if linenr not in handled_lines
+        )
         data = re.sub("\n\n+", "\n", data)
         fout.write(data)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) < 2:
-        raise Exception('Please supply path to glew.h')
+        raise Exception("Please supply path to glew.h")
     generate_pxd(sys.argv[1])
