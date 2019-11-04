@@ -4,14 +4,17 @@ import io
 import os
 import platform
 import re
+import sys
 from stat import ST_MTIME
 
 import numpy
 from Cython.Build import cythonize
 from setuptools import Extension, setup
 
+dir_containing_glew = os.path.dirname(__file__)
+sys.path.append(dir_containing_glew)
 from glew_pxd import generate_pxd
-
+sys.path.remove(dir_containing_glew)
 
 def read(*names, **kwargs):
     with io.open(
