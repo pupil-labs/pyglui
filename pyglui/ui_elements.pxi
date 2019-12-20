@@ -1028,14 +1028,14 @@ cdef class Info_Text(UI_element):
     cdef basestring _text
     cdef int max_height
     cdef FitBox text_area
-    cdef float text_size
+    cdef float _text_size
 
     def __cinit__(self, basestring text):
         self._text = text
         self.max_height = 200
         self.outline = FitBox(Vec2(0,0),Vec2(0,0))
         self.text_area = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
-        self.text_size = size_text_info
+        self._text_size = size_text_info
 
     def __init__(self, basestring text):
         pass
@@ -1049,6 +1049,16 @@ cdef class Info_Text(UI_element):
             if self._text != new_text:
                 should_redraw = True
                 self._text = new_text
+
+    property text_size:
+        def __get__(self):
+            return self._text_size
+
+        def __set__(self, float new_text_size):
+            global should_redraw
+            if self._text_size != new_text_size:
+                should_redraw = True
+                self._text_size = new_text_size
 
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         #update appearance
