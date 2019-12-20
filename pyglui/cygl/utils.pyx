@@ -44,6 +44,9 @@ cdef class RGBA:
             self.r,self.g,self.b,self.a = t
         else:
             raise IndexError()
+    
+    def as_tuple(self):
+        return (self.r, self.g, self.b, self.a)
 
 basic_shader = None
 simple_pt_shader = None

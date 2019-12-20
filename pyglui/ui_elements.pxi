@@ -1028,14 +1028,18 @@ cdef class Info_Text(UI_element):
     cdef basestring _text
     cdef int max_height
     cdef FitBox text_area
-    cdef float text_size
+    cdef float _text_size
+    cdef RGBA _text_color
+    cdef bint _centered
 
     def __cinit__(self, basestring text):
         self._text = text
         self.max_height = 200
         self.outline = FitBox(Vec2(0,0),Vec2(0,0))
         self.text_area = FitBox(Vec2(outline_padding,outline_padding),Vec2(-outline_padding,-outline_padding))
-        self.text_size = size_text_info
+        self._text_size = size_text_info
+        self._text_color = RGBA(*color_text_info)
+        self._centered = False
 
     def __init__(self, basestring text):
         pass
@@ -1050,14 +1054,50 @@ cdef class Info_Text(UI_element):
                 should_redraw = True
                 self._text = new_text
 
+    property text_size:
+        def __get__(self):
+            return self._text_size
+
+        def __set__(self, float new_text_size):
+            global should_redraw
+            if self._text_size != new_text_size:
+                should_redraw = True
+                self._text_size = new_text_size
+
+    property text_color:
+        def __get__(self):
+            return self._text_color
+
+        def __set__(self, RGBA new_text_color):
+            global should_redraw
+            if self._text_color != new_text_color:
+                should_redraw = True
+                self._text_color = new_text_color
+
+    property centered:
+        #TODO: Replace this property with full support for setting horizontal and vertical alignment
+        def __get__(self):
+            return self._centered
+
+        def __set__(self, bint new_value):
+            global should_redraw
+            if self._centered != new_value:
+                should_redraw = True
+                self._centered = new_value
+
     cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
         #update appearance
         self.outline.compute(parent)
         self.text_area.compute(self.outline)
         glfont.push_state()
-        glfont.set_color_float(color_text_info)
+        glfont.set_color_float(self.text_color.as_tuple())
         glfont.set_size(self.text_size*ui_scale)
-        left_word, height = glfont.draw_breaking_text(self.text_area.org.x, self.text_area.org.y, self._text, self.text_area.size.x,self.max_height )
+        if self.centered:
+            glfont.set_align(fs.FONS_ALIGN_CENTER | fs.FONS_ALIGN_TOP)
+            text_origin = (self.text_area.center[0], self.text_area.org.y)
+        else:
+            text_origin = (self.text_area.org.x, self.text_area.org.y)
+        left_word, height = glfont.draw_breaking_text(text_origin[0], text_origin[1], self._text, self.text_area.size.x,self.max_height )
         glfont.pop_state()
         self.text_area.design_size.y  = (height-self.text_area.org.y)/ui_scale
         self.outline.design_size.y = self.text_area.design_size.y+outline_padding*2
@@ -1090,7 +1130,7 @@ cdef class Thumb(UI_element):
     cdef float offset_x,offset_y,offset_size
     cdef public basestring label_font
     cdef Synced_Value sync_val
-    cdef public RGBA on_color,off_color
+    cdef RGBA _on_color, _off_color
     cdef basestring _status_text
     cdef object hotkey, label_getter
 
@@ -1108,8 +1148,8 @@ cdef class Thumb(UI_element):
         self.outline = FitBox(Vec2(0,0),Vec2(thumb_outline_size,thumb_outline_size))
         self.button = FitBox(Vec2(thumb_outline_pad,thumb_outline_pad),Vec2(-thumb_outline_pad,-thumb_outline_pad))
         self.selected = False
-        self.on_color = RGBA(*on_color)
-        self.off_color = RGBA(*off_color)
+        self._on_color = RGBA(*on_color)
+        self._off_color = RGBA(*off_color)
         self.hotkey = hotkey
         self._status_text = ''
 
@@ -1124,6 +1164,24 @@ cdef class Thumb(UI_element):
                 global should_redraw
                 should_redraw = True
                 self._status_text = new_status_text
+
+    property on_color:
+        def __get__(self):
+            return self._on_color
+        def __set__(self, RGBA new_color):
+            if self._on_color != new_color:
+                global should_redraw
+                should_redraw = True
+                self._on_color = new_color
+
+    property off_color:
+        def __get__(self):
+            return self._off_color
+        def __set__(self, RGBA new_color):
+            if self._off_color != new_color:
+                global should_redraw
+                should_redraw = True
+                self._off_color = new_color
 
     cpdef sync(self):
         if self.label_getter is not None:
