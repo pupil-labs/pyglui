@@ -1100,7 +1100,7 @@ cdef class Thumb(UI_element):
     cdef float offset_x,offset_y,offset_size
     cdef public basestring label_font
     cdef Synced_Value sync_val
-    cdef public RGBA on_color,off_color
+    cdef RGBA _on_color, _off_color
     cdef basestring _status_text
     cdef object hotkey, label_getter
 
@@ -1118,8 +1118,8 @@ cdef class Thumb(UI_element):
         self.outline = FitBox(Vec2(0,0),Vec2(thumb_outline_size,thumb_outline_size))
         self.button = FitBox(Vec2(thumb_outline_pad,thumb_outline_pad),Vec2(-thumb_outline_pad,-thumb_outline_pad))
         self.selected = False
-        self.on_color = RGBA(*on_color)
-        self.off_color = RGBA(*off_color)
+        self._on_color = RGBA(*on_color)
+        self._off_color = RGBA(*off_color)
         self.hotkey = hotkey
         self._status_text = ''
 
@@ -1134,6 +1134,24 @@ cdef class Thumb(UI_element):
                 global should_redraw
                 should_redraw = True
                 self._status_text = new_status_text
+
+    property on_color:
+        def __get__(self):
+            return self._on_color
+        def __set__(self, RGBA new_color):
+            if self._on_color != new_color:
+                global should_redraw
+                should_redraw = True
+                self._on_color = new_color
+
+    property off_color:
+        def __get__(self):
+            return self._off_color
+        def __set__(self, RGBA new_color):
+            if self._off_color != new_color:
+                global should_redraw
+                should_redraw = True
+                self._off_color = new_color
 
     cpdef sync(self):
         if self.label_getter is not None:
