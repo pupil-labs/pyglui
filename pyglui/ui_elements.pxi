@@ -349,6 +349,10 @@ cdef class Selector(UI_element):
     cdef object selection_getter
 
     def __cinit__(self,str attribute_name, object attribute_context = None, selection = [], labels=None, label=None, setter=None, getter=None, selection_getter = None):
+        # NOTE: implementing a custom selection_getter can lead to race-conditions. Make
+        # sure that the current set value is always contained in the returned selections
+        # from selection_getter.
+
         self.uid = id(self)
         self._label = label or attribute_name
 
