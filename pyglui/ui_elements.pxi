@@ -349,6 +349,10 @@ cdef class Selector(UI_element):
     cdef object selection_getter
 
     def __cinit__(self,str attribute_name, object attribute_context = None, selection = [], labels=None, label=None, setter=None, getter=None, selection_getter = None):
+        # NOTE: implementing a custom selection_getter can lead to race-conditions. Make
+        # sure that the current set value is always contained in the returned selections
+        # from selection_getter.
+
         self.uid = id(self)
         self._label = label or attribute_name
 
@@ -468,16 +472,14 @@ cdef class Selector(UI_element):
 
 
     cdef finish_selection(self,float mouse_y):
-        self.selection_idx = int(mouse_y/(self.select_field.size.y/float(len(self.selection))) )
+        clicked_idx = int(mouse_y/(self.select_field.size.y/float(len(self.selection))) )
         #just for sanity
-        self.selection_idx = int(clamp(self.selection_idx,0,len(self.selection)-1))
+        clicked_idx = int(clamp(clicked_idx,0,len(self.selection)-1))
 
-        self.sync_val.value = self.selection[self.selection_idx]
+        self.sync_val.value = self.selection[clicked_idx]
 
-        #Sometimes the synced values setter rejects the set value or the getter return val is static.
-        #Sync the value to trigger changes required.
+        # Sync value. Will update self.selection_idx if the value actually changed.
         self.sync_val.sync()
-
 
         #make the outline small again
         cdef h = line_height

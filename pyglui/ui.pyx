@@ -355,7 +355,7 @@ cdef class Synced_Value:
                 else:
                     should_redraw = True
                 if self.on_change is not None:
-                    self.on_change(self._value)
+                    self.on_change(self.value)
 
         elif self._value != getattr(self.attribute_context,self.attribute_name):
             self._value = getattr(self.attribute_context,self.attribute_name)
@@ -364,7 +364,7 @@ cdef class Synced_Value:
             else:
                 should_redraw = True
             if self.on_change is not None:
-                self.on_change(self._value)
+                self.on_change(self.value)
 
     property value:
         def __get__(self):
