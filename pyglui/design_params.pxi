@@ -71,10 +71,10 @@ DEF button_outline_size_y = 44.
 DEF button_outline_padding = outline_padding
 DEF button_text_padding = 2.
 DEF button_default_color = color_default
-DEF button_read_only_color = color_on_read_only
+DEF button_read_only_color = (0.25, 0.25, 0.25, 0.75)
 DEF button_active_color = color_selected
 DEF button_default_text_color = color_text_default
-DEF button_read_only_text_color = color_text_read_only
+DEF button_read_only_text_color = (0.5, 0.5, 0.5, 0.75)
 DEF button_active_text_color = color_shadow
 
 # Thumb - design parameters
