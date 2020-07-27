@@ -1103,6 +1103,7 @@ cdef class Info_Text(UI_element):
         glfont.pop_state()
         self.text_area.design_size.y  = (height-self.text_area.org.y)/ui_scale
         self.outline.design_size.y = self.text_area.design_size.y+outline_padding*2
+        self.text_area.compute(self.outline)
         self.outline.compute(parent)
 
     cpdef precompute(self,FitBox parent):
