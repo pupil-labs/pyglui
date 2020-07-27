@@ -1110,13 +1110,12 @@ cdef class Info_Text(UI_element):
         self.outline.compute(parent)
         self.text_area.compute(self.outline)
         glfont.push_state()
-        glfont.set_size(self.text_size)
+        glfont.set_size(self.text_size*ui_scale)
         left_word, height = glfont.compute_breaking_text(self.text_area.org.x, self.text_area.org.y, self._text, self.text_area.size.x,self.max_height )
         glfont.pop_state()
         self.text_area.design_size.y  = (height-self.text_area.org.y)/ui_scale
         self.outline.design_size.y = self.text_area.design_size.y+outline_padding*2
         self.outline.compute(parent)
-
 
 ########## Thumb ##########
 
