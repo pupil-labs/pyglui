@@ -14,7 +14,9 @@ from setuptools import Extension, setup
 dir_containing_glew = os.path.dirname(__file__)
 sys.path.append(dir_containing_glew)
 from glew_pxd import generate_pxd
+
 sys.path.remove(dir_containing_glew)
+
 
 def read(*names, **kwargs):
     with io.open(
@@ -37,6 +39,10 @@ def find_version(*file_paths):
 requirements = []
 if platform.system() != "Windows":
     requirements.append("cysignals")
+
+
+def examples_requirements() -> list:
+    return ["psutil", "numpy", "pyopengl", "glfw"]
 
 
 includes = ["pyglui/cygl/", ".", numpy.get_include()]
@@ -153,6 +159,7 @@ setup(
     version=pyglui_version,
     packages=["pyglui"],
     install_requires=requirements,
+    extras_require={"examples": examples_requirements()},
     py_modules=[
         "pyglui.cygl.__init__",
         "pyglui.pyfontstash.__init__",
