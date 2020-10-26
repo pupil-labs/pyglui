@@ -51,7 +51,7 @@ sudo python3 setup.py install
 ```
 
 ## Demo
-* `pip install psutil` (psutil is used in the demo to show cpu load)
+* `pip install ".[examples]"`
 * `cd /example`
 * `python3 example.py`
 
