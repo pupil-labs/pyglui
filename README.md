@@ -32,7 +32,7 @@ brew install glew
 
 * install pyglui
 ```shell
-sudo pip3 install git+https://github.com/pupil-labs/pyglui
+python -m pip install git+https://github.com/pupil-labs/pyglui
 ```
 
 ### Development
@@ -43,7 +43,7 @@ git clone http://github.com/pupil-labs/pyglui --recursive
 cd pyglui
 
 # Build and install `pyglui` in "editable" mode
-sudo pip3 install -e .
+python -m pip install -e .
 ```
 
 ### Run the demo
@@ -54,7 +54,7 @@ git clone http://github.com/pupil-labs/pyglui --recursive
 cd pyglui
 
 # Build and install `pyglui` in "editable" mode, with examples dependencies
-sudo pip3 install -e ".[examples]"
+python -m pip install -e ".[examples]"
 
 # Run the demo example
 cd example
