@@ -16,13 +16,6 @@ Cython powered OpenGL gui.
 * cygl and pyfontstash can also be installed separately but are hosted in this project for convenience.
 
 
-## Setup
-Fork and clone to work locally.
-
-```shell
-git clone http://github.com/pupil-labs/pyglui --recursive
-```
-
 ## Installation
 
 * install `glew`
@@ -42,18 +35,31 @@ brew install glew
 sudo pip3 install git+https://github.com/pupil-labs/pyglui
 ```
 
-## Development
+### Development
 
-Run command to build pyglui
 ```shell
-sudo python3 setup.py install
+# Clone the repository to the local filesystem
+git clone http://github.com/pupil-labs/pyglui --recursive
+cd pyglui
 
+# Build and install `pyglui` in "editable" mode
+sudo pip3 install -e .
 ```
 
-## Demo
-* `pip install ".[examples]"`
-* `cd /example`
-* `python3 example.py`
+### Run the demo
+
+```shell
+# Clone the repository to the local filesystem
+git clone http://github.com/pupil-labs/pyglui --recursive
+cd pyglui
+
+# Build and install `pyglui` in "editable" mode, with examples dependencies
+sudo pip3 install -e ".[examples]"
+
+# Run the demo example
+cd example
+python3 example.py
+```
 
 ![](https://raw.github.com/wiki/pupil-labs/pyglui/media/pyglui_20171219.png)
 *Demo screenshot as of 2017-12-19*
