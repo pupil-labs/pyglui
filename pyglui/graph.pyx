@@ -9,7 +9,7 @@ from pyglui.cygl.utils cimport RGBA
 
 from os import path
 
-include 'version.pxi'
+__version__ = "1.29.0"
 
 
 # legacy push and pop
