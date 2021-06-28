@@ -5,7 +5,7 @@ from pyglui.cygl cimport glew as gl
 from pyglui.cygl cimport utils
 from pyglui.cygl.utils cimport RGBA
 
-__version__ = "1.29.0"
+__version__ = "1.29.1"
 include 'gldraw.pxi'
 include 'helpers.pxi'
 include 'design_params.pxi'

@@ -132,7 +132,7 @@ extensions = [
 
 setup(
     name="pyglui",
-    version="1.29.0",
+    version="1.29.1",
     packages=["pyglui"],
     install_requires=requirements,
     extras_require={
