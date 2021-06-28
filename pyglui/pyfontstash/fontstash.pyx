@@ -1,6 +1,5 @@
 cimport cfontstash as fs
 
-
 #expose some constansts when c imported
 FONS_ALIGN_LEFT = fs.FONS_ALIGN_LEFT
 FONS_ALIGN_CENTER = fs.FONS_ALIGN_CENTER
@@ -287,4 +286,3 @@ cdef class Context:
 
     def draw_debug(self,float x,float y):
         fs.fonsDrawDebug(self.ctx,x,y)
-

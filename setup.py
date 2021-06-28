@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import io
 import os
 import platform
@@ -19,7 +17,7 @@ sys.path.remove(dir_containing_glew)
 
 
 def read(*names, **kwargs):
-    with io.open(
+    with open(
         os.path.join(os.path.dirname(__file__), *names),
         encoding=kwargs.get("encoding", "utf8"),
     ) as fp:

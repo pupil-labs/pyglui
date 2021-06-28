@@ -1,8 +1,7 @@
-from setuptools import setup, Extension
 import platform
 
 from Cython.Build import cythonize
-
+from setuptools import Extension, setup
 
 if platform.system() == "Darwin":
     includes = ["/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/"]

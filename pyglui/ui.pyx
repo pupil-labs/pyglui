@@ -1,20 +1,19 @@
 # cython: profile=False
+from pyfontstash cimport fontstash as fs
+
 from pyglui.cygl cimport glew as gl
 from pyglui.cygl cimport utils
 from pyglui.cygl.utils cimport RGBA
 
-
-from pyfontstash cimport fontstash as fs
 include 'version.pxi'
 include 'gldraw.pxi'
 include 'helpers.pxi'
 include 'design_params.pxi'
 
-from os import path
-from time import time
 from collections import namedtuple
-
+from os import path
 from platform import system as current_os
+from time import time
 
 IF UNAME_SYSNAME != "Windows":
     import cysignals

@@ -1,6 +1,7 @@
 cimport glew as gl
 from cpython.version cimport PY_MAJOR_VERSION
 
+
 cdef str _to_str(object s):
     if PY_MAJOR_VERSION > 2:
         if type(s) is unicode:

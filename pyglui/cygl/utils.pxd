@@ -1,6 +1,7 @@
 from glew cimport *
 from libcpp.vector cimport vector
 
+
 cdef class RGBA:
     cdef public float r,g,b,a
 
