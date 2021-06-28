@@ -1,0 +1,38 @@
+name: Update font
+on:
+  repository_dispatch:
+    types: [pyglui-update-font]
+  push:
+    branches: [font-auto-update]
+
+jobs:
+  update-font:
+    name: Update font
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Clone pyglui
+      - uses: actions/checkout@v2
+        name: Clone pupil-icon-font
+        with:
+          repository: pupil-labs/pupil-icon-font
+          path: pupil-icon-font-clone
+      - uses: actions/setup-node@v2
+      - name: Get pupil-icon-font version
+        id: get_font_version
+        working-directory: pupil-icon-font-clone
+        run: echo ::set-output name=version::$(node -p -e "require('./package.json').version")
+      - name: Copy updated font
+        run: |
+          cp pupil-icon-font-clone/font/pupil_icons.ttf pyglui/pupil_icons.ttf
+      - name: Delete pupil-icon-font clone
+        run: rm -r pupil-icon-font-clone
+      - name: Display changes
+        run: git status
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          title: "Update pupil-icon-font to version ${{ steps.get_font_version.outputs.version }}"
+          commit-message: "Update pupil-icon-font to version ${{ steps.get_font_version.outputs.version }}"
+          branch: update-pupil-icon-font
+          delete-branch: True
