@@ -3,13 +3,13 @@ Script taken from: https://github.com/orlp/pygrafix
 Appropriate Licence applies!
 """
 
+import os
 import re
 import sys
-import os
 
 
 def generate_pxd(glew_header_loc, dest=""):
-    with open(glew_header_loc, "r") as fin:
+    with open(glew_header_loc) as fin:
         data = fin.read()
 
     # cython doesn't support const

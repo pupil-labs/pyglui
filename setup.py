@@ -1,9 +1,5 @@
-from __future__ import print_function
-
-import io
 import os
 import platform
-import re
 import sys
 from stat import ST_MTIME
 
@@ -16,24 +12,6 @@ sys.path.append(dir_containing_glew)
 from glew_pxd import generate_pxd
 
 sys.path.remove(dir_containing_glew)
-
-
-def read(*names, **kwargs):
-    with io.open(
-        os.path.join(os.path.dirname(__file__), *names),
-        encoding=kwargs.get("encoding", "utf8"),
-    ) as fp:
-        return fp.read()
-
-
-# pip's single-source version method as described here:
-# https://python-packaging-user-guide.readthedocs.io/single_source_version/
-def find_version(*file_paths):
-    version_file = read(*file_paths)
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError("Unable to find version string.")
 
 
 requirements = []
@@ -152,14 +130,16 @@ extensions = [
 ]
 
 
-pyglui_version = find_version("pyglui", "__init__.py")
-
 setup(
     name="pyglui",
-    version=pyglui_version,
+    version="1.29.1",
     packages=["pyglui"],
     install_requires=requirements,
-    extras_require={"examples": examples_requirements()},
+    extras_require={
+        "examples": examples_requirements(),
+        "dev": ["pre-commit"],
+        "deploy": ["bump2version"],
+    },
     py_modules=[
         "pyglui.cygl.__init__",
         "pyglui.pyfontstash.__init__",

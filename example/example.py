@@ -1,22 +1,20 @@
-# -*- coding: utf-8 -*-
-from __future__ import print_function
+import functools
 import logging
+import time
 
 import glfw
-from OpenGL.GL import *
-
 import numpy as np
+from OpenGL.GL import *
 
 # create logger for the context of this function
 logger = logging.getLogger(__name__)
 
 import time
-from pyglui import ui
-from pyglui.cygl.utils import init
-from pyglui.cygl.utils import RGBA
-from pyglui.pyfontstash import fontstash as fs
-from pyglui.cygl.shader import Shader
 
+from pyglui import ui
+from pyglui.cygl.shader import Shader
+from pyglui.cygl.utils import RGBA, draw_points, init
+from pyglui.pyfontstash import fontstash as fs
 
 width, height = (1280, 720)
 
@@ -30,7 +28,6 @@ def basic_gl_setup():
     glEnable(GL_LINE_SMOOTH)
     # glEnable(GL_POINT_SMOOTH)
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
-    glEnable(GL_LINE_SMOOTH)
     glEnable(GL_POLYGON_SMOOTH)
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST)
 
@@ -48,6 +45,139 @@ def adjust_gl_view(w, h, window):
     glLoadIdentity()
 
 
+_MARKER_CIRCLE_RGB_OUTER = (0.0, 0.0, 0.0)
+_MARKER_CIRCLE_RGB_MIDDLE = (1.0, 1.0, 1.0)
+_MARKER_CIRCLE_RGB_INNER = (0.0, 0.0, 0.0)
+_MARKER_CIRCLE_RGB_FEEDBACK_INVALID = (0.8, 0.0, 0.0)
+_MARKER_CIRCLE_RGB_FEEDBACK_VALID = (0.0, 0.8, 0.0)
+
+_MARKER_CIRCLE_SIZE_OUTER = 60
+_MARKER_CIRCLE_SIZE_MIDDLE = 38
+_MARKER_CIRCLE_SIZE_INNER = 19
+_MARKER_CIRCLE_SIZE_FEEDBACK = 3
+
+_MARKER_CIRCLE_SHARPNESS_OUTER = 0.9
+_MARKER_CIRCLE_SHARPNESS_MIDDLE = 0.8
+_MARKER_CIRCLE_SHARPNESS_INNER = 0.55
+_MARKER_CIRCLE_SHARPNESS_FEEDBACK = 0.5
+
+
+@functools.lru_cache(4)  # 4 circles needed to draw calibration marker
+def _circle_points_around_zero(radius: float, num_points: int) -> np.ndarray:
+    t = np.linspace(0, 2 * np.pi, num_points, dtype=np.float64)
+    t.shape = -1, 1
+    points = np.hstack([np.cos(t), np.sin(t)])
+    points *= radius
+    return points
+
+
+@functools.lru_cache(4)  # 4 circles needed to draw calibration marker
+def _circle_points_offset(
+    offset, radius: float, num_points: int, flat: bool = True
+) -> np.ndarray:
+    # NOTE: .copy() to avoid modifying the cached result
+    points = _circle_points_around_zero(radius, num_points).copy()
+    points[:, 0] += offset[0]
+    points[:, 1] += offset[1]
+    if flat:
+        points.shape = -1
+    return points
+
+
+def _draw_circle_filled(screen_point, size: float, color: RGBA, num_points: int = 50):
+    points = _circle_points_offset(
+        screen_point, radius=size, num_points=num_points, flat=False
+    )
+    glColor4f(color.r, color.g, color.b, color.a)
+    glEnableClientState(GL_VERTEX_ARRAY)
+    glVertexPointer(2, GL_DOUBLE, 0, points)
+    glDrawArrays(GL_POLYGON, 0, points.shape[0])
+
+
+def _draw_circle_marker_polygon(position):
+
+    r2 = 2
+    screen_point = position
+
+    # _draw_circle_filled(
+    #     screen_point,
+    #     size=_MARKER_CIRCLE_SIZE_OUTER * r2,
+    #     color=RGBA(1.0, 0.0, 0.0, alpha),
+    #     num_points=50,
+    # )
+    alpha = 1
+
+    _draw_circle_filled(
+        screen_point,
+        size=_MARKER_CIRCLE_SIZE_OUTER * r2,
+        color=RGBA(*_MARKER_CIRCLE_RGB_OUTER, alpha),
+    )
+    _draw_circle_filled(
+        screen_point,
+        size=_MARKER_CIRCLE_SIZE_MIDDLE * r2,
+        color=RGBA(*_MARKER_CIRCLE_RGB_MIDDLE, alpha),
+    )
+    _draw_circle_filled(
+        screen_point,
+        size=_MARKER_CIRCLE_SIZE_INNER * r2,
+        color=RGBA(*_MARKER_CIRCLE_RGB_INNER, alpha),
+    )
+    _draw_circle_filled(
+        screen_point,
+        size=_MARKER_CIRCLE_SIZE_FEEDBACK * r2,
+        color=RGBA(*_MARKER_CIRCLE_RGB_FEEDBACK_VALID, alpha),
+    )
+
+
+def _draw_circle_marker_pointshader(position):
+
+    r2 = 2 * 2
+    screen_point = position
+    alpha = 1
+
+    draw_points(
+        [screen_point],
+        size=_MARKER_CIRCLE_SIZE_OUTER * r2,
+        color=RGBA(*_MARKER_CIRCLE_RGB_OUTER, alpha),
+        sharpness=_MARKER_CIRCLE_SHARPNESS_OUTER,
+    )
+    draw_points(
+        [screen_point],
+        size=_MARKER_CIRCLE_SIZE_MIDDLE * r2,
+        color=RGBA(*_MARKER_CIRCLE_RGB_MIDDLE, alpha),
+        sharpness=_MARKER_CIRCLE_SHARPNESS_MIDDLE,
+    )
+    draw_points(
+        [screen_point],
+        size=_MARKER_CIRCLE_SIZE_INNER * r2,
+        color=RGBA(*_MARKER_CIRCLE_RGB_INNER, alpha),
+        sharpness=_MARKER_CIRCLE_SHARPNESS_INNER,
+    )
+    draw_points(
+        [screen_point],
+        size=_MARKER_CIRCLE_SIZE_FEEDBACK * r2,
+        color=RGBA(*_MARKER_CIRCLE_RGB_FEEDBACK_VALID, alpha),
+        sharpness=_MARKER_CIRCLE_SHARPNESS_FEEDBACK,
+    )
+
+
+class Timer:
+    def __init__(self):
+        self._times = []
+
+    def __enter__(self, *args, **kwargs):
+        self.t0 = time.perf_counter()
+
+    def __exit__(self, *args, **kwargs):
+        self._times.append(time.perf_counter() - self.t0)
+        del self.t0
+
+    def result(self):
+        import pandas as pd
+
+        return pd.Series(self._times).describe()
+
+
 def demo():
     global quit
     quit = False
@@ -60,52 +190,12 @@ def demo():
             glfw.get_framebuffer_size(window)[0] / glfw.get_window_size(window)[0]
         )
         w, h = w * hdpi_factor, h * hdpi_factor
-        gui.update_window(w, h)
         active_window = glfw.get_current_context()
         glfw.make_context_current(active_window)
         # norm_size = normalize((w,h),glfw.get_window_size(window))
         # fb_size = denormalize(norm_size,glfw.get_framebuffer_size(window))
         adjust_gl_view(w, h, window)
         glfw.make_context_current(active_window)
-
-    def on_iconify(window, iconfied):
-        pass
-
-    def on_key(window, key, scancode, action, mods):
-        gui.update_key(key, scancode, action, mods)
-
-        if action == glfw.PRESS:
-            if key == glfw.KEY_ESCAPE:
-                on_close(window)
-            if mods == glfw.MOD_SUPER:
-                if key == 67:
-                    # copy value to system clipboard
-                    # ideally copy what is in our text input area
-                    test_val = "copied text input"
-                    glfw.set_clipboard_string(window, test_val)
-                    print("set clipboard to: %s" % (test_val))
-                if key == 86:
-                    # copy from system clipboard
-                    clipboard = glfw.get_clipboard_string(window)
-                    print("pasting from clipboard: %s" % (clipboard))
-
-    def on_char(window, char):
-        gui.update_char(char)
-
-    def on_button(window, button, action, mods):
-        gui.update_button(button, action, mods)
-        # pos = normalize(pos,glfw.get_window_size(window))
-        # pos = denormalize(pos,(frame.img.shape[1],frame.img.shape[0]) ) # Position in img pixels
-
-    def on_pos(window, x, y):
-        hdpi_factor = float(
-            glfw.get_framebuffer_size(window)[0] / glfw.get_window_size(window)[0]
-        )
-        x, y = x * hdpi_factor, y * hdpi_factor
-        gui.update_mouse(x, y)
-
-    def on_scroll(window, x, y):
-        gui.update_scroll(x, y)
 
     def on_close(window):
         global quit
@@ -123,160 +213,43 @@ def demo():
     # Register callbacks for the window
     glfw.set_window_size_callback(window, on_resize)
     glfw.set_window_close_callback(window, on_close)
-    glfw.set_window_iconify_callback(window, on_iconify)
-    glfw.set_key_callback(window, on_key)
-    glfw.set_char_callback(window, on_char)
-    glfw.set_mouse_button_callback(window, on_button)
-    glfw.set_cursor_pos_callback(window, on_pos)
-    glfw.set_scroll_callback(window, on_scroll)
     # test out new paste function
 
     glfw.make_context_current(window)
     init()
     basic_gl_setup()
+    glfw.swap_interval(0)
 
     print(glGetString(GL_VERSION))
 
-    class Temp(object):
-        """Temp class to make objects"""
-
-        def __init__(self):
-            pass
-
-    foo = Temp()
-    foo.bar = 34
-    foo.sel = "mi"
-    foo.selection = ["€", "mi", u"re"]
-
-    foo.mytext = "some text"
-    foo.T = True
-    foo.L = False
-
-    def set_text_val(val):
-        foo.mytext = val
-        # print 'setting to :',val
-
-    def pr():
-        print("pyglui version: %s" % (ui.__version__))
-
-    gui = ui.UI()
-    gui.scale = 1.0
-    thumbbar = ui.Scrolling_Menu(
-        "ThumbBar", pos=(-80, 0), size=(0, 0), header_pos="hidden"
-    )
-    menubar = ui.Scrolling_Menu(
-        "MenueBar", pos=(-500, 0), size=(-90, 0), header_pos="left"
-    )
-
-    gui.append(menubar)
-    gui.append(thumbbar)
-
-    T = ui.Growing_Menu("T menu", header_pos="headline")
-    menubar.append(T)
-    L = ui.Growing_Menu("L menu", header_pos="headline")
-    menubar.append(L)
-    M = ui.Growing_Menu("M menu", header_pos="headline")
-    menubar.append(M)
-
-    def toggle_menu(collapsed, menu):
-        menubar.collapsed = collapsed
-        for m in menubar.elements:
-            m.collapsed = True
-        menu.collapsed = collapsed
-
-    thumbbar.append(
-        ui.Thumb(
-            "collapsed",
-            T,
-            label="T",
-            on_val=False,
-            off_val=True,
-            setter=lambda x: toggle_menu(x, T),
-        )
-    )
-    thumbbar.append(
-        ui.Thumb(
-            "collapsed",
-            L,
-            label="L",
-            on_val=False,
-            off_val=True,
-            setter=lambda x: toggle_menu(x, L),
-        )
-    )
-    thumbbar.append(
-        ui.Thumb(
-            "collapsed",
-            M,
-            label="M",
-            on_val=False,
-            off_val=True,
-            setter=lambda x: toggle_menu(x, M),
-        )
-    )
-
-    # thumbbar.elements[-1].order = -10.0
-    print("order" + str(thumbbar.elements[-1].order))
-    T.append(ui.Button("T test", pr))
-    T.append(
-        ui.Info_Text(
-            "T best finerfpiwnesdco'n wfo;ineqrfo;inwefo'qefr voijeqfr'p9qefrp'i 'iqefr'ijqfr eqrfiqerfn'ioer"
-        )
-    )
-    L.append(ui.Button("L test", pr))
-    L.append(ui.Button("L best", pr))
-    M.append(ui.Button("M test", pr))
-    M.append(ui.Button("M best", pr))
-    MM = ui.Growing_Menu("MM menu", pos=(0, 0), size=(0, 400))
-    M.append(MM)
-    for x in range(20):
-        MM.append(ui.Button("M test%s" % x, pr))
-    M.append(ui.Button("M best", pr))
-    M.append(ui.Button("M best", pr))
-    M.append(ui.Button("M best", pr))
-    M.append(ui.Button("M best", pr))
-    M.append(ui.Button("M best", pr))
-    M.append(ui.Button("M best", pr))
-    M.append(ui.Button("M best", pr))
-    # label = 'Ï'
-    # label = 'R'
-    # gui.append(
-    import os
-    import psutil
-
-    pid = os.getpid()
-    ps = psutil.Process(pid)
-    ts = time.time()
-
-    from pyglui import graph
-
-    print(graph.__version__)
-    cpu_g = graph.Line_Graph()
-    cpu_g.pos = (50, 100)
-    cpu_g.update_fn = ps.cpu_percent
-    cpu_g.update_rate = 5
-    cpu_g.label = "CPU %0.1f"
-
-    fps_g = graph.Line_Graph()
-    fps_g.pos = (50, 100)
-    fps_g.update_rate = 5
-    fps_g.label = "%0.0f FPS"
-    fps_g.color[:] = 0.1, 0.1, 0.8, 0.9
-
     on_resize(window, *glfw.get_window_size(window))
 
+    t_pointshader = Timer()
+    t_polygon = Timer()
+    t_swap = Timer()
+    t_poll = Timer()
+
     while not quit:
-        gui.update()
-        # print(T.collapsed,L.collapsed,M.collapsed)
-        # T.collapsed = True
-        # glfw.make_context_current(window)
-        glfw.swap_buffers(window)
-        glfw.poll_events()
+
+        with t_pointshader:
+            _draw_circle_marker_pointshader((320, 320))
+        with t_polygon:
+            _draw_circle_marker_polygon((960, 320))
+
+        with t_swap:
+            glfw.swap_buffers(window)
+
+        with t_poll:
+            glfw.poll_events()
         # adjust_gl_view(1280,720,window)
-        glClearColor(0.3, 0.4, 0.1, 1)
+        glClearColor(1.0, 1.0, 1.0, 1)
         glClear(GL_COLOR_BUFFER_BIT)
 
-    gui.terminate()
+    print(f"{t_pointshader.result()=}")
+    print(f"{t_polygon.result()=}")
+    print(f"{t_swap.result()=}")
+    print(f"{t_poll.result()=}")
+
     glfw.terminate()
     logger.debug("Process done")
 
@@ -285,7 +258,9 @@ if __name__ == "__main__":
     if 1:
         demo()
     else:
-        import cProfile, subprocess, os
+        import cProfile
+        import os
+        import subprocess
 
         cProfile.runctx("demo()", {}, locals(), "example.pstats")
         gprof2dot_loc = "gprof2dot.py"

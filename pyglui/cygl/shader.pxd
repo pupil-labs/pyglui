@@ -1,5 +1,6 @@
 cimport glew as gl
 
+
 cdef class Shader:
     cdef dict uniforms
     cdef bytes _vertex_code, _fragment_code, _geometry_code

@@ -12,4 +12,3 @@ GLEW (OpengGL Extension Wrangler)
 ##Build
 * run 'python setup.py install' (may require sudo)
 * please raise an issue if this does not work for you
-

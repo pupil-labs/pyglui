@@ -307,7 +307,3 @@ cdef draw_ui_texture(fbo_tex_id ui_layer):
     gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
     gl.glDisable(gl.GL_TEXTURE_2D)
     gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-
-
-
-

@@ -1,10 +1,15 @@
 from cython cimport view
-from pyglui.ui import get_opensans_font_path,get_roboto_font_path
+
+from pyglui.ui import get_opensans_font_path, get_roboto_font_path
+
+from pyfontstash cimport fontstash as fs
+
 from pyglui.cygl cimport glew as gl
 from pyglui.cygl.utils cimport RGBA
-from pyfontstash cimport fontstash as fs
+
 from os import path
-include 'version.pxi'
+
+__version__ = "1.29.1"
 
 
 # legacy push and pop
@@ -387,7 +392,3 @@ cdef class Averaged_Value:
         self.glfont.set_color_float(self.color[:])
         self.glfont.draw_text(self.x*self.scale,self.y*self.scale,self.label%self.avg)
         gl.glPopMatrix()
-
-
-
-

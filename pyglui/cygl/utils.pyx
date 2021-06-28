@@ -1,8 +1,11 @@
 from cython cimport view
 from libcpp.vector cimport vector
+
 import numpy as np
+
 cimport numpy as np
 cimport shader
+
 
 cpdef RGBA mix_smooth(RGBA first, RGBA second, float val, float min_, float max_):
     cdef float pct = np.clip((val - min_) / (max_ - min_), 0., 1.)
@@ -44,7 +47,7 @@ cdef class RGBA:
             self.r,self.g,self.b,self.a = t
         else:
             raise IndexError()
-    
+
     def as_tuple(self):
         return (self.r, self.g, self.b, self.a)
 
@@ -1070,4 +1073,3 @@ cpdef pop_ortho():
     glPopMatrix()
     glMatrixMode(GL_MODELVIEW)
     glPopMatrix()
-

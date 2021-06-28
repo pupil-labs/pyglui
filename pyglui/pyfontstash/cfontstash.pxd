@@ -6,7 +6,7 @@ IF UNAME_SYSNAME == "Windows":
 ELSE:
     cdef extern from 'gl.h':
         pass
-    
+
 cdef extern from 'stb_truetype.h':
     pass
 
@@ -144,5 +144,3 @@ cdef extern from 'glfontstash.h':
     FONScontext *glfonsCreate(int width, int height, int flags)
     void glfonsDelete(FONScontext* ctx)
     unsigned int glfonsRGBA(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
-
-
