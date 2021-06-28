@@ -159,7 +159,7 @@ setup(
     version=pyglui_version,
     packages=["pyglui"],
     install_requires=requirements,
-    extras_require={"examples": examples_requirements()},
+    extras_require={"examples": examples_requirements(), "dev": ["pre-commit"]},
     py_modules=[
         "pyglui.cygl.__init__",
         "pyglui.pyfontstash.__init__",
