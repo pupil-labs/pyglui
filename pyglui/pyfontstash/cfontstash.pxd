@@ -1,3 +1,5 @@
+# cython: language_level=3
+
 IF UNAME_SYSNAME == "Windows":
     cdef extern from 'Windows.h':
         pass
@@ -44,8 +46,6 @@ cdef extern from 'fontstash.h':
         void (*renderDraw)(void *, float *, float *, unsigned int *, int)
         void (*renderDelete)(void *)
 
-    ctypedef FONSparams FONSparams
-
     cdef struct FONSquad:
         float x0
         float y0
@@ -55,8 +55,6 @@ cdef extern from 'fontstash.h':
         float y1
         float s1
         float t1
-
-    ctypedef FONSquad FONSquad
 
     cdef struct FONStextIter:
         float x
@@ -77,10 +75,6 @@ cdef extern from 'fontstash.h':
 
     cdef struct FONSfont:
         pass
-
-    ctypedef FONStextIter FONStextIter
-
-    ctypedef FONScontext FONScontext
 
     cdef struct FONScontext:
         pass

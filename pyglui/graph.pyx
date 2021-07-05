@@ -1,11 +1,12 @@
+# cython: language_level=3
 from cython cimport view
 
 from pyglui.ui import get_opensans_font_path, get_roboto_font_path
 
-from pyfontstash cimport fontstash as fs
-
 from pyglui.cygl cimport glew as gl
 from pyglui.cygl.utils cimport RGBA
+# pyfontstash needs to be import AFTER pyglui.cygl.glew
+from pyglui.pyfontstash cimport fontstash as fs
 
 from os import path
 

@@ -3,12 +3,13 @@ Script taken from: https://github.com/orlp/pygrafix
 Appropriate Licence applies!
 """
 
+import argparse
 import os
+import pathlib
 import re
-import sys
 
 
-def generate_pxd(glew_header_loc, dest=""):
+def generate_pxd(glew_header_loc, dest="."):
     with open(glew_header_loc) as fin:
         data = fin.read()
 
@@ -118,7 +119,8 @@ def generate_pxd(glew_header_loc, dest=""):
         enums.append(result)
         handled_lines.add(linenr)
 
-    pxdheader = """from libc.stdint cimport int64_t, uint64_t
+    pxdheader = """# cython: language_level=3
+from libc.stdint cimport int64_t, uint64_t
 
 cdef extern from "include_glew.h":
     ctypedef struct _cl_context:
@@ -188,11 +190,13 @@ cdef extern from "include_glew.h":
 
 """
 
-    with open(os.path.join(dest, "glew.pxd"), "w") as fout:
+    dest = pathlib.Path(dest)
+    dest.mkdir(exist_ok=True, parents=True)
+    with (dest / "glew.pxd").open("w") as fout:
         data = pxdheader
 
         data += "    enum:\n"
-        data += "\n".join("        " + enum for enum in enums)
+        data += "\n".join("        " + enum for enum in set(enums))
         data += "\n\n"
 
         def mod_func(func):
@@ -249,7 +253,7 @@ cdef extern from "include_glew.h":
 
         fout.write(data)
 
-    with open(os.path.join(dest, "unhandled_glew.h"), "w") as fout:
+    with (dest / "unhandled_glew.h").open("w") as fout:
         data = "\n".join(
             lines[linenr] for linenr in range(len(lines)) if linenr not in handled_lines
         )
@@ -258,6 +262,8 @@ cdef extern from "include_glew.h":
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        raise Exception("Please supply path to glew.h")
-    generate_pxd(sys.argv[1])
+    parser = argparse.ArgumentParser()
+    parser.add_argument("glew_header_loc")
+    parser.add_argument("destination")
+    args = parser.parse_args()
+    generate_pxd(args.glew_header_loc, dest=args.destination)

@@ -1,4 +1,4 @@
-cimport cfontstash as fs
+cimport pyglui.pyfontstash.cfontstash as fs
 
 #expose some constansts when c imported
 FONS_ALIGN_LEFT = fs.FONS_ALIGN_LEFT

@@ -1,4 +1,6 @@
-cimport glew as gl
+# cython: language_level=3
+
+cimport pyglui.cygl.glew as gl
 
 
 cdef class Shader:
