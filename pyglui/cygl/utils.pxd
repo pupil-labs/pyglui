@@ -1,5 +1,8 @@
-from glew cimport *
+# cython: language_level=3
+
 from libcpp.vector cimport vector
+
+from pyglui.cygl.glew cimport *
 
 
 cdef class RGBA:

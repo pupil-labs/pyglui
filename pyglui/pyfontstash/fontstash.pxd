@@ -1,4 +1,5 @@
-cimport cfontstash as fs
+# cython: language_level=3
+cimport pyglui.pyfontstash.cfontstash as fs
 
 
 cdef int FONS_ALIGN_LEFT

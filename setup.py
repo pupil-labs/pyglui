@@ -1,4 +1,6 @@
+import argparse
 import os
+import pathlib
 import platform
 import sys
 from stat import ST_MTIME
@@ -6,22 +8,6 @@ from stat import ST_MTIME
 import numpy
 from Cython.Build import cythonize
 from setuptools import Extension, setup
-
-dir_containing_glew = os.path.dirname(__file__)
-sys.path.append(dir_containing_glew)
-from glew_pxd import generate_pxd
-
-sys.path.remove(dir_containing_glew)
-
-
-requirements = []
-if platform.system() != "Windows":
-    requirements.append("cysignals")
-
-
-def examples_requirements() -> list:
-    return ["psutil", "numpy", "pyopengl", "glfw"]
-
 
 includes = ["pyglui/cygl/", ".", numpy.get_include()]
 glew_binaries = []
@@ -66,37 +52,30 @@ elif platform.system() == "Windows":
 else:
     raise Exception("Platform build not implemented.")
 
-
-if (
-    os.path.isfile("pyglui/cygl/glew.pxd")
-    and os.stat("pyglui/cygl/glew.pxd")[ST_MTIME] > os.stat(glew_header)[ST_MTIME]
-):
-    print("'glew.pxd' is up-to-date.")
-else:
-    print("generating glew.pxd based on '%s'" % glew_header)
-    generate_pxd(glew_header, "pyglui/cygl")
-
+includes_fontstash = ["pyglui/pyfontstash/fontstash/src"]
 
 extensions = [
     Extension(
         name="pyglui.ui",
         sources=["pyglui/ui.pyx"],
-        include_dirs=includes + ["pyglui/pyfontstash/fontstash/src"],
+        include_dirs=includes + includes_fontstash,
         libraries=libs,
         library_dirs=lib_dir,
         extra_link_args=link_args,
         extra_compile_args=extra_compile_args,
         language="c++",
+        define_macros=[("GL_SILENCE_DEPRECATION", "1")],
     ),
     Extension(
         name="pyglui.graph",
         sources=["pyglui/graph.pyx"],
-        include_dirs=includes + ["pyglui/pyfontstash/fontstash/src"],
+        include_dirs=includes + includes_fontstash,
         libraries=libs,
         library_dirs=lib_dir,
         extra_link_args=link_args,
         extra_compile_args=extra_compile_args,
         language="c++",
+        define_macros=[("GL_SILENCE_DEPRECATION", "1")],
     ),
     Extension(
         name="pyglui.cygl.utils",
@@ -121,36 +100,58 @@ extensions = [
     Extension(
         name="pyglui.pyfontstash.fontstash",
         sources=["pyglui/pyfontstash/fontstash.pyx"],
-        include_dirs=includes + ["pyglui/pyfontstash/fontstash/src"],
+        include_dirs=includes + includes_fontstash,
         libraries=libs,
         library_dirs=lib_dir,
         extra_link_args=link_args,
         extra_compile_args=extra_compile_args + fontstash_compile_args,
+        define_macros=[("GL_SILENCE_DEPRECATION", "1")],
     ),
 ]
 
+# Find dist-dir
+parser = argparse.ArgumentParser()
+parser.add_argument("--dist-dir")
+args, args_unused = parser.parse_known_args()
 
-setup(
-    name="pyglui",
-    version="1.29.1",
-    packages=["pyglui"],
-    install_requires=requirements,
-    extras_require={
-        "examples": examples_requirements(),
-        "dev": ["pre-commit"],
-        "deploy": ["bump2version"],
-    },
-    py_modules=[
-        "pyglui.cygl.__init__",
-        "pyglui.pyfontstash.__init__",
-    ],  # add  __init__.py files
-    description="OpenGL UI powered by Cython",
-    url="https://github.com/pupil-labs/pyglui",
-    author="Pupil Labs",
-    author_email="info@pupil-labs.com",
-    license="MIT",
-    data_files=glew_binaries,
-    package_dir={"pyglui": "pyglui"},
-    package_data={"pyglui": ["*.ttf"]},  # fonts
-    ext_modules=cythonize(extensions),
+should_cythonize = args.dist_dir and any(
+    not pathlib.Path(sfile)
+    .with_suffix(".cpp" if extension.language == "c++" else ".c")
+    .exists()
+    for extension in extensions
+    for sfile in extension.sources
+    if pathlib.Path(sfile).suffix == ".pyx"
 )
+if should_cythonize:
+    # 1. generate additional cython files
+    print(f"Generating glew.pxd based on {glew_header}")
+
+    dir_glew_generator = pathlib.Path("scripts")
+    dir_glew_destination = pathlib.Path(".") / "pyglui" / "cygl"
+
+    print(f"Adding {dir_glew_generator} to sys.path")
+    sys.path.append(str(dir_glew_generator))
+    from glew_pxd import generate_pxd
+
+    print(f"Removing {dir_glew_generator} from sys.path")
+    sys.path.remove(str(dir_glew_generator))
+    print(f"Writing glew.pxd to {dir_glew_destination}")
+    generate_pxd(glew_header, dir_glew_destination)
+
+    # 2. cythonize
+    extensions = cythonize(extensions)
+else:
+    # Replace cython files with compiled c(++) sources
+    # https://cython.readthedocs.io/en/latest/src/userguide/source_files_and_compilation.html
+    for extension in extensions:
+        sources = []
+        for sfile in extension.sources:
+            sfile = pathlib.Path(sfile)
+            path, ext = os.path.splitext(sfile)
+            if sfile.suffix == ".pyx":
+                ext = ".cpp" if extension.language == "c++" else ".c"
+                sfile = sfile.with_suffix(ext)
+            sources.append(str(sfile))
+        extension.sources[:] = sources
+
+setup(ext_modules=extensions)

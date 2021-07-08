@@ -1,5 +1,6 @@
-cimport glew as gl
 from cpython.version cimport PY_MAJOR_VERSION
+
+cimport pyglui.cygl.glew as gl
 
 
 cdef str _to_str(object s):

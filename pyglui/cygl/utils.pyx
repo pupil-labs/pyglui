@@ -4,7 +4,8 @@ from libcpp.vector cimport vector
 import numpy as np
 
 cimport numpy as np
-cimport shader
+
+cimport pyglui.cygl.shader as shader
 
 
 cpdef RGBA mix_smooth(RGBA first, RGBA second, float val, float min_, float max_):

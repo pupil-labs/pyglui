@@ -1,9 +1,9 @@
-# cython: profile=False
-from pyfontstash cimport fontstash as fs
-
+# cython: language_level=3, profile=False
 from pyglui.cygl cimport glew as gl
 from pyglui.cygl cimport utils
 from pyglui.cygl.utils cimport RGBA
+# pyfontstash needs to be import AFTER pyglui.cygl.glew
+from pyglui.pyfontstash cimport fontstash as fs
 
 __version__ = "1.29.1"
 include 'gldraw.pxi'
