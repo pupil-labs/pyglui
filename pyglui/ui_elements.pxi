@@ -1018,12 +1018,12 @@ cdef class Separator(UI_element):
                   self.outline.org.y + outline_padding),
              RGBA(*menu_line))
 
-        self.outline.design_size.y = 1.5 * ui_scale + outline_padding * 2
+        self.outline.design_size.y = 1.5 * ui_scale * outline_padding * 2
         self.outline.compute(parent)
 
     cpdef precompute(self, FitBox parent):
         self.outline.compute(parent)
-        self.outline.design_size.y = 1.5 * ui_scale +outline_padding*2
+        self.outline.design_size.y = 1.5 * ui_scale * outline_padding * 2
         self.outline.compute(parent)
 
 cdef class Info_Text(UI_element):
@@ -1101,8 +1101,8 @@ cdef class Info_Text(UI_element):
             text_origin = (self.text_area.org.x, self.text_area.org.y)
         left_word, height = glfont.draw_breaking_text(text_origin[0], text_origin[1], self._text, self.text_area.size.x,self.max_height )
         glfont.pop_state()
-        self.text_area.design_size.y  = (height-self.text_area.org.y)/ui_scale
-        self.outline.design_size.y = self.text_area.design_size.y+outline_padding*2
+        self.text_area.design_size.y  = (height - self.text_area.org.y) / ui_scale
+        self.outline.design_size.y = self.text_area.design_size.y + outline_padding * 2
         self.text_area.compute(self.outline)
         self.outline.compute(parent)
 
@@ -1113,8 +1113,9 @@ cdef class Info_Text(UI_element):
         glfont.set_size(self.text_size*ui_scale)
         left_word, height = glfont.compute_breaking_text(self.text_area.org.x, self.text_area.org.y, self._text, self.text_area.size.x,self.max_height )
         glfont.pop_state()
-        self.text_area.design_size.y  = (height-self.text_area.org.y)/ui_scale
-        self.outline.design_size.y = self.text_area.design_size.y+outline_padding*2
+        self.text_area.design_size.y  = (height - self.text_area.org.y) / ui_scale
+        self.outline.design_size.y = self.text_area.design_size.y + outline_padding * 2
+        self.text_area.compute(self.outline)
         self.outline.compute(parent)
 
 ########## Thumb ##########
