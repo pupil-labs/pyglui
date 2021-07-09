@@ -5,7 +5,7 @@ from pyglui.cygl.utils cimport RGBA
 # pyfontstash needs to be import AFTER pyglui.cygl.glew
 from pyglui.pyfontstash cimport fontstash as fs
 
-__version__ = "1.29.2"
+__version__ = "1.30.0"
 include 'gldraw.pxi'
 include 'helpers.pxi'
 include 'design_params.pxi'
