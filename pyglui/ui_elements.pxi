@@ -1118,6 +1118,77 @@ cdef class Info_Text(UI_element):
         self.text_area.compute(self.outline)
         self.outline.compute(parent)
 
+
+cdef class Color_Legend(UI_element):
+    cdef basestring _text
+    cdef FitBox text_area
+    cdef float _text_size
+    cdef RGBA _text_color
+    cdef RGBA _line_color
+    cdef int max_height
+
+    def __cinit__(self, object line_color, basestring text):
+        self._text = text
+        self.max_height = 200
+        self.outline = FitBox(Vec2(0,0),Vec2(0,0))
+        self.text_area = FitBox(
+            Vec2(outline_padding * 6, outline_padding),
+            Vec2(-outline_padding, -outline_padding)
+        )
+        self._text_size = size_text_info
+        self._text_color = RGBA(*color_text_info)
+        self._line_color = RGBA(*line_color)
+
+    def __init__(self, object line_color, basestring text):
+        pass
+
+    cpdef draw(self,FitBox parent,bint nested=True, bint parent_read_only = False):
+        self.outline.compute(parent)
+
+        line(Vec2(self.outline.org.x + outline_padding,
+                  self.outline.org.y + outline_padding),
+             Vec2(self.outline.org.x + ui_scale * outline_padding * 4,
+                  self.outline.org.y + outline_padding),
+             self._line_color)
+
+        self.text_area.compute(self.outline)
+
+        glfont.push_state()
+        glfont.set_color_float(self._text_color.as_tuple())
+        glfont.set_size(self._text_size * ui_scale)
+        glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_LEFT)
+        left_word, height = glfont.draw_breaking_text(
+            self.text_area.org.x,
+            self.text_area.org.y,
+            self._text,
+            self.text_area.size.x,
+            self.max_height,
+        )
+        glfont.pop_state()
+        self.text_area.design_size.y  = (height - self.text_area.org.y) / ui_scale
+        self.outline.design_size.y = self.text_area.design_size.y + outline_padding
+        self.text_area.compute(self.outline)
+        self.outline.compute(parent)
+
+    cpdef precompute(self, FitBox parent):
+        self.outline.compute(parent)
+        self.text_area.compute(self.outline)
+        glfont.push_state()
+        glfont.set_size(self._text_size * ui_scale)
+        glfont.set_align(fs.FONS_ALIGN_MIDDLE | fs.FONS_ALIGN_LEFT)
+        left_word, height = glfont.compute_breaking_text(
+            self.text_area.org.x,
+            self.text_area.org.y,
+            self._text,
+            self.text_area.size.x,
+            self.max_height
+        )
+        glfont.pop_state()
+        self.text_area.design_size.y  = (height - self.text_area.org.y) / ui_scale
+        self.outline.design_size.y = self.text_area.design_size.y + outline_padding
+        self.text_area.compute(self.outline)
+        self.outline.compute(parent)
+
 ########## Thumb ##########
 
 
