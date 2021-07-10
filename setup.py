@@ -18,9 +18,12 @@ fontstash_compile_args = [
 ]
 
 
-def macos_homebrew_glew_dir():
+def macos_homebrew_prefix(package: str) -> str:
     import subprocess
-    with subprocess.Popen(["brew", "--prefix", "glew"], stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
+
+    with subprocess.Popen(
+        ["brew", "--prefix", package], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    ) as proc:
         out = proc.stdout.read()
         err = proc.stderr.read()
     if out:
@@ -31,7 +34,7 @@ def macos_homebrew_glew_dir():
 
 if platform.system() == "Darwin":
     # find glew irrespective of version
-    for root, dirs, files in os.walk(macos_homebrew_glew_dir()):
+    for root, dirs, files in os.walk(macos_homebrew_prefix("glew")):
         if "glew.h" in files:
             glew_header = os.path.join(root, "glew.h")
     includes += [
