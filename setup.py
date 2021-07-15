@@ -1,4 +1,3 @@
-import argparse
 import os
 import pathlib
 import platform
@@ -109,12 +108,7 @@ extensions = [
     ),
 ]
 
-# Find dist-dir
-parser = argparse.ArgumentParser()
-parser.add_argument("--dist-dir")
-args, args_unused = parser.parse_known_args()
-
-should_cythonize = args.dist_dir and any(
+should_cythonize = any(
     not pathlib.Path(sfile)
     .with_suffix(".cpp" if extension.language == "c++" else ".c")
     .exists()
