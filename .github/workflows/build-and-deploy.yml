@@ -18,38 +18,26 @@ jobs:
     continue-on-error: true
     runs-on: ${{ matrix.os }}
     steps:
-      # - name: Dump GitHub context
-      #   env:
-      #     GITHUB_CONTEXT: ${{ toJSON(github) }}
-      #   run: echo "$GITHUB_CONTEXT"
       - uses: actions/checkout@v2
         with:
           submodules: true
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v1.11.1.post1
+        env:
+          CIBW_SKIP: "{cp,pp}27-* {cp,pp}35-* pp* *win32 *_aarch64 *_ppc64le *_s390x *_i686"
+          CIBW_ARCHS_MACOS: "x86_64"
+          CIBW_ARCHS_LINUX: "x86_64"
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
-      # - name: Build wheels
-      #   uses: pypa/cibuildwheel@v1.11.1.post1
-      #   env:
-      #     # CIBW_ENVIRONMENT_LINUX: >
-      #     #   LD_LIBRARY_PATH=/project/lib64:$LD_LIBRARY_PATH
+          CIBW_BEFORE_ALL_LINUX: sudo apt-get install libglew-dev
+          CIBW_BEFORE_ALL_MACOS: brew install glew
 
-      #     CIBW_SKIP: "{cp,pp}27-* {cp,pp}35-* pp* *win32 *_aarch64 *_ppc64le *_s390x *_i686"
-      #     CIBW_ARCHS_MACOS: "x86_64"
-      #     CIBW_ARCHS_LINUX: "x86_64"
+          CIBW_BEFORE_BUILD_WINDOWS: pip install delvewheel
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair -w {dest_dir} {wheel}
 
-      #     CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-      #     CIBW_BEFORE_BUILD_WINDOWS: pip install delvewheel
-      #     CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair -w {dest_dir} {wheel}
-
-      #     CIBW_TEST_REQUIRES: pytest opencv-python pandas scikit-image
-      #     CIBW_TEST_COMMAND: >
-      #       curl -L ${{ env.pye3d-test-input-download-url }} --silent
-      #       --output {package}/tests/integration/input/pye3d_test_input.npz
-      #       && pytest {package}/tests
-      #     CIBW_TEST_COMMAND_WINDOWS: >
-      #       curl -L ${{ env.pye3d-test-input-download-url }} --silent
-      #       --output {package}\tests\integration\input\pye3d_test_input.npz
-      #       && pytest {package}\tests
-      #     CIBW_TEST_SKIP: "*-macosx_arm64 *-macosx_universal2:arm64"
+          CIBW_TEST_REQUIRES: pytest glfw
+          CIBW_TEST_COMMAND: pytest {package}/tests
+          CIBW_TEST_SKIP: "*-macosx_arm64 *-macosx_universal2:arm64"
 
       - uses: actions/upload-artifact@v2
         if: always()
