@@ -1,0 +1,93 @@
+name: Build and deploy
+
+on:
+  pull_request:
+  push:
+    tags:
+      - "**"
+    branches:
+      - "cibuildwheels"
+  workflow_dispatch:
+
+jobs:
+  build_wheels:
+    name: "Build pyglui wheels on ${{ matrix.os }}"
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    continue-on-error: true
+    runs-on: ${{ matrix.os }}
+    steps:
+      # - name: Dump GitHub context
+      #   env:
+      #     GITHUB_CONTEXT: ${{ toJSON(github) }}
+      #   run: echo "$GITHUB_CONTEXT"
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      # - name: Build wheels
+      #   uses: pypa/cibuildwheel@v1.11.1.post1
+      #   env:
+      #     # CIBW_ENVIRONMENT_LINUX: >
+      #     #   LD_LIBRARY_PATH=/project/lib64:$LD_LIBRARY_PATH
+
+      #     CIBW_SKIP: "{cp,pp}27-* {cp,pp}35-* pp* *win32 *_aarch64 *_ppc64le *_s390x *_i686"
+      #     CIBW_ARCHS_MACOS: "x86_64"
+      #     CIBW_ARCHS_LINUX: "x86_64"
+
+      #     CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+      #     CIBW_BEFORE_BUILD_WINDOWS: pip install delvewheel
+      #     CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair -w {dest_dir} {wheel}
+
+      #     CIBW_TEST_REQUIRES: pytest opencv-python pandas scikit-image
+      #     CIBW_TEST_COMMAND: >
+      #       curl -L ${{ env.pye3d-test-input-download-url }} --silent
+      #       --output {package}/tests/integration/input/pye3d_test_input.npz
+      #       && pytest {package}/tests
+      #     CIBW_TEST_COMMAND_WINDOWS: >
+      #       curl -L ${{ env.pye3d-test-input-download-url }} --silent
+      #       --output {package}\tests\integration\input\pye3d_test_input.npz
+      #       && pytest {package}\tests
+      #     CIBW_TEST_SKIP: "*-macosx_arm64 *-macosx_universal2:arm64"
+
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: distribution
+          path: ./wheelhouse/*.whl
+
+  build_sdist:
+    name: Build source distribution
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - name: Build source package
+        run: |
+          pip install build
+          python -m build --sdist .
+      - name: Upload source package
+        uses: actions/upload-artifact@v2
+        with:
+          name: distribution
+          path: dist/
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: [build_wheels, build_sdist]
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: distribution
+          path: dist/
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
