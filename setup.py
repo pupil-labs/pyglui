@@ -16,6 +16,13 @@ fontstash_compile_args = [
     "-D GLFONTSTASH_IMPLEMENTATION",
 ]
 
+
+def get_cysignals_include():
+    import cysignals
+
+    return cysignals.__path__[0]
+
+
 if platform.system() == "Darwin":
     # find glew irrespective of version
     for root, dirs, files in os.walk("/usr/local/Cellar/glew"):
@@ -24,6 +31,7 @@ if platform.system() == "Darwin":
     includes += [
         "/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/",
         "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/",
+        get_cysignals_include(),
     ]
     link_args = []
     libs = ["GLEW"]
@@ -31,7 +39,7 @@ if platform.system() == "Darwin":
     extra_compile_args = ["-Wno-strict-aliasing", "-O2"]
 elif platform.system() == "Linux":
     glew_header = "/usr/include/GL/glew.h"
-    includes += ["/usr/include/GL"]
+    includes += ["/usr/include/GL", get_cysignals_include()]
     libs = ["GLEW", "GL"]  # GL needed for fonstash
     link_args = []
     extra_compile_args = ["-Wno-strict-aliasing", "-O2"]

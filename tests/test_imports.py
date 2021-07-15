@@ -2,6 +2,14 @@ def test_import_numpy():
     import numpy
 
 
+def test_import_cysignals():
+    import cysignals
+
+
+def test_import_glfw():
+    import glfw
+
+
 def test_import_pyglui():
     import pyglui
 

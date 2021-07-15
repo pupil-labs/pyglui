@@ -1,4 +1,22 @@
 # cython: language_level=3, profile=False
+from contextlib import contextmanager
+
+IF UNAME_SYSNAME != 'Windows':
+    import cysignals
+    from cysignals.signals cimport sig_off, sig_on
+
+    @contextmanager
+    def sig_on_off():
+        sig_on()
+        try:
+            yield
+        finally:
+            sig_off()
+ELSE:
+    @contextmanager
+    def sig_on_off():
+        yield
+
 from pyglui.cygl cimport glew as gl
 from pyglui.cygl cimport utils
 from pyglui.cygl.utils cimport RGBA
@@ -10,16 +28,14 @@ include 'gldraw.pxi'
 include 'helpers.pxi'
 include 'design_params.pxi'
 
+import platform
 from collections import namedtuple
 from os import path
-from platform import system as current_os
 from time import time
 
-IF UNAME_SYSNAME != "Windows":
-    import cysignals
 
 cdef int UI_MOD_KEY  # defines modifier key for cut/copy/paste
-if current_os() == 'Darwin':
+if platform.system() == 'Darwin':
     UI_MOD_KEY = 8  # glfw.GLFW_MOD_SUPER
 else:
     UI_MOD_KEY = 2  # glfw.GLFW_MOD_CONTROL
@@ -62,18 +78,19 @@ cdef class UI:
     cdef fbo_tex_id overlay_layer
 
     def __cinit__(self):
-        self.elements = []
-        self.new_input = Input()
-        self.window = FitBox(Vec2(0,0),Vec2(0,0))
-        self.ui_layer = create_ui_texture(Vec2(200,200))
-        self.overlay_layer = create_ui_texture(Vec2(200,200))
+        with sig_on_off():
+            self.elements = []
+            self.new_input = Input()
+            self.window = FitBox(Vec2(0,0),Vec2(0,0))
+            self.ui_layer = create_ui_texture(Vec2(200,200))
+            self.overlay_layer = create_ui_texture(Vec2(200,200))
 
-        #global init of gl fonts
-        global glfont
-        glfont = fs.Context()
-        self.add_font('roboto',get_roboto_font_path() )
-        self.add_font('opensans',get_opensans_font_path())
-        self.add_font('pupil_icons',get_pupil_icons_font_path())
+            #global init of gl fonts
+            global glfont
+            glfont = fs.Context()
+            self.add_font('roboto',get_roboto_font_path() )
+            self.add_font('opensans',get_opensans_font_path())
+            self.add_font('pupil_icons',get_pupil_icons_font_path())
 
     def __init__(self):
         pass
