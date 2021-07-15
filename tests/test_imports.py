@@ -1,7 +1,15 @@
+import platform
+
+import pytest
+
+
 def test_import_numpy():
     import numpy
 
 
+@pytest.mark.skipif(
+    platform.system() == "Windows", reason="cysignals is not required on Windows"
+)
 def test_import_cysignals():
     import cysignals
 
