@@ -8,10 +8,10 @@ def pyglui_ui_instance():
     from pyglui import cygl, ui
 
     glfw.ERROR_REPORTING = "raise"
-    glfw_init_successful = glfw.init()
-    assert glfw_init_successful, "Failed to initialize GLFW"
-    glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
     try:
+        glfw_init_successful = glfw.init()
+        assert glfw_init_successful, "Failed to initialize GLFW"
+        glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
         window = glfw.create_window(200, 200, "Test window", None, None)
     except glfw.GLFWError as err:
         # Skip if CI does not allow creating a window, e.g. on macOS:
