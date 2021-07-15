@@ -34,8 +34,10 @@ jobs:
           # the manylinux container
           CIBW_BEFORE_BUILD_LINUX: yum install libGLEW
 
-          # CIBW_BEFORE_BUILD_WINDOWS: pip install delvewheel
-          # CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair -w {dest_dir} {wheel}
+          CIBW_BEFORE_BUILD_WINDOWS: pip install delvewheel
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
+            delvewheel repair -w {dest_dir} {wheel}
+            --add-path src\\pyglui\\cygl\\win_glew
 
           CIBW_TEST_REQUIRES: pytest glfw
           CIBW_TEST_COMMAND: pytest {package}/tests

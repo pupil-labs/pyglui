@@ -55,7 +55,6 @@ elif platform.system() == "Windows":
         "/DFONTSTASH_IMPLEMENTATION",
         "/DGLFONTSTASH_IMPLEMENTATION",
     ]
-    glew_binaries = [("", ["src/pyglui/cygl/win_glew/glew32.dll"])]
 else:
     raise Exception("Platform build not implemented.")
 
