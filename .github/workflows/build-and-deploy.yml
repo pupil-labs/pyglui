@@ -29,8 +29,10 @@ jobs:
           CIBW_ARCHS_LINUX: "x86_64"
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
-          CIBW_BEFORE_ALL_LINUX: sudo apt-get install libglew-dev
           CIBW_BEFORE_ALL_MACOS: brew install glew
+          # On Linux, we use before build such that the dependency is installed into
+          # the manylinux container
+          CIBW_BEFORE_BUILD_LINUX: yum install libGLEW
 
           # CIBW_BEFORE_BUILD_WINDOWS: pip install delvewheel
           # CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair -w {dest_dir} {wheel}
