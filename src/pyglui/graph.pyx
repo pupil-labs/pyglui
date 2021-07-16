@@ -10,7 +10,7 @@ from pyglui.pyfontstash cimport fontstash as fs
 
 from os import path
 
-__version__ = "1.30.0"
+__version__ = "1.30.1"
 
 
 # legacy push and pop
