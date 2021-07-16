@@ -1,3 +1,8 @@
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Build and deploy](https://github.com/pupil-labs/pyglui/actions/workflows/build-and-deploy.yml/badge.svg)](https://github.com/pupil-labs/pyglui/actions/workflows/build-and-deploy.yml)
+[![PyPI version](https://badge.fury.io/py/pyglui.svg)](https://pypi.org/project/pyglui/)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+
 pyglui
 ======
 
@@ -18,11 +23,23 @@ Cython powered OpenGL gui.
 
 ## Installation
 
+```
+pip install pyglui
+```
+
+### Source installation
+
+#### Dependencies
 * install `glew`
 
-Linux
+Linux (via apt-get)
 ```shell
 sudo apt-get install libglew-dev
+```
+
+Linux (via yum)
+```shell
+yum install glew-devel
 ```
 
 MacOS
@@ -35,7 +52,7 @@ brew install glew
 python -m pip install git+https://github.com/pupil-labs/pyglui
 ```
 
-### Development
+#### Source code
 
 ```shell
 # Clone the repository to the local filesystem
