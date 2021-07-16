@@ -1,4 +1,3 @@
-import argparse
 import os
 import pathlib
 import platform
@@ -9,13 +8,20 @@ import numpy
 from Cython.Build import cythonize
 from setuptools import Extension, setup
 
-includes = ["pyglui/cygl/", ".", numpy.get_include()]
+includes = ["src/pyglui/cygl/", ".", numpy.get_include()]
 glew_binaries = []
 lib_dir = []
 fontstash_compile_args = [
     "-D FONTSTASH_IMPLEMENTATION",
     "-D GLFONTSTASH_IMPLEMENTATION",
 ]
+
+
+def get_cysignals_include():
+    import cysignals
+
+    return cysignals.__path__[0]
+
 
 if platform.system() == "Darwin":
     # find glew irrespective of version
@@ -25,6 +31,7 @@ if platform.system() == "Darwin":
     includes += [
         "/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/",
         "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/",
+        get_cysignals_include(),
     ]
     link_args = []
     libs = ["GLEW"]
@@ -32,15 +39,15 @@ if platform.system() == "Darwin":
     extra_compile_args = ["-Wno-strict-aliasing", "-O2"]
 elif platform.system() == "Linux":
     glew_header = "/usr/include/GL/glew.h"
-    includes += ["/usr/include/GL"]
+    includes += ["/usr/include/GL", get_cysignals_include()]
     libs = ["GLEW", "GL"]  # GL needed for fonstash
     link_args = []
     extra_compile_args = ["-Wno-strict-aliasing", "-O2"]
 elif platform.system() == "Windows":
-    glew_header = "pyglui/cygl/win_glew/gl/glew.h"
-    includes += ["pyglui/cygl/win_glew"]
+    glew_header = "src/pyglui/cygl/win_glew/gl/glew.h"
+    includes += ["src/pyglui/cygl/win_glew"]
     libs = ["glew32", "OpenGL32"]
-    lib_dir = ["pyglui/cygl/win_glew"]
+    lib_dir = ["src/pyglui/cygl/win_glew"]
     link_args = []
     gl_compile_args = []  # ['/DGL_GLEXT_PROTOTYPES']
     extra_compile_args = ["-O2"]
@@ -48,16 +55,15 @@ elif platform.system() == "Windows":
         "/DFONTSTASH_IMPLEMENTATION",
         "/DGLFONTSTASH_IMPLEMENTATION",
     ]
-    glew_binaries = [("", ["pyglui/cygl/win_glew/glew32.dll"])]
 else:
     raise Exception("Platform build not implemented.")
 
-includes_fontstash = ["pyglui/pyfontstash/fontstash/src"]
+includes_fontstash = ["src/pyglui/pyfontstash/fontstash/src"]
 
 extensions = [
     Extension(
         name="pyglui.ui",
-        sources=["pyglui/ui.pyx"],
+        sources=["src/pyglui/ui.pyx"],
         include_dirs=includes + includes_fontstash,
         libraries=libs,
         library_dirs=lib_dir,
@@ -68,7 +74,7 @@ extensions = [
     ),
     Extension(
         name="pyglui.graph",
-        sources=["pyglui/graph.pyx"],
+        sources=["src/pyglui/graph.pyx"],
         include_dirs=includes + includes_fontstash,
         libraries=libs,
         library_dirs=lib_dir,
@@ -79,7 +85,7 @@ extensions = [
     ),
     Extension(
         name="pyglui.cygl.utils",
-        sources=["pyglui/cygl/utils.pyx"],
+        sources=["src/pyglui/cygl/utils.pyx"],
         include_dirs=includes,
         libraries=libs,
         library_dirs=lib_dir,
@@ -89,7 +95,7 @@ extensions = [
     ),
     Extension(
         name="pyglui.cygl.shader",
-        sources=["pyglui/cygl/shader.pyx"],
+        sources=["src/pyglui/cygl/shader.pyx"],
         include_dirs=includes,
         libraries=libs,
         library_dirs=lib_dir,
@@ -99,7 +105,7 @@ extensions = [
     ),
     Extension(
         name="pyglui.pyfontstash.fontstash",
-        sources=["pyglui/pyfontstash/fontstash.pyx"],
+        sources=["src/pyglui/pyfontstash/fontstash.pyx"],
         include_dirs=includes + includes_fontstash,
         libraries=libs,
         library_dirs=lib_dir,
@@ -109,12 +115,7 @@ extensions = [
     ),
 ]
 
-# Find dist-dir
-parser = argparse.ArgumentParser()
-parser.add_argument("--dist-dir")
-args, args_unused = parser.parse_known_args()
-
-should_cythonize = args.dist_dir and any(
+should_cythonize = any(
     not pathlib.Path(sfile)
     .with_suffix(".cpp" if extension.language == "c++" else ".c")
     .exists()
@@ -127,7 +128,7 @@ if should_cythonize:
     print(f"Generating glew.pxd based on {glew_header}")
 
     dir_glew_generator = pathlib.Path("scripts")
-    dir_glew_destination = pathlib.Path(".") / "pyglui" / "cygl"
+    dir_glew_destination = pathlib.Path("src", "pyglui", "cygl")
 
     print(f"Adding {dir_glew_generator} to sys.path")
     sys.path.append(str(dir_glew_generator))
