@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.30.1 (???)
+## 1.30.1 (2020-07-16)
 - Add CI build support and PyPI deployment
 - Moved pyglui package to src/ directory
 - Added basic tests
