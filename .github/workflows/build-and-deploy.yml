@@ -40,7 +40,7 @@ jobs:
             --add-path src\\pyglui\\cygl\\win_glew
 
           CIBW_TEST_REQUIRES: pytest glfw
-          CIBW_TEST_COMMAND: pytest {package}/tests
+          CIBW_TEST_COMMAND: pytest {package}/tests -v
           CIBW_TEST_SKIP: "*-macosx_arm64 *-macosx_universal2:arm64"
 
       - uses: actions/upload-artifact@v2
