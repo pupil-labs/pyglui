@@ -5,12 +5,14 @@ import sys
 from stat import ST_MTIME
 
 import numpy
+import pkgconfig
 from Cython.Build import cythonize
 from setuptools import Extension, setup
 
 includes = ["src/pyglui/cygl/", ".", numpy.get_include()]
 glew_binaries = []
 lib_dir = []
+link_args = []
 fontstash_compile_args = [
     "-D FONTSTASH_IMPLEMENTATION",
     "-D GLFONTSTASH_IMPLEMENTATION",
@@ -25,23 +27,30 @@ def get_cysignals_include():
 
 if platform.system() == "Darwin":
     # find glew irrespective of version
-    for root, dirs, files in os.walk("/usr/local/Cellar/glew"):
-        if "glew.h" in files:
-            glew_header = os.path.join(root, "glew.h")
+    pkgconfig_glew = pkgconfig.parse("glew")
+    includes += pkgconfig_glew["include_dirs"]
+    lib_dir += pkgconfig_glew["library_dirs"]
+    libs = pkgconfig_glew["libraries"]
+    extra_compile_args = ["-Wno-strict-aliasing", "-O2"]
+
+    # OpenGL + cysignal headers
     includes += [
         "/System/Library/Frameworks/OpenGL.framework/Versions/Current/Headers/",
         "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenGL.framework/Headers/",
         get_cysignals_include(),
     ]
-    link_args = []
-    libs = ["GLEW"]
-    libglew = []  # we are using the dylib
-    extra_compile_args = ["-Wno-strict-aliasing", "-O2"]
+
+    # find glew.h to generate glew.pxd later
+    for include in pkgconfig_glew["include_dirs"]:
+        for glew_header in pathlib.Path(include).rglob("glew.h"):
+            # convert from Path to str
+            glew_header = str(glew_header)
+            break
+
 elif platform.system() == "Linux":
     glew_header = "/usr/include/GL/glew.h"
     includes += ["/usr/include/GL", get_cysignals_include()]
     libs = ["GLEW", "GL"]  # GL needed for fonstash
-    link_args = []
     extra_compile_args = ["-Wno-strict-aliasing", "-O2"]
 elif platform.system() == "Windows":
     glew_header = "src/pyglui/cygl/win_glew/gl/glew.h"
