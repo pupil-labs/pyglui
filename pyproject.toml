@@ -8,3 +8,31 @@ requires = [
     "cysignals;platform_system != \"Windows\""
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.cibuildwheel]
+archs = ["native"]
+skip = "{cp,pp}27-* {cp,pp}35-* {cp,pp}310-* pp*"
+
+build-frontend = "build"
+before-build = "python scripts/fetch-ffmpeg /tmp/vendor"
+
+test-command = "pytest {package}/tests -v"
+before-test = ""
+test-requires = ["pytest", "glfw"]
+test-extras = []
+
+manylinux-x86_64-image = "manylinux2014"
+
+[tool.cibuildwheel.linux]
+before-build = "yum install -y glew-devel"
+
+[tool.cibuildwheel.macos]
+before-all = "brew install glew"
+
+[tool.cibuildwheel.macos.environment]
+LDFLAGS="-headerpad_max_install_names"
+PKG_CONFIG_PATH="/tmp/libjpeg-turbo-build/lib/pkgconfig:/tmp/vendor/lib/pkgconfig"
+
+[tool.cibuildwheel.windows]
+before-build = "pip install delvewheel"
+repair-wheel-command = "delvewheel repair -w {dest_dir} {wheel} --add-path src\\pyglui\\cygl\\win_glew"

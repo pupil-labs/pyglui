@@ -21,25 +21,6 @@ jobs:
           submodules: true
       - name: Build wheels
         uses: pypa/cibuildwheel@v1.11.1.post1
-        env:
-          CIBW_SKIP: "{cp,pp}27-* {cp,pp}35-* pp* *win32 *_aarch64 *_ppc64le *_s390x *_i686"
-          CIBW_ARCHS_MACOS: "x86_64"
-          CIBW_ARCHS_LINUX: "x86_64"
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-
-          CIBW_BEFORE_ALL_MACOS: brew install glew
-          # On Linux, we use before build such that the dependency is installed into
-          # the manylinux container
-          CIBW_BEFORE_BUILD_LINUX: yum install -y glew-devel
-
-          CIBW_BEFORE_BUILD_WINDOWS: pip install delvewheel
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
-            delvewheel repair -w {dest_dir} {wheel}
-            --add-path src\\pyglui\\cygl\\win_glew
-
-          CIBW_TEST_REQUIRES: pytest glfw
-          CIBW_TEST_COMMAND: pytest {package}/tests -v
-          CIBW_TEST_SKIP: "*-macosx_arm64 *-macosx_universal2:arm64"
 
       - uses: actions/upload-artifact@v2
         if: always()
