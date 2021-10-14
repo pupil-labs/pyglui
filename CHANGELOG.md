@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.31.0 (2020-10-14)
+-  Support multi-line thumb and icon labels
+
 ## 1.30.2 (2020-10-13)
 - Improve build pipeline
 
