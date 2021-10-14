@@ -1201,14 +1201,32 @@ cdef class Thumb(UI_element):
     cdef public FitBox button
     cdef bint selected
     cdef int on_val,off_val
-    cdef float offset_x,offset_y,offset_size
+    cdef float offset_x, offset_y, offset_size, label_line_height
     cdef public basestring label_font
     cdef Synced_Value sync_val
     cdef RGBA _on_color, _off_color
     cdef basestring _status_text
     cdef object hotkey, label_getter
 
-    def __cinit__(self,str attribute_name, object attribute_context = None, on_val=True, off_val=False, label=None,label_font='roboto', label_offset_x=0, label_offset_y=0,label_offset_size=0, setter=None, getter=None, hotkey = None,  on_color=thumb_color_on, off_color=thumb_color_off, label_getter=None):
+    def __cinit__(
+        self,
+        str attribute_name,
+        object attribute_context = None,
+        on_val=True,
+        off_val=False,
+        label=None,
+        label_font='roboto',
+        label_offset_x=0,
+        label_offset_y=0,
+        label_offset_size=0,
+        label_line_height=1.0,
+        setter=None,
+        getter=None,
+        hotkey = None,
+        on_color=thumb_color_on,
+        off_color=thumb_color_off,
+        label_getter=None
+    ):
         self.uid = id(self)
         self._label = label_getter() if label_getter is not None else (label or attribute_name[0])
         self.label_font = label_font
@@ -1216,6 +1234,7 @@ cdef class Thumb(UI_element):
         self.offset_x = label_offset_x
         self.offset_y = label_offset_y
         self.offset_size = label_offset_size
+        self.label_line_height = label_line_height
         self.sync_val = Synced_Value(attribute_name,attribute_context,getter,setter)
         self.on_val = on_val
         self.off_val = off_val
@@ -1296,10 +1315,10 @@ cdef class Thumb(UI_element):
         glfont.set_blur(10.5)
         cdef int text_x = self.button.center[0]+int(self.offset_x*ui_scale)
         cdef int text_y = self.button.center[1]+int(self.offset_y*ui_scale)
-        glfont.draw_text(text_x,text_y,self._label)
+        glfont.draw_multi_line_text(text_x, text_y, self._label, self.label_line_height)
         glfont.set_blur(0.5)
         glfont.set_color_float(icon_color[:])
-        glfont.draw_text(text_x,text_y,self._label)
+        glfont.draw_multi_line_text(text_x, text_y, self._label, self.label_line_height)
         glfont.pop_state()
 
 
@@ -1310,10 +1329,10 @@ cdef class Thumb(UI_element):
         glfont.set_size( max(1, int( (min(self.button.size) )-thumb_font_padding*ui_scale)/2.) )
         glfont.set_color_float((0,0,0,1))
         glfont.set_blur(10.5)
-        glfont.draw_text(self.button.center[0]+self.button.size.x/2.,self.button.center[1],self._status_text)
+        glfont.draw_multi_line_text(self.button.center[0]+self.button.size.x/2.,self.button.center[1],self._status_text)
         glfont.set_color_float(icon_color[:])
         glfont.set_blur(.1)
-        glfont.draw_text(self.button.center[0]+self.button.size.x/2.,self.button.center[1],self._status_text)
+        glfont.draw_multi_line_text(self.button.center[0]+self.button.size.x/2.,self.button.center[1],self._status_text)
         glfont.pop_state()
 
 
@@ -1445,10 +1464,10 @@ cdef class Icon(Thumb):
         glfont.set_blur(3)
         cdef int text_x = self.button.center[0]+int(self.offset_x*ui_scale)
         cdef int text_y = self.button.center[1]+int(self.offset_y*ui_scale)
-        glfont.draw_text(text_x,text_y,self._label)
+        glfont.draw_multi_line_text(text_x, text_y, self._label, self.label_line_height)
         glfont.set_blur(0.5)
         glfont.set_color_float(icon_color)
-        glfont.draw_text(text_x,text_y,self._label)
+        glfont.draw_multi_line_text(text_x, text_y, self._label, self.label_line_height)
         glfont.pop_state()
 
     cpdef draw_overlay(self,FitBox parent,bint nested=True, bint parent_read_only = False):
