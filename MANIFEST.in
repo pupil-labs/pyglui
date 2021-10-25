@@ -1,3 +1,4 @@
 recursive-include src/pyglui *.pyx *.pxd *.pxi *.h *.c *.cpp
 include scripts/*.py
 include src/pyglui/*.ttf
+include src/pyglui/cygl/win_glew/glew32*
