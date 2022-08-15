@@ -23,7 +23,7 @@ test-extras = []
 manylinux-x86_64-image = "manylinux2014"
 
 [tool.cibuildwheel.linux]
-before-all = "yum install -y glew-devel"
+before-all = "yum --disablerepo=epel -y update ca-certificates && yum install -y glew-devel"
 
 [tool.cibuildwheel.macos]
 before-all = "brew install glew"
