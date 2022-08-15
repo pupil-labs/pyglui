@@ -1,7 +1,11 @@
 # Changelog
 
+## 1.31.0.post1 (2022-08-15)
+- Use setuptools scm for versioning
+- Add Python 3.10 wheels
+
 ## 1.31.0 (2020-10-14)
--  Support multi-line thumb and icon labels
+- Support multi-line thumb and icon labels
 
 ## 1.30.2 (2020-10-13)
 - Improve build pipeline
