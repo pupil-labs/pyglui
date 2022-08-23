@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.31.0.post2 (2022-08-23)
+- Add Python 3.11 wheels
+
 ## 1.31.0.post1 (2022-08-15)
 - Use setuptools scm for versioning
 - Add Python 3.10 wheels
