@@ -6,7 +6,7 @@ requires = [
     "numpy",
     "Cython>=3.0a7",
     "pkgconfig",
-    "cysignals;platform_system != \"Windows\""
+    "cysignals;platform_system != \"Windows\"",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -32,8 +32,8 @@ before-all = "yum --disablerepo=epel -y update ca-certificates && yum install -y
 before-all = "brew install glew"
 
 [tool.cibuildwheel.macos.environment]
-LDFLAGS="-headerpad_max_install_names"
-PKG_CONFIG_PATH="/tmp/libjpeg-turbo-build/lib/pkgconfig:/tmp/vendor/lib/pkgconfig"
+LDFLAGS = "-headerpad_max_install_names"
+PKG_CONFIG_PATH = "/tmp/libjpeg-turbo-build/lib/pkgconfig:/tmp/vendor/lib/pkgconfig"
 
 [tool.cibuildwheel.windows]
 before-build = "pip install delvewheel"
