@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.31.1 (2022-12-29)
+- Resolve font path sym links
+
 ## 1.31.0.post3 (2022-08-24)
 - Actually add Python 3.11 wheels
 

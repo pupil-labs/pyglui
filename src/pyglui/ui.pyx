@@ -28,9 +28,9 @@ include 'gldraw.pxi'
 include 'helpers.pxi'
 include 'design_params.pxi'
 
+import pathlib
 import platform
 from collections import namedtuple
-from os import path
 from time import time
 
 
@@ -47,16 +47,20 @@ cdef bint should_redraw = True
 cdef bint should_redraw_overlay = True
 
 def get_roboto_font_path():
-    return path.join(path.dirname(__file__),'Roboto-Regular.ttf')
+    return _resolved_relative_path('Roboto-Regular.ttf')
 
 def get_opensans_font_path():
-    return path.join(path.dirname(__file__),'OpenSans-Regular.ttf')
+    return _resolved_relative_path('OpenSans-Regular.ttf')
 
 def get_pupil_icons_font_path():
-    return path.join(path.dirname(__file__),'pupil_icons.ttf')
+    return _resolved_relative_path('pupil_icons.ttf')
 
 def get_all_font_paths():
     return get_roboto_font_path(),get_opensans_font_path(),get_pupil_icons_font_path()
+
+def _resolved_relative_path(file_name: str) -> str:
+    return str(pathlib.Path(__file__).with_name(file_name).resolve())
+
 
 try:
     from six import unichr
@@ -829,3 +833,10 @@ cdef class Vec2:
                 self.y == obj
             else:
                 raise IndexError()
+
+
+cpdef test_fonts():
+    cdef fs.Context glfont = fs.Context()
+
+    for path in get_all_font_paths():
+        glfont.add_font(pathlib.Path(path).stem, path)
