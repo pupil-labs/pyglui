@@ -95,7 +95,6 @@ def _draw_circle_filled(screen_point, size: float, color: RGBA, num_points: int 
 
 
 def _draw_circle_marker_polygon(position):
-
     r2 = 2
     screen_point = position
 
@@ -130,7 +129,6 @@ def _draw_circle_marker_polygon(position):
 
 
 def _draw_circle_marker_pointshader(position):
-
     r2 = 2 * 2
     screen_point = position
     alpha = 1
@@ -230,7 +228,6 @@ def demo():
     t_poll = Timer()
 
     while not quit:
-
         with t_pointshader:
             _draw_circle_marker_pointshader((320, 320))
         with t_polygon:
